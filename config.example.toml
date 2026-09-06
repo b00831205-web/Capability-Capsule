@@ -1,0 +1,16 @@
+[ollama]
+base_url = "http://127.0.0.1:11434"
+generation_model = "qwen3.5:4b"
+embedding_model = "nomic-embed-text"
+
+[http]
+# Keep false in proxied WSL environments so localhost Ollama calls bypass proxy variables.
+trust_env = false
+
+[capsule]
+size_budget_bytes = 1073741824
+offline_duration_hours = 12.0
+
+[telemetry]
+enabled = true
+output_dir = ".capsule/sessions"
