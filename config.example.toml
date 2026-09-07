@@ -14,3 +14,7 @@ offline_duration_hours = 12.0
 [telemetry]
 enabled = true
 output_dir = ".capsule/sessions"
+
+[rag]
+# Source-text character budget, not a token limit
+max_context_chars = 12000

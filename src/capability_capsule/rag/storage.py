@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from capability_capsule.rag.chunker import TextChunk
 from capability_capsule.rag.index import VectorIndex
 
+
 class IndexMetadata(BaseModel):
     """Text chunks and model information stored alongside vectors"""
 

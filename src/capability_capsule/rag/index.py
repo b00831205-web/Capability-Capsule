@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict
 
 from capability_capsule.rag.chunker import TextChunk
 
+
 class SearchResult(BaseModel):
     """A retrieved chunk and its cosine similarity score."""
 

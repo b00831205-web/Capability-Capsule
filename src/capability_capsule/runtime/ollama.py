@@ -35,9 +35,16 @@ def answer_question(
         settings: Settings,
         *,
         top_k: int = 5,
+        max_context_chars: int | None = None,
         transport: httpx.BaseTransport | None = None,
 ) -> RagAnswer:
     """Retrieve relevant chunks, then ask Ollama to answer the question."""
+
+    if max_context_chars is None:
+        max_context_chars = settings.rag.max_context_chars
+
+    if max_context_chars <= 0:
+        raise ValueError("max_context_chars must be positive")
 
     sources = retrieve(
         question,
@@ -46,6 +53,34 @@ def answer_question(
         top_k = top_k,
         transport = transport,
     )
+
+    remaining = max_context_chars
+    selected: list[SearchResult] = []
+
+    for source in sources:
+        if remaining == 0:
+            break
+
+        chunk = source.chunk
+        text = chunk.text[:remaining]
+
+        limited_chunk = chunk.model_copy(
+            update = {
+                "text": text,
+                "end_char": chunk.start_char + len(text)
+            }
+        )
+
+        selected.append(
+            SearchResult(
+                chunk = limited_chunk,
+                score = source.score,
+            )
+        )
+
+        remaining -= len(text)
+
+    sources = tuple(selected)
 
     context = {
         "question": question,

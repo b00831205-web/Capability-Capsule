@@ -1,6 +1,6 @@
-from pathlib import Path
 import sys
 import zipfile
+from pathlib import Path
 
 from docx import Document
 from docx.table import Table
@@ -30,7 +30,14 @@ def extract(path: Path):
                 print(text)
         else:
             for row in block.rows:
-                cells = [" ".join(p.text.strip() for p in c.paragraphs if p.text.strip()) for c in row.cells]
+                cells = [
+                    " ".join(
+                        paragraph.text.strip()
+                        for paragraph in cell.paragraphs
+                        if paragraph.text.strip()
+                    )
+                    for cell in row.cells
+                ]
                 print(" | ".join(cells))
     for section_no, section in enumerate(doc.sections, 1):
         for label, container in (("HEADER", section.header), ("FOOTER", section.footer)):
@@ -43,8 +50,16 @@ def extract_openxml(path: Path):
     ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
     with zipfile.ZipFile(path) as archive:
         names = ["word/document.xml"]
-        names += sorted(n for n in archive.namelist() if n.startswith("word/header") and n.endswith(".xml"))
-        names += sorted(n for n in archive.namelist() if n.startswith("word/footer") and n.endswith(".xml"))
+        names += sorted(
+            name
+            for name in archive.namelist()
+            if name.startswith("word/header") and name.endswith(".xml")
+        )
+        names += sorted(
+            name
+            for name in archive.namelist()
+            if name.startswith("word/footer") and name.endswith(".xml")
+        )
         for name in names:
             root = etree.fromstring(archive.read(name))
             if name != "word/document.xml":

@@ -1,6 +1,8 @@
 """Build a searchable index from repository text files"""
 
+import os
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
@@ -11,6 +13,7 @@ from capability_capsule.rag.embeddings import embed_texts
 from capability_capsule.rag.storage import save_index
 from capability_capsule.scanner.documents import read_repository_documents
 from capability_capsule.scanner.repo import scan_repository
+
 
 class IndexBuildResult(BaseModel):
     """Summary of a completed index build"""
@@ -100,12 +103,25 @@ def build_index(
 
         vectors.extend(batch_vectors)
 
-    save_index(
-        destination,
-        chunks,
-        vectors,
-        embedding_model = settings.ollama.embedding_model,
-    )
+    with TemporaryDirectory(
+        prefix= ".capsule-build-",
+        dir = destination.parent,
+    ) as temporary_directory:
+        staged_path = Path(temporary_directory) / "index.npz"
+
+        save_index(
+            staged_path,
+            chunks,
+            vectors,
+            embedding_model= settings.ollama.embedding_model,
+        )
+        actual_size = staged_path.stat().st_size
+        budget = settings.capsule.size_budget_bytes
+        if actual_size > budget:
+            raise ValueError(
+                f"Index size {actual_size} bytes exceeds budget {budget} bytes"
+            )
+        os.link(staged_path, destination)
 
     return IndexBuildResult(
         output_path = destination,

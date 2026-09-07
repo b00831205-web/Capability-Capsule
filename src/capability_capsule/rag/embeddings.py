@@ -7,6 +7,7 @@ import httpx
 
 from capability_capsule.config import Settings
 
+
 def embed_texts(
         texts: Sequence[str],
         settings: Settings,

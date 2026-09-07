@@ -8,6 +8,8 @@ import typer
 
 from capability_capsule import __version__
 from capability_capsule.config import Settings
+from capability_capsule.eval.dataset import load_cases
+from capability_capsule.eval.runner import evaluate_retrieval
 from capability_capsule.packager.build import build_index
 from capability_capsule.runtime.ollama import answer_question
 
@@ -69,6 +71,13 @@ def build_command(
             help = "Optional TOML configuration file. "
             ),
         ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option(
+            "--json",
+            help = "Output the index build summary as JSON."
+        )
+    ] = False
 ) -> None:
     """Build and save a repository index."""
 
@@ -78,6 +87,10 @@ def build_command(
     except (OSError, ValueError, httpx.HTTPError) as error:
         typer.echo(f"Build failed: {error}", err = True)
         raise typer.Exit(code = 1) from error
+
+    if json_output:
+        typer.echo(result.model_dump_json(indent=2))
+        return
 
     typer.echo(f"Index: {result.output_path}")
     typer.echo(f"Documents: {result.document_count}")
@@ -109,6 +122,14 @@ def ask_command(
             help = "Maximum number of source chunks to retrieve"
         ),
     ] = 5,
+    max_context_chars: Annotated[
+        int | None,
+        typer.Option(
+            "--max-context-chars",
+            min = 1,
+            help = "Maximum source-text characters supplied to the model."
+        )
+    ] = None,
     config: Annotated[
         Path | None,
         typer.Option(
@@ -118,6 +139,13 @@ def ask_command(
             help = "Optional TOML configuration file."
         ),
     ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option(
+            "--json",
+            help = "Output the answer and sources as JSON."
+        ),
+    ] = False
 ) -> None:
     """Answer a question using a saved index and local Ollama"""
 
@@ -128,10 +156,19 @@ def ask_command(
             index_path,
             settings,
             top_k = top_k,
+            max_context_chars = (
+                max_context_chars
+                if max_context_chars is not None
+                else settings.rag.max_context_chars
+            ),
         )
     except ( OSError, ValueError, httpx.HTTPError) as error:
         typer.echo(f"Question failed: {error}", err = True)
         raise typer.Exit(code = 1) from error
+
+    if json_output:
+        typer.echo(result.model_dump_json(indent = 2))
+        return
 
     typer.echo(result.answer)
     typer.echo()
@@ -144,4 +181,73 @@ def ask_command(
             f"chars {chunk.start_char}:{chunk.end_char} "
             f"score={source.score:.3f}"
         )
-    
+
+@app.command("eval")
+def eval_command(
+    index_path: Annotated[
+        Path,
+        typer.Argument(
+            exists = True,
+            dir_okay = False,
+            help = "Saved index file to evaluate."
+        )
+    ],
+    cases_path: Annotated[
+        Path,
+        typer.Option(
+            "--cases",
+            exists = True,
+            dir_okay = False,
+            help="JSON file containing evaluation cases.",
+        ),
+    ],
+    top_k: Annotated[
+        int,
+        typer.Option(
+            "--top-k",
+            min = 1,
+            help = "Maximum number of chunks to retrieve per question."
+        ),
+    ] = 5,
+    config: Annotated[
+        Path | None,
+        typer.Option(
+            "--config",
+            exists = True,
+            dir_okay = False,
+            help = "Optional TOML configuration file."
+        ),
+    ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option(
+            "--json",
+            help = "Output the complete evaluation report as JSON."
+        ),
+    ] = False,
+) -> None:
+    """Evaluate retrieval against expected source files."""
+
+    try:
+        settings = _load_settings(config)
+        cases = load_cases(cases_path)
+        report = evaluate_retrieval(
+            cases,
+            index_path,
+            settings,
+            top_k = top_k
+        )
+    except (OSError, ValueError, httpx.HTTPError) as error:
+        typer.echo(f"Evaluation failed: {error}", err = True)
+        raise typer.Exit(code = 1) from error
+
+    if json_output:
+        typer.echo(report.model_dump_json(indent = 2))
+        return
+
+    summary = report.summary
+    typer.echo(f"Questions: {summary.query_count}")
+    typer.echo(f"Top k: {report.top_k}")
+    typer.echo(f"Hit rate: {summary.hit_rate:.3f}")
+    typer.echo(f"Mean recall: {summary.mean_recall:.3f}")
+    typer.echo(f"MRR: {summary.mrr:.3f}")

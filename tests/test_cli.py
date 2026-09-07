@@ -64,10 +64,12 @@ def test_ask_passes_question_and_displays_answer_and_source(
 
     def fake_answer(
         question: str, index_path: Path, settings: Settings, *, top_k: int,
+        max_context_chars: int = 12_000,
     ) -> RagAnswer:
         assert question == "Where is the index?"
         assert index_path == index
         assert top_k == 2
+        assert max_context_chars == 12_000
         assert settings.ollama.generation_model == "qwen3.5:4b"
         chunk = TextChunk(
             relative_path="notes/design.md", source_type=SourceType.REPO,
