@@ -44,7 +44,9 @@ def test_real_build_and_answer(tmp_path: Path) -> None:
     result = answer_question(
         "What is the recovery code for the Silver Finch project? "
         "Answer briefly and cite the source.",
-        output, settings, top_k=1,
+        output,
+        settings,
+        top_k=1,
     )
     print(f"ANSWER {result.answer}", flush=True)
     print(f"ANSWER_SECONDS {perf_counter() - started:.2f}", flush=True)

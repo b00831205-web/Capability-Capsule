@@ -15,27 +15,28 @@ from capability_capsule.rag.index import VectorIndex
 class IndexMetadata(BaseModel):
     """Text chunks and model information stored alongside vectors"""
 
-    model_config = ConfigDict(extra = "forbid", frozen = True)
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     schema_version: Literal["0.1"] = "0.1"
-    embedding_model: str = Field(min_length = 1)
+    embedding_model: str = Field(min_length=1)
     chunks: tuple[TextChunk, ...]
 
+
 def save_index(
-        path: Path,
-        chunks: Sequence[TextChunk],
-        vectors: Sequence[Sequence[float]],
-        *,
-        embedding_model: str
+    path: Path,
+    chunks: Sequence[TextChunk],
+    vectors: Sequence[Sequence[float]],
+    *,
+    embedding_model: str,
 ) -> None:
     """Validate and save an index without overwriting an existing file."""
 
     metadata = IndexMetadata(
-        embedding_model = embedding_model,
-        chunks = tuple(chunks),
+        embedding_model=embedding_model,
+        chunks=tuple(chunks),
     )
 
-    matrix = np.array(vectors, dtype=np.float64, copy = True)
+    matrix = np.array(vectors, dtype=np.float64, copy=True)
 
     VectorIndex(metadata.chunks, matrix.tolist())
     metadata_array = np.array(metadata.model_dump_json())
@@ -43,19 +44,16 @@ def save_index(
     with path.open("xb") as stream:
         np.savez_compressed(
             stream,
-            metadata = metadata_array,
-            vectors = matrix,
-            allow_pickle = False,
+            metadata=metadata_array,
+            vectors=matrix,
+            allow_pickle=False,
         )
 
-def load_index(
-        path: Path,
-        *,
-        expected_embedding_model: str
-) -> VectorIndex:
+
+def load_index(path: Path, *, expected_embedding_model: str) -> VectorIndex:
     """Load an index and verify its embedding model and vector data"""
 
-    archive = np.load(path, allow_pickle = False)
+    archive = np.load(path, allow_pickle=False)
 
     if not isinstance(archive, NpzFile):
         raise ValueError("Expected an NPZ index archive")
@@ -69,9 +67,7 @@ def load_index(
         if metadata_array.ndim != 0 or metadata_array.dtype.kind != "U":
             raise ValueError("Metadata must be a scalar Unicode string")
 
-        metadata = IndexMetadata.model_validate_json(
-            str(metadata_array.item())
-        )
+        metadata = IndexMetadata.model_validate_json(str(metadata_array.item()))
 
         if metadata.embedding_model != expected_embedding_model:
             raise ValueError("Embedding model does not match the saved index")
@@ -82,5 +78,3 @@ def load_index(
             raise ValueError("Vector must be a floating-point matrix")
 
         return VectorIndex(metadata.chunks, matrix.tolist())
-
-    

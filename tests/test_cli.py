@@ -21,6 +21,11 @@ def test_help_and_version() -> None:
     help_result = runner.invoke(cli.app, ["--help"])
     assert help_result.exit_code == 0
     assert "build" in help_result.output
+    assert "pack" in help_result.output
+    assert "inspect" in help_result.output
+    assert "run" in help_result.output
+    assert "doctor" in help_result.output
+    assert "report" in help_result.output
     assert "ask" in help_result.output
     version_result = runner.invoke(cli.app, ["--version"])
     assert version_result.exit_code == 0
@@ -28,7 +33,8 @@ def test_help_and_version() -> None:
 
 
 def test_build_passes_paths_and_configuration(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     output = tmp_path / "index.npz"
     config = tmp_path / "custom.toml"
@@ -42,14 +48,26 @@ def test_build_passes_paths_and_configuration(
         assert settings.http.trust_env is False
         called.append(True)
         return IndexBuildResult(
-            output_path=output, document_count=2, chunk_count=3,
-            vector_dimensions=768, size_bytes=1234,
+            output_path=output,
+            document_count=2,
+            chunk_count=3,
+            vector_dimensions=768,
+            size_bytes=1234,
         )
 
     monkeypatch.setattr(cli, "build_index", fake_build, raising=False)
-    result = runner.invoke(cli.app, [
-        "build", "--repo", str(tmp_path), "--output", str(output), "--config", str(config),
-    ])
+    result = runner.invoke(
+        cli.app,
+        [
+            "build",
+            "--repo",
+            str(tmp_path),
+            "--output",
+            str(output),
+            "--config",
+            str(config),
+        ],
+    )
     assert result.exit_code == 0, result.output
     assert called == [True]
     assert "index.npz" in result.output
@@ -57,13 +75,18 @@ def test_build_passes_paths_and_configuration(
 
 
 def test_ask_passes_question_and_displays_answer_and_source(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     index = tmp_path / "index.npz"
     index.touch()
 
     def fake_answer(
-        question: str, index_path: Path, settings: Settings, *, top_k: int,
+        question: str,
+        index_path: Path,
+        settings: Settings,
+        *,
+        top_k: int,
         max_context_chars: int = 12_000,
     ) -> RagAnswer:
         assert question == "Where is the index?"
@@ -72,11 +95,16 @@ def test_ask_passes_question_and_displays_answer_and_source(
         assert max_context_chars == 12_000
         assert settings.ollama.generation_model == "qwen3.5:4b"
         chunk = TextChunk(
-            relative_path="notes/design.md", source_type=SourceType.REPO,
-            chunk_index=0, start_char=0, end_char=5, text="local",
+            relative_path="notes/design.md",
+            source_type=SourceType.REPO,
+            chunk_index=0,
+            start_char=0,
+            end_char=5,
+            text="local",
         )
         return RagAnswer(
-            answer="Stored locally [1].", generation_model="qwen3.5:4b",
+            answer="Stored locally [1].",
+            generation_model="qwen3.5:4b",
             sources=(SearchResult(chunk=chunk, score=0.9),),
         )
 
@@ -89,15 +117,24 @@ def test_ask_passes_question_and_displays_answer_and_source(
 
 @pytest.mark.parametrize("failure", [FileExistsError("exists"), httpx.ConnectError("offline")])
 def test_build_failure_has_nonzero_exit_without_traceback(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: Exception,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: Exception,
 ) -> None:
     def fail(*args: Any, **kwargs: Any) -> IndexBuildResult:
         raise failure
 
     monkeypatch.setattr(cli, "build_index", fail, raising=False)
-    result = runner.invoke(cli.app, [
-        "build", "--repo", str(tmp_path), "--output", str(tmp_path / "index.npz"),
-    ])
+    result = runner.invoke(
+        cli.app,
+        [
+            "build",
+            "--repo",
+            str(tmp_path),
+            "--output",
+            str(tmp_path / "index.npz"),
+        ],
+    )
     assert result.exit_code == 1
     assert isinstance(result.exception, SystemExit)
     assert result.output.strip()
@@ -105,7 +142,8 @@ def test_build_failure_has_nonzero_exit_without_traceback(
 
 
 def test_ask_failure_has_nonzero_exit_without_traceback(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     index = tmp_path / "index.npz"
     index.touch()
@@ -131,10 +169,18 @@ def test_bad_config_prevents_build(tmp_path: Path, monkeypatch: pytest.MonkeyPat
         raise AssertionError("Build must not run with invalid config")
 
     monkeypatch.setattr(cli, "build_index", fail, raising=False)
-    result = runner.invoke(cli.app, [
-        "build", "--repo", str(tmp_path), "--output", str(tmp_path / "index.npz"),
-        "--config", str(config),
-    ])
+    result = runner.invoke(
+        cli.app,
+        [
+            "build",
+            "--repo",
+            str(tmp_path),
+            "--output",
+            str(tmp_path / "index.npz"),
+            "--config",
+            str(config),
+        ],
+    )
     assert result.exit_code == 1
     assert isinstance(result.exception, SystemExit)
     assert called == []

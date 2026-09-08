@@ -16,21 +16,28 @@ from capability_capsule.rag.storage import save_index
 def index_path(tmp_path: Path) -> Path:
     chunks = tuple(
         TextChunk(
-            relative_path=f"notes/{number}.md", source_type=SourceType.REPO,
-            chunk_index=0, start_char=0, end_char=len(text), text=text,
+            relative_path=f"notes/{number}.md",
+            source_type=SourceType.REPO,
+            chunk_index=0,
+            start_char=0,
+            end_char=len(text),
+            text=text,
         )
         for number, text in enumerate(("alpha", "beta", "gamma"))
     )
     path = tmp_path / "index.npz"
     save_index(
-        path, chunks, [[1.0, 0.0], [0.0, 1.0], [-1.0, 0.0]],
+        path,
+        chunks,
+        [[1.0, 0.0], [0.0, 1.0], [-1.0, 0.0]],
         embedding_model="nomic-embed-text",
     )
     return path
 
 
 def test_retrieve_many_batches_embedding_and_preserves_question_order(
-    index_path: Path, monkeypatch: pytest.MonkeyPatch,
+    index_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     module = importlib.import_module("capability_capsule.rag.retrieval")
     original_load = module.load_index
@@ -52,7 +59,10 @@ def test_retrieve_many_batches_embedding_and_preserves_question_order(
     monkeypatch.setattr(module, "load_index", counted_load)
     before = index_path.read_bytes()
     batches = module.retrieve_many(
-        ("alpha question", "beta question"), index_path, Settings(), top_k=2,
+        ("alpha question", "beta question"),
+        index_path,
+        Settings(),
+        top_k=2,
         transport=httpx.MockTransport(handle),
     )
     assert loads == [index_path]
@@ -79,7 +89,8 @@ def test_retrieve_many_empty_input_does_no_work(monkeypatch: pytest.MonkeyPatch)
 
 @pytest.mark.parametrize("questions", [("valid", ""), (" ",), ("valid", "\n\t")])
 def test_retrieve_many_rejects_any_blank_question_before_work(
-    monkeypatch: pytest.MonkeyPatch, questions: tuple[str, ...],
+    monkeypatch: pytest.MonkeyPatch,
+    questions: tuple[str, ...],
 ) -> None:
     module = importlib.import_module("capability_capsule.rag.retrieval")
 
@@ -93,7 +104,8 @@ def test_retrieve_many_rejects_any_blank_question_before_work(
 
 @pytest.mark.parametrize("top_k", [0, -1])
 def test_retrieve_many_rejects_invalid_top_k_before_work(
-    monkeypatch: pytest.MonkeyPatch, top_k: int,
+    monkeypatch: pytest.MonkeyPatch,
+    top_k: int,
 ) -> None:
     module = importlib.import_module("capability_capsule.rag.retrieval")
 

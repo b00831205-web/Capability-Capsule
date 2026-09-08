@@ -9,10 +9,10 @@ from capability_capsule.config import Settings
 
 
 def embed_texts(
-        texts: Sequence[str],
-        settings: Settings,
-        *,
-        transport: httpx.BaseTransport | None = None,
+    texts: Sequence[str],
+    settings: Settings,
+    *,
+    transport: httpx.BaseTransport | None = None,
 ) -> tuple[tuple[float, ...], ...]:
     """Return one embedding per input text, preserving input order."""
 
@@ -20,18 +20,18 @@ def embed_texts(
         return ()
 
     with httpx.Client(
-        base_url= str(settings.ollama.base_url),
+        base_url=str(settings.ollama.base_url),
         trust_env=settings.http.trust_env,
-        timeout = 120.0,
-        transport = transport,
+        timeout=120.0,
+        transport=transport,
     ) as client:
         response = client.post(
             "/api/embed",
-            json = {
+            json={
                 "model": settings.ollama.embedding_model,
                 "input": list(texts),
                 "truncate": False,
-            }
+            },
         )
         response.raise_for_status()
         payload = response.json()

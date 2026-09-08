@@ -15,14 +15,20 @@ from capability_capsule.rag.storage import save_index
 def index_path(tmp_path: Path) -> Path:
     chunks = [
         TextChunk(
-            relative_path=f"notes/{i}.md", source_type=SourceType.REPO,
-            chunk_index=0, start_char=0, end_char=len(text), text=text,
+            relative_path=f"notes/{i}.md",
+            source_type=SourceType.REPO,
+            chunk_index=0,
+            start_char=0,
+            end_char=len(text),
+            text=text,
         )
         for i, text in enumerate(["local retrieval", "other topic"])
     ]
     path = tmp_path / "index.npz"
     save_index(
-        path, chunks, [[1.0, 0.0], [0.0, 1.0]],
+        path,
+        chunks,
+        [[1.0, 0.0], [0.0, 1.0]],
         embedding_model="nomic-embed-text",
     )
     return path
@@ -45,7 +51,10 @@ def test_retrieve_embeds_question_and_returns_matching_chunk(index_path: Path) -
 
     before = index_path.read_bytes()
     results = retrieve(
-        "How does local retrieval work?", index_path, Settings(), top_k=1,
+        "How does local retrieval work?",
+        index_path,
+        Settings(),
+        top_k=1,
         transport=httpx.MockTransport(handle),
     )
     assert len(calls) == 1
@@ -66,7 +75,10 @@ def test_blank_question_is_rejected(index_path: Path, question: str) -> None:
 def test_invalid_top_k_is_rejected(index_path: Path, top_k: int) -> None:
     with pytest.raises(ValueError):
         retrieve(
-            "question", index_path, Settings(), top_k=top_k,
+            "question",
+            index_path,
+            Settings(),
+            top_k=top_k,
             transport=httpx.MockTransport(_no_request),
         )
 
@@ -81,7 +93,9 @@ def test_wrong_model_is_rejected_before_embedding(index_path: Path) -> None:
 def test_missing_index_is_rejected_before_embedding(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
         retrieve(
-            "question", tmp_path / "missing.npz", Settings(),
+            "question",
+            tmp_path / "missing.npz",
+            Settings(),
             transport=httpx.MockTransport(_no_request),
         )
 

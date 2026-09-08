@@ -40,9 +40,12 @@ class TelemetryConfig(StrictModel):
     enabled: bool = True
     output_dir: Path = Path(".capsule/sessions")
 
+
 class RagConfig(StrictModel):
     """Limits for retrieved source text supplied to generation"""
-    max_context_chars: int = Field(default = 12_000, gt = 0)
+
+    max_context_chars: int = Field(default=12_000, gt=0)
+
 
 class Settings(StrictModel):
     """Top-level Capability Capsule settings."""

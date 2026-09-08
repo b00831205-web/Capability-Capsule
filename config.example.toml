@@ -8,10 +8,13 @@ embedding_model = "nomic-embed-text"
 trust_env = false
 
 [capsule]
+# Both values are copied into the capsule manifest and enforced during inspection.
 size_budget_bytes = 1073741824
 offline_duration_hours = 12.0
 
 [telemetry]
+# Events stay local and contain metrics only, never question or answer text.
+# Relative paths are resolved beside the capsule at runtime.
 enabled = true
 output_dir = ".capsule/sessions"
 

@@ -12,12 +12,12 @@ from capability_capsule.rag.storage import load_index
 
 
 def retrieve(
-        question: str,
-        index_path: Path,
-        settings: Settings,
-        *,
-        top_k: int = 5,
-        transport: httpx.BaseTransport | None = None,
+    question: str,
+    index_path: Path,
+    settings: Settings,
+    *,
+    top_k: int = 5,
+    transport: httpx.BaseTransport | None = None,
 ) -> tuple[SearchResult, ...]:
     """Embed a question a retrieve the most similar stored chunks."""
 
@@ -29,27 +29,21 @@ def retrieve(
 
     index = load_index(
         index_path,
-        expected_embedding_model= settings.ollama.embedding_model,
+        expected_embedding_model=settings.ollama.embedding_model,
     )
 
-    query_vectors = embed_texts(
-        [question],
-        settings,
-        transport=transport
-    )
+    query_vectors = embed_texts([question], settings, transport=transport)
 
-    return index.search(
-        query_vectors[0],
-        top_k = top_k
-    )
+    return index.search(query_vectors[0], top_k=top_k)
+
 
 def retrieve_many(
-        questions: Sequence[str],
-        index_path: Path,
-        settings: Settings,
-        *,
-        top_k: int = 5,
-        transport: httpx.BaseTransport | None = None,
+    questions: Sequence[str],
+    index_path: Path,
+    settings: Settings,
+    *,
+    top_k: int = 5,
+    transport: httpx.BaseTransport | None = None,
 ) -> tuple[tuple[SearchResult, ...], ...]:
     """Retrieve ranked chunks for multiple questions in one embedding batch."""
 
@@ -64,16 +58,13 @@ def retrieve_many(
 
     index = load_index(
         index_path,
-        expected_embedding_model = settings.ollama.embedding_model,
+        expected_embedding_model=settings.ollama.embedding_model,
     )
 
     query_vectors = embed_texts(
         questions,
         settings,
-        transport = transport,
+        transport=transport,
     )
 
-    return tuple(
-        index.search(query_vector, top_k = top_k)
-        for query_vector in query_vectors
-    )
+    return tuple(index.search(query_vector, top_k=top_k) for query_vector in query_vectors)

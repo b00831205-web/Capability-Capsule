@@ -25,7 +25,9 @@ def test_batch_request_preserves_order_and_uses_config() -> None:
         return httpx.Response(200, json={"embeddings": [[1, 0.5], [-1, 2]]})
 
     vectors = embed_texts(
-        ["first", "second"], settings, transport=httpx.MockTransport(handle),
+        ["first", "second"],
+        settings,
+        transport=httpx.MockTransport(handle),
     )
 
     assert len(requests) == 1
@@ -76,7 +78,8 @@ def test_invalid_vectors_are_rejected(payload: dict[str, Any]) -> None:
 
 @pytest.mark.parametrize("trust_env", [False, True])
 def test_proxy_setting_is_passed_to_http_client(
-    monkeypatch: pytest.MonkeyPatch, trust_env: bool,
+    monkeypatch: pytest.MonkeyPatch,
+    trust_env: bool,
 ) -> None:
     settings = Settings()
     assert settings.http.trust_env is False

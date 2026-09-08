@@ -12,10 +12,11 @@ from capability_capsule.rag.chunker import TextChunk
 class SearchResult(BaseModel):
     """A retrieved chunk and its cosine similarity score."""
 
-    model_config = ConfigDict(extra = "forbid", frozen = True)
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     chunk: TextChunk
     score: float
+
 
 def _normalize_rows(matrix: NDArray[np.float64]) -> NDArray[np.float64]:
     """Normalize non-zero rows without overflowing on large values"""
@@ -23,26 +24,24 @@ def _normalize_rows(matrix: NDArray[np.float64]) -> NDArray[np.float64]:
     if not np.isfinite(matrix).all():
         raise ValueError("Vector must contain only finite numbers")
 
-    scales = np.max(np.abs(matrix), axis = 1, keepdims = True)
+    scales = np.max(np.abs(matrix), axis=1, keepdims=True)
     if np.any(scales == 0):
         raise ValueError("Zero vectors cannot be used for cosine similarity")
 
     scaled = matrix / scales
-    lengths = np.sqrt(np.sum(scaled * scaled, axis = 1, keepdims = True))
+    lengths = np.sqrt(np.sum(scaled * scaled, axis=1, keepdims=True))
     normalized: NDArray[np.float64] = scaled / lengths
     return normalized
+
 
 class VectorIndex:
     """Store chunks and search their normalized embedding vectors"""
 
-    def __init__(self,
-                 chunks: Sequence[TextChunk],
-                 vectors: Sequence[Sequence[float]]
-                 ) -> None:
+    def __init__(self, chunks: Sequence[TextChunk], vectors: Sequence[Sequence[float]]) -> None:
         if not chunks:
             raise ValueError("An index requires ata= least one chunk")
 
-        matrix = np.array(vectors, dtype = np.float64, copy = True)
+        matrix = np.array(vectors, dtype=np.float64, copy=True)
 
         if matrix.ndim != 2:
             raise ValueError("Vector must form a two-dimensional matrix")
@@ -57,20 +56,21 @@ class VectorIndex:
         self._vectors = _normalize_rows(matrix)
         self._dimensions = matrix.shape[1]
 
-    def search(
-            self,
-            query_vector: Sequence[float],
-            *,
-            top_k: int = 5
-    )->tuple[SearchResult, ...]:
+    @property
+    def chunks(self) -> tuple[TextChunk, ...]:
+        """Return the indexed chunks in vector-row order."""
+
+        return self._chunks
+
+    def search(self, query_vector: Sequence[float], *, top_k: int = 5) -> tuple[SearchResult, ...]:
         """Return up to top_k chunks, ordered by descending similarity"""
 
         if top_k <= 0:
             raise ValueError("top_k must be positive")
 
-        query = np.array(query_vector, dtype = np.float64, copy = True)
+        query = np.array(query_vector, dtype=np.float64, copy=True)
 
-        if query.ndim !=1 or query.size != self._dimensions:
+        if query.ndim != 1 or query.size != self._dimensions:
             raise ValueError("Query dimensions must match index dimensions")
 
         normalized_query = _normalize_rows(query.reshape(1, -1))[0]
@@ -80,8 +80,7 @@ class VectorIndex:
 
         positions = np.argsort(-scores, kind="stable")[:top_k]
 
-        return tuple(SearchResult(
-            chunk = self._chunks[int(position)],
-            score = float(scores[position])
-        ) for position in positions)
-    
+        return tuple(
+            SearchResult(chunk=self._chunks[int(position)], score=float(scores[position]))
+            for position in positions
+        )

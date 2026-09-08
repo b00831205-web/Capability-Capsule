@@ -23,7 +23,9 @@ from capability_capsule.runtime.ollama import RagAnswer
 def test_real_cli_build_eval_and_ask_json(tmp_path: Path) -> None:
     settings = Settings()
     with httpx.Client(
-        base_url=str(settings.ollama.base_url), trust_env=False, timeout=10,
+        base_url=str(settings.ollama.base_url),
+        trust_env=False,
+        timeout=10,
     ) as client:
         version = client.get("/api/version")
         version.raise_for_status()
@@ -58,18 +60,33 @@ def test_real_cli_build_eval_and_ask_json(tmp_path: Path) -> None:
     def run_cli(*args: str) -> str:
         started = perf_counter()
         process = subprocess.run(
-            [str(executable), *args], cwd=tmp_path, capture_output=True,
-            text=True, encoding="utf-8", timeout=240, check=False,
+            [str(executable), *args],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=240,
+            check=False,
         )
         assert process.returncode == 0, process.stderr or process.stdout
         assert not process.stderr.strip(), process.stderr
         print(f"CLI {args[0]} elapsed_seconds={perf_counter() - started:.2f}", flush=True)
         return process.stdout
 
-    build = IndexBuildResult.model_validate(json.loads(run_cli(
-        "build", "--repo", str(repo), "--output", str(output),
-        "--config", str(config), "--json",
-    )))
+    build = IndexBuildResult.model_validate(
+        json.loads(
+            run_cli(
+                "build",
+                "--repo",
+                str(repo),
+                "--output",
+                str(output),
+                "--config",
+                str(config),
+                "--json",
+            )
+        )
+    )
     assert build.output_path == output
     assert build.document_count == 2
     assert build.chunk_count == 2
@@ -89,10 +106,21 @@ def test_real_cli_build_eval_and_ask_json(tmp_path: Path) -> None:
     ]
     dataset.write_text(json.dumps(case_data, indent=2), encoding="utf-8")
     index_before = output.read_bytes()
-    report = RetrievalEvaluationReport.model_validate(json.loads(run_cli(
-        "eval", str(output), "--cases", str(dataset), "--top-k", "1",
-        "--config", str(config), "--json",
-    )))
+    report = RetrievalEvaluationReport.model_validate(
+        json.loads(
+            run_cli(
+                "eval",
+                str(output),
+                "--cases",
+                str(dataset),
+                "--top-k",
+                "1",
+                "--config",
+                str(config),
+                "--json",
+            )
+        )
+    )
     assert report.top_k == 1
     assert len(report.cases) == 2
     assert [row.case.model_dump(mode="json") for row in report.cases] == case_data
@@ -109,18 +137,27 @@ def test_real_cli_build_eval_and_ask_json(tmp_path: Path) -> None:
     assert output.read_bytes() == index_before
     print(f"EVAL {report.summary.model_dump_json()}", flush=True)
 
-    result = RagAnswer.model_validate(json.loads(run_cli(
-        "ask", str(output),
-        "What is the recovery code for the Silver Finch project? "
-        "Answer briefly and cite the source.",
-        "--top-k", "1", "--config", str(config), "--json",
-    )))
+    result = RagAnswer.model_validate(
+        json.loads(
+            run_cli(
+                "ask",
+                str(output),
+                "What is the recovery code for the Silver Finch project? "
+                "Answer briefly and cite the source.",
+                "--top-k",
+                "1",
+                "--config",
+                str(config),
+                "--json",
+            )
+        )
+    )
     assert result.generation_model == settings.ollama.generation_model
     assert "CAPSULE-7319" in result.answer
     assert len(result.sources) == 1
     chunk = result.sources[0].chunk
     assert chunk.relative_path == "recovery.md"
     assert len(chunk.text) == 120
-    assert chunk.text == recovery[chunk.start_char:chunk.end_char]
+    assert chunk.text == recovery[chunk.start_char : chunk.end_char]
     print(f"ANSWER {result.answer}", flush=True)
     print(f"SOURCE {chunk.relative_path} chars={len(chunk.text)}", flush=True)

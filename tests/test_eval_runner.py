@@ -19,8 +19,12 @@ def test_evaluate_retrieval_uses_embedding_and_aggregates(tmp_path: Path, top_k:
     index = tmp_path / "index.npz"
     chunks = tuple(
         TextChunk(
-            relative_path=path, source_type=SourceType.REPO,
-            chunk_index=0, start_char=0, end_char=4, text="text",
+            relative_path=path,
+            source_type=SourceType.REPO,
+            chunk_index=0,
+            start_char=0,
+            end_char=4,
+            text="text",
         )
         for path in ("a.md", "b.md")
     )
@@ -37,12 +41,19 @@ def test_evaluate_retrieval_uses_embedding_and_aggregates(tmp_path: Path, top_k:
         payload = json.loads(request.content)
         assert payload["model"] == "nomic-embed-text"
         calls.append(payload["input"])
-        return httpx.Response(200, json={
-            "embeddings": [[1.0, 0.0] for _ in payload["input"]],
-        })
+        return httpx.Response(
+            200,
+            json={
+                "embeddings": [[1.0, 0.0] for _ in payload["input"]],
+            },
+        )
 
     report = module.evaluate_retrieval(
-        cases, index, Settings(), top_k=top_k, transport=httpx.MockTransport(handle),
+        cases,
+        index,
+        Settings(),
+        top_k=top_k,
+        transport=httpx.MockTransport(handle),
     )
     assert calls == [["first", "second"]]
     assert report.top_k == top_k
@@ -75,7 +86,9 @@ def test_retrieval_case_rejects_invalid_input(data: dict[str, Any]) -> None:
 
 @pytest.mark.parametrize(("empty", "top_k"), [(True, 5), (False, 0), (False, -1)])
 def test_invalid_run_is_rejected_before_retrieval(
-    monkeypatch: pytest.MonkeyPatch, empty: bool, top_k: int,
+    monkeypatch: pytest.MonkeyPatch,
+    empty: bool,
+    top_k: int,
 ) -> None:
     module = importlib.import_module("capability_capsule.eval.runner")
 

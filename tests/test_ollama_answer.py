@@ -16,8 +16,12 @@ from capability_capsule.runtime.ollama import answer_question
 def index_path(tmp_path: Path) -> Path:
     text = "Capsule stores a local vector index."
     chunk = TextChunk(
-        relative_path="README.md", source_type=SourceType.REPO,
-        chunk_index=0, start_char=0, end_char=len(text), text=text,
+        relative_path="README.md",
+        source_type=SourceType.REPO,
+        chunk_index=0,
+        start_char=0,
+        end_char=len(text),
+        text=text,
     )
     path = tmp_path / "index.npz"
     save_index(path, [chunk], [[1.0, 0.0]], embedding_model="nomic-embed-text")
@@ -47,12 +51,18 @@ def test_answer_retrieves_then_generates_with_numbered_sources(index_path: Path)
         assert source["text"] == "Capsule stores a local vector index."
         assert source["start_char"] == 0
         assert source["end_char"] == len(source["text"])
-        return httpx.Response(200, json={
-            "done": True, "message": {"role": "assistant", "content": "A local index [1]."},
-        })
+        return httpx.Response(
+            200,
+            json={
+                "done": True,
+                "message": {"role": "assistant", "content": "A local index [1]."},
+            },
+        )
 
     result = answer_question(
-        "What does Capsule store?", index_path, settings,
+        "What does Capsule store?",
+        index_path,
+        settings,
         transport=httpx.MockTransport(handle),
     )
     assert routes == ["/api/embed", "/api/chat"]
@@ -64,7 +74,9 @@ def test_answer_retrieves_then_generates_with_numbered_sources(index_path: Path)
 @pytest.mark.parametrize(
     "payload",
     [
-        {}, {"done": False}, {"done": True},
+        {},
+        {"done": False},
+        {"done": True},
         {"done": True, "message": {"role": "assistant", "content": ""}},
         {"done": True, "message": {"role": "assistant", "content": "  "}},
         {"done": True, "message": {"role": "assistant", "content": 123}},
@@ -72,7 +84,8 @@ def test_answer_retrieves_then_generates_with_numbered_sources(index_path: Path)
     ],
 )
 def test_invalid_generation_response_is_rejected(
-    index_path: Path, payload: dict[str, Any],
+    index_path: Path,
+    payload: dict[str, Any],
 ) -> None:
     def handle(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/api/embed":
@@ -99,7 +112,8 @@ def test_http_failure_is_propagated(index_path: Path, failure_route: str) -> Non
 
 
 def test_proxy_bypass_applies_to_both_clients(
-    index_path: Path, monkeypatch: pytest.MonkeyPatch,
+    index_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     original_client = httpx.Client
     inherited: list[bool] = []
@@ -111,9 +125,13 @@ def test_proxy_bypass_applies_to_both_clients(
     def handle(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/api/embed":
             return httpx.Response(200, json={"embeddings": [[1.0, 0.0]]})
-        return httpx.Response(200, json={
-            "done": True, "message": {"role": "assistant", "content": "answer"},
-        })
+        return httpx.Response(
+            200,
+            json={
+                "done": True,
+                "message": {"role": "assistant", "content": "answer"},
+            },
+        )
 
     monkeypatch.setattr(httpx, "Client", make_client)
     answer_question("question", index_path, Settings(), transport=httpx.MockTransport(handle))

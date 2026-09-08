@@ -39,36 +39,38 @@ SUPPORTED_TEXT_SUFFIXES = frozenset(
     }
 )
 
+
 class RepositoryDocument(BaseModel):
     """UTF-8 text loaded from one repository file"""
 
-    model_config = ConfigDict(extra = "forbid", frozen = True)
-    relative_path: str = Field(min_length = 1)
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    relative_path: str = Field(min_length=1)
     text: str
     size_bytes: int = Field(ge=0)
     source_type: SourceType = SourceType.REPO
 
+
 def read_repository_documents(
-        root: Path,
-        files: Iterable[RepositoryFile],
-        *,
-        max_file_size_bytes: int = 1_000_000,
+    root: Path,
+    files: Iterable[RepositoryFile],
+    *,
+    max_file_size_bytes: int = 1_000_000,
 ) -> tuple[RepositoryDocument, ...]:
     """Load supported UTF-8 text files within a repository root."""
 
     if max_file_size_bytes <= 0:
         raise ValueError("max_file_size_bytes must be positive")
 
-    repository_root = root.resolve(strict = True)
+    repository_root = root.resolve(strict=True)
     if not repository_root.is_dir():
         raise NotADirectoryError(repository_root)
     documents: list[RepositoryDocument] = []
 
     for file in files:
         unresolved_path = repository_root / file.relative_path
-        candidate = unresolved_path.resolve(strict = False)
+        candidate = unresolved_path.resolve(strict=False)
 
-        try: 
+        try:
             candidate.relative_to(repository_root)
         except ValueError as error:
             raise ValueError(
@@ -85,7 +87,7 @@ def read_repository_documents(
             continue
 
         try:
-            text = candidate.read_text(encoding = "utf-8")
+            text = candidate.read_text(encoding="utf-8")
 
         except UnicodeDecodeError:
             continue
@@ -94,11 +96,7 @@ def read_repository_documents(
             continue
 
         documents.append(
-            RepositoryDocument(
-                relative_path= file.relative_path,
-                text = text,
-                size_bytes = size_bytes
-            )
+            RepositoryDocument(relative_path=file.relative_path, text=text, size_bytes=size_bytes)
         )
 
-    return tuple(sorted(documents, key= lambda item: item.relative_path))
+    return tuple(sorted(documents, key=lambda item: item.relative_path))

@@ -50,6 +50,17 @@ def test_index_is_independent_of_mutated_input_lists() -> None:
     assert result.score == pytest.approx(1.0)
 
 
+def test_chunks_exposes_an_immutable_snapshot() -> None:
+    original = [_chunk("first"), _chunk("second")]
+    index = VectorIndex(original, [[1.0, 0.0], [0.0, 1.0]])
+    exposed = index.chunks
+    assert isinstance(exposed, tuple)
+    assert exposed == tuple(original)
+    assert exposed is index.chunks
+    original.reverse()
+    assert index.chunks != tuple(original)
+
+
 def test_empty_index_is_rejected() -> None:
     with pytest.raises(ValueError):
         VectorIndex([], [])
@@ -73,8 +84,7 @@ def test_invalid_index_vectors_are_rejected(vectors: list[list[float]]) -> None:
 
 @pytest.mark.parametrize(
     "query",
-    [[], [1.0], [1.0, 0.0, 0.0], [0.0, 0.0], [float("nan"), 0.0],
-     [float("inf"), 0.0]],
+    [[], [1.0], [1.0, 0.0, 0.0], [0.0, 0.0], [float("nan"), 0.0], [float("inf"), 0.0]],
 )
 def test_invalid_query_is_rejected(query: list[float]) -> None:
     index = VectorIndex([_chunk("first")], [[1.0, 0.0]])

@@ -27,7 +27,11 @@ def test_load_cases_preserves_content_and_order(tmp_path: Path, indent: int | No
 @pytest.mark.parametrize(
     "content",
     [
-        "", "[", "[]", "null", "{}",
+        "",
+        "[",
+        "[]",
+        "null",
+        "{}",
         '[{"question": "q", "expected_paths": []}]',
         '[{"question": "  ", "expected_paths": ["a.md"]}]',
         '[{"question": "q", "expected_paths": [" "]}]',

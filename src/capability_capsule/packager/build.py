@@ -18,24 +18,25 @@ from capability_capsule.scanner.repo import scan_repository
 class IndexBuildResult(BaseModel):
     """Summary of a completed index build"""
 
-    model_config = ConfigDict(extra = "forbid", frozen = True)
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
-    output_path : Path
-    document_count: int = Field(gt = 0)
-    chunk_count: int = Field(gt = 0)
-    vector_dimensions: int = Field(gt = 0)
-    size_bytes: int = Field(gt = 0)
+    output_path: Path
+    document_count: int = Field(gt=0)
+    chunk_count: int = Field(gt=0)
+    vector_dimensions: int = Field(gt=0)
+    size_bytes: int = Field(gt=0)
+
 
 def build_index(
-        root: Path,
-        output_path: Path,
-        settings: Settings,
-        *,
-        chunk_size_chars: int = 1_000,
-        overlap_chars: int = 200,
-        batch_size: int = 32,
-        max_file_size_bytes: int = 1_000_000,
-        transport: httpx.BaseTransport | None = None,
+    root: Path,
+    output_path: Path,
+    settings: Settings,
+    *,
+    chunk_size_chars: int = 1_000,
+    overlap_chars: int = 200,
+    batch_size: int = 32,
+    max_file_size_bytes: int = 1_000_000,
+    transport: httpx.BaseTransport | None = None,
 ) -> IndexBuildResult:
     """Scan, chunk, embed, and save repository text as an index."""
 
@@ -67,16 +68,15 @@ def build_index(
     )
 
     # Empty documents cannot contribute any chunks.
-    nonempty_documents = tuple(
-        document for document in documents if document.text
-    )
+    nonempty_documents = tuple(document for document in documents if document.text)
 
     chunks = tuple(
-        chunk for document in nonempty_documents
+        chunk
+        for document in nonempty_documents
         for chunk in chunk_document(
             document,
-            chunk_size_chars= chunk_size_chars,
-            overlap_chars= overlap_chars,
+            chunk_size_chars=chunk_size_chars,
+            overlap_chars=overlap_chars,
         )
     )
 
@@ -91,7 +91,7 @@ def build_index(
         batch_vectors = embed_texts(
             [chunk.text for chunk in batch],
             settings,
-            transport = transport,
+            transport=transport,
         )
 
         batch_dimensions = len(batch_vectors[0])
@@ -104,8 +104,8 @@ def build_index(
         vectors.extend(batch_vectors)
 
     with TemporaryDirectory(
-        prefix= ".capsule-build-",
-        dir = destination.parent,
+        prefix=".capsule-build-",
+        dir=destination.parent,
     ) as temporary_directory:
         staged_path = Path(temporary_directory) / "index.npz"
 
@@ -113,20 +113,18 @@ def build_index(
             staged_path,
             chunks,
             vectors,
-            embedding_model= settings.ollama.embedding_model,
+            embedding_model=settings.ollama.embedding_model,
         )
         actual_size = staged_path.stat().st_size
         budget = settings.capsule.size_budget_bytes
         if actual_size > budget:
-            raise ValueError(
-                f"Index size {actual_size} bytes exceeds budget {budget} bytes"
-            )
+            raise ValueError(f"Index size {actual_size} bytes exceeds budget {budget} bytes")
         os.link(staged_path, destination)
 
     return IndexBuildResult(
-        output_path = destination,
-        document_count= len(nonempty_documents),
+        output_path=destination,
+        document_count=len(nonempty_documents),
         chunk_count=len(chunks),
         vector_dimensions=len(vectors[0]),
-        size_bytes= destination.stat().st_size
+        size_bytes=destination.stat().st_size,
     )

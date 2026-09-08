@@ -31,8 +31,11 @@ def test_config_rejects_nonpositive_context_budget(budget: int) -> None:
     [(None, None, 12_000), (2400, None, 2400), (2400, 800, 800), (None, 800, 800)],
 )
 def test_cli_context_budget_precedence(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
-    configured: int | None, override: int | None, expected: int,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    configured: int | None,
+    override: int | None,
+    expected: int,
 ) -> None:
     index = tmp_path / "index.npz"
     index.touch()
@@ -58,7 +61,10 @@ def test_cli_context_budget_precedence(
 @pytest.mark.parametrize("via_config", [False, True])
 @pytest.mark.parametrize("budget", [0, -1])
 def test_invalid_budget_prevents_answer(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, via_config: bool, budget: int,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    via_config: bool,
+    budget: int,
 ) -> None:
     index = tmp_path / "index.npz"
     index.touch()

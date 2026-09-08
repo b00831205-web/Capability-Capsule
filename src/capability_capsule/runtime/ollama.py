@@ -20,23 +20,25 @@ SYSTEM_PROMPT = (
     "Reply in the language of the question."
 )
 
+
 class RagAnswer(BaseModel):
     """Generate answer and the retrieved sources supplied to the model."""
 
-    model_config = ConfigDict(extra = "forbid", frozen = True)
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     answer: str
     generation_model: str
     sources: tuple[SearchResult, ...]
 
+
 def answer_question(
-        question: str,
-        index_path: Path,
-        settings: Settings,
-        *,
-        top_k: int = 5,
-        max_context_chars: int | None = None,
-        transport: httpx.BaseTransport | None = None,
+    question: str,
+    index_path: Path,
+    settings: Settings,
+    *,
+    top_k: int = 5,
+    max_context_chars: int | None = None,
+    transport: httpx.BaseTransport | None = None,
 ) -> RagAnswer:
     """Retrieve relevant chunks, then ask Ollama to answer the question."""
 
@@ -50,8 +52,8 @@ def answer_question(
         question,
         index_path,
         settings,
-        top_k = top_k,
-        transport = transport,
+        top_k=top_k,
+        transport=transport,
     )
 
     remaining = max_context_chars
@@ -65,16 +67,13 @@ def answer_question(
         text = chunk.text[:remaining]
 
         limited_chunk = chunk.model_copy(
-            update = {
-                "text": text,
-                "end_char": chunk.start_char + len(text)
-            }
+            update={"text": text, "end_char": chunk.start_char + len(text)}
         )
 
         selected.append(
             SearchResult(
-                chunk = limited_chunk,
-                score = source.score,
+                chunk=limited_chunk,
+                score=source.score,
             )
         )
 
@@ -92,8 +91,8 @@ def answer_question(
                 "end_char": result.chunk.end_char,
                 "text": result.chunk.text,
             }
-            for number, result in enumerate(sources, start = 1)
-        ]
+            for number, result in enumerate(sources, start=1)
+        ],
     }
 
     messages = [
@@ -108,14 +107,14 @@ def answer_question(
     ]
 
     with httpx.Client(
-        base_url = str(settings.ollama.base_url),
-        trust_env = settings.http.trust_env,
-        timeout = 180.0,
-        transport = transport,
+        base_url=str(settings.ollama.base_url),
+        trust_env=settings.http.trust_env,
+        timeout=180.0,
+        transport=transport,
     ) as client:
         response = client.post(
             "/api/chat",
-            json = {
+            json={
                 "model": settings.ollama.generation_model,
                 "messages": messages,
                 "stream": False,
@@ -139,7 +138,5 @@ def answer_question(
         raise ValueError("Assistant response must contain non-empty text")
 
     return RagAnswer(
-        answer = answer,
-        generation_model = settings.ollama.generation_model,
-        sources = sources
+        answer=answer, generation_model=settings.ollama.generation_model, sources=sources
     )

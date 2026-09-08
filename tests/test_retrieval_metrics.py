@@ -11,8 +11,12 @@ from capability_capsule.rag.index import SearchResult
 def _result(path: str, number: int) -> SearchResult:
     return SearchResult(
         chunk=TextChunk(
-            relative_path=path, source_type=SourceType.REPO,
-            chunk_index=number, start_char=0, end_char=4, text="text",
+            relative_path=path,
+            source_type=SourceType.REPO,
+            chunk_index=number,
+            start_char=0,
+            end_char=4,
+            text="text",
         ),
         score=1.0 / (number + 1),
     )
@@ -32,8 +36,12 @@ def _result(path: str, number: int) -> SearchResult:
     ],
 )
 def test_retrieval_metrics(
-    paths: list[str], expected: list[str], top_k: int,
-    hit: bool, recall: float, reciprocal_rank: float,
+    paths: list[str],
+    expected: list[str],
+    top_k: int,
+    hit: bool,
+    recall: float,
+    reciprocal_rank: float,
 ) -> None:
     module = importlib.import_module("capability_capsule.eval.retrieval")
     results = tuple(_result(path, number) for number, path in enumerate(paths))
@@ -46,7 +54,8 @@ def test_retrieval_metrics(
 
 
 @pytest.mark.parametrize(
-    ("expected", "top_k"), [([], 5), ([""], 5), (["   "], 5), (["a.md"], 0), (["a.md"], -1)],
+    ("expected", "top_k"),
+    [([], 5), ([""], 5), (["   "], 5), (["a.md"], 0), (["a.md"], -1)],
 )
 def test_retrieval_metrics_reject_invalid_inputs(expected: list[str], top_k: int) -> None:
     module: Any = importlib.import_module("capability_capsule.eval.retrieval")

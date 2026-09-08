@@ -29,13 +29,18 @@ def test_build_saves_a_searchable_index_with_ordered_batches(tmp_path: Path) -> 
         payload = json.loads(request.content)
         assert payload["model"] == "nomic-embed-text"
         batches.append(payload["input"])
-        vectors = [[1.0, 0.0] if text == "abcd" else [0.0, 1.0]
-                   for text in payload["input"]]
+        vectors = [[1.0, 0.0] if text == "abcd" else [0.0, 1.0] for text in payload["input"]]
         return httpx.Response(200, json={"embeddings": vectors})
 
     result = build_index(
-        repo, output, Settings(), chunk_size_chars=4, overlap_chars=0,
-        batch_size=2, max_file_size_bytes=32, transport=httpx.MockTransport(handle),
+        repo,
+        output,
+        Settings(),
+        chunk_size_chars=4,
+        overlap_chars=0,
+        batch_size=2,
+        max_file_size_bytes=32,
+        transport=httpx.MockTransport(handle),
     )
 
     assert batches == [["abcd", "efgh"], ["ijkl"]]
@@ -69,16 +74,22 @@ def test_no_chunks_fails_without_output_or_http_calls(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "options",
     [
-        {"batch_size": 0}, {"batch_size": -1}, {"chunk_size_chars": 0},
-        {"overlap_chars": -1}, {"chunk_size_chars": 5, "overlap_chars": 5},
+        {"batch_size": 0},
+        {"batch_size": -1},
+        {"chunk_size_chars": 0},
+        {"overlap_chars": -1},
+        {"chunk_size_chars": 5, "overlap_chars": 5},
         {"max_file_size_bytes": 0},
     ],
 )
 def test_bad_options_fail_before_http_calls(tmp_path: Path, options: dict[str, int]) -> None:
     with pytest.raises(ValueError):
         build_index(
-            tmp_path, tmp_path / "index.npz", Settings(),
-            transport=httpx.MockTransport(_no_request), **options,
+            tmp_path,
+            tmp_path / "index.npz",
+            Settings(),
+            transport=httpx.MockTransport(_no_request),
+            **options,
         )
 
 
@@ -100,8 +111,13 @@ def test_later_batch_failure_does_not_leave_an_index(tmp_path: Path, failure: st
     expected_error = httpx.HTTPStatusError if failure == "http" else ValueError
     with pytest.raises(expected_error):
         build_index(
-            tmp_path, output, Settings(), chunk_size_chars=4, overlap_chars=0,
-            batch_size=1, transport=httpx.MockTransport(handle),
+            tmp_path,
+            output,
+            Settings(),
+            chunk_size_chars=4,
+            overlap_chars=0,
+            batch_size=1,
+            transport=httpx.MockTransport(handle),
         )
     assert calls == 2
     assert not output.exists()

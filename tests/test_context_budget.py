@@ -15,8 +15,12 @@ from capability_capsule.rag.index import SearchResult
 def _source(text: str, number: int) -> SearchResult:
     return SearchResult(
         chunk=TextChunk(
-            relative_path=f"notes/{number}.md", source_type=SourceType.REPO,
-            chunk_index=number, start_char=10, end_char=10 + len(text), text=text,
+            relative_path=f"notes/{number}.md",
+            source_type=SourceType.REPO,
+            chunk_index=number,
+            start_char=10,
+            end_char=10 + len(text),
+            text=text,
         ),
         score=1.0 / (number + 1),
     )
@@ -32,7 +36,9 @@ def _source(text: str, number: int) -> SearchResult:
     ],
 )
 def test_context_budget_matches_sent_and_returned_sources(
-    monkeypatch: pytest.MonkeyPatch, budget: int, expected_texts: list[str],
+    monkeypatch: pytest.MonkeyPatch,
+    budget: int,
+    expected_texts: list[str],
 ) -> None:
     original = tuple(_source(text, i) for i, text in enumerate(["abcdef", "ghijkl", "mnopqr"]))
 
@@ -51,13 +57,20 @@ def test_context_budget_matches_sent_and_returned_sources(
         assert sum(len(source["text"]) for source in sent) <= budget
         for source in sent:
             assert source["end_char"] - source["start_char"] == len(source["text"])
-        return httpx.Response(200, json={
-            "done": True, "message": {"role": "assistant", "content": "answer"},
-        })
+        return httpx.Response(
+            200,
+            json={
+                "done": True,
+                "message": {"role": "assistant", "content": "answer"},
+            },
+        )
 
     monkeypatch.setattr(ollama, "retrieve", fake_retrieve)
     result = ollama.answer_question(
-        "question", Path("unused.npz"), Settings(), max_context_chars=budget,
+        "question",
+        Path("unused.npz"),
+        Settings(),
+        max_context_chars=budget,
         transport=httpx.MockTransport(handle),
     )
     assert len(calls) == 1
@@ -73,7 +86,8 @@ def test_context_budget_matches_sent_and_returned_sources(
 
 @pytest.mark.parametrize("budget", [0, -1])
 def test_invalid_budget_fails_before_retrieval(
-    monkeypatch: pytest.MonkeyPatch, budget: int,
+    monkeypatch: pytest.MonkeyPatch,
+    budget: int,
 ) -> None:
     def forbidden(*args: Any, **kwargs: Any) -> tuple[SearchResult, ...]:
         pytest.fail("Invalid budget must be rejected before retrieval")
@@ -92,13 +106,20 @@ def test_unicode_budget_counts_characters(monkeypatch: pytest.MonkeyPatch) -> No
     def handle(request: httpx.Request) -> httpx.Response:
         user_data = json.loads(json.loads(request.content)["messages"][1]["content"])
         assert user_data["sources"][0]["text"] == "甲🙂\n"
-        return httpx.Response(200, json={
-            "done": True, "message": {"role": "assistant", "content": "answer"},
-        })
+        return httpx.Response(
+            200,
+            json={
+                "done": True,
+                "message": {"role": "assistant", "content": "answer"},
+            },
+        )
 
     monkeypatch.setattr(ollama, "retrieve", fake_retrieve)
     result = ollama.answer_question(
-        "question", Path("unused.npz"), Settings(), max_context_chars=3,
+        "question",
+        Path("unused.npz"),
+        Settings(),
+        max_context_chars=3,
         transport=httpx.MockTransport(handle),
     )
     assert result.sources[0].chunk.text == "甲🙂\n"
@@ -107,12 +128,18 @@ def test_unicode_budget_counts_characters(monkeypatch: pytest.MonkeyPatch) -> No
 
 @pytest.mark.parametrize(
     ("configured", "explicit", "expected_length"),
-    [(None, {}, 12_000), (3, {}, 3), (3, {"max_context_chars": None}, 3),
-     (3, {"max_context_chars": 8}, 8)],
+    [
+        (None, {}, 12_000),
+        (3, {}, 3),
+        (3, {"max_context_chars": None}, 3),
+        (3, {"max_context_chars": 8}, 8),
+    ],
 )
 def test_runtime_context_budget_precedence(
-    monkeypatch: pytest.MonkeyPatch, configured: int | None,
-    explicit: dict[str, Any], expected_length: int,
+    monkeypatch: pytest.MonkeyPatch,
+    configured: int | None,
+    explicit: dict[str, Any],
+    expected_length: int,
 ) -> None:
     settings = Settings.model_validate(
         {} if configured is None else {"rag": {"max_context_chars": configured}}
@@ -128,14 +155,21 @@ def test_runtime_context_budget_precedence(
         assert request.url.path == "/api/chat"
         data = json.loads(json.loads(request.content)["messages"][1]["content"])
         sent_texts.extend(source["text"] for source in data["sources"])
-        return httpx.Response(200, json={
-            "done": True, "message": {"role": "assistant", "content": "answer"},
-        })
+        return httpx.Response(
+            200,
+            json={
+                "done": True,
+                "message": {"role": "assistant", "content": "answer"},
+            },
+        )
 
     monkeypatch.setattr(ollama, "retrieve", fake_retrieve)
     result = ollama.answer_question(
-        "question", Path("unused.npz"), settings,
-        transport=httpx.MockTransport(handle), **explicit,
+        "question",
+        Path("unused.npz"),
+        settings,
+        transport=httpx.MockTransport(handle),
+        **explicit,
     )
     assert sent_texts == ["a" * expected_length]
     assert [source.chunk.text for source in result.sources] == sent_texts

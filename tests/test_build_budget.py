@@ -41,11 +41,16 @@ def test_build_within_budget_saves_loadable_index(repo: Path, tmp_path: Path) ->
 
 @pytest.mark.parametrize("budget_delta", [0, -1])
 def test_budget_boundary_uses_actual_compressed_size(
-    repo: Path, tmp_path: Path, budget_delta: int,
+    repo: Path,
+    tmp_path: Path,
+    budget_delta: int,
 ) -> None:
     settings = Settings()
     baseline = builder.build_index(
-        repo, tmp_path / "baseline.npz", settings, transport=_transport(),
+        repo,
+        tmp_path / "baseline.npz",
+        settings,
+        transport=_transport(),
     )
     settings.capsule.size_budget_bytes = baseline.size_bytes + budget_delta
     output = tmp_path / "bounded.npz"
@@ -74,7 +79,9 @@ def test_existing_output_is_preserved(repo: Path, tmp_path: Path) -> None:
 
 
 def test_save_failure_leaves_no_partial_index(
-    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    repo: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     output = tmp_path / "index.npz"
     before = set(tmp_path.iterdir())

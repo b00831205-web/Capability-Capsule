@@ -20,13 +20,15 @@ def test_chunks_preserve_text_offsets_and_source() -> None:
 
     assert [chunk.text for chunk in chunks] == ["abcde", "defgh", "ghijk"]
     assert [(chunk.start_char, chunk.end_char) for chunk in chunks] == [
-        (0, 5), (3, 8), (6, 11),
+        (0, 5),
+        (3, 8),
+        (6, 11),
     ]
     assert [chunk.chunk_index for chunk in chunks] == [0, 1, 2]
     for chunk in chunks:
         assert chunk.relative_path == document.relative_path
         assert chunk.source_type is SourceType.REPO
-        assert chunk.text == document.text[chunk.start_char:chunk.end_char]
+        assert chunk.text == document.text[chunk.start_char : chunk.end_char]
     assert chunks == chunk_document(document, chunk_size_chars=5, overlap_chars=2)
 
 
@@ -60,7 +62,9 @@ def test_unicode_and_whitespace_use_character_offsets() -> None:
 
     assert [chunk.text for chunk in chunks] == ["甲乙\n", "\n🙂 ", " 丙"]
     assert [(chunk.start_char, chunk.end_char) for chunk in chunks] == [
-        (0, 3), (2, 5), (4, 6),
+        (0, 3),
+        (2, 5),
+        (4, 6),
     ]
 
 
@@ -75,7 +79,8 @@ def test_unicode_and_whitespace_use_character_offsets() -> None:
     ],
 )
 def test_invalid_parameters_fail_even_for_empty_document(
-    chunk_size_chars: int, overlap_chars: int,
+    chunk_size_chars: int,
+    overlap_chars: int,
 ) -> None:
     with pytest.raises(ValueError):
         chunk_document(

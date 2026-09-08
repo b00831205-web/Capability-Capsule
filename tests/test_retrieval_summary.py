@@ -18,12 +18,12 @@ from capability_capsule.eval.retrieval import RetrievalMetrics
     ],
 )
 def test_summarize_retrieval(
-    rows: list[tuple[bool, float, float]], expected: tuple[float, float, float],
+    rows: list[tuple[bool, float, float]],
+    expected: tuple[float, float, float],
 ) -> None:
     module = importlib.import_module("capability_capsule.eval.retrieval")
     metrics = [
-        RetrievalMetrics(hit=hit, recall=recall, reciprocal_rank=rank)
-        for hit, recall, rank in rows
+        RetrievalMetrics(hit=hit, recall=recall, reciprocal_rank=rank) for hit, recall, rank in rows
     ]
     before = [metric.model_dump() for metric in metrics]
     summary = module.summarize_retrieval(metrics)

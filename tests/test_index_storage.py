@@ -13,8 +13,12 @@ from capability_capsule.rag.storage import load_index, save_index
 def _chunks() -> list[TextChunk]:
     return [
         TextChunk(
-            relative_path=f"notes/{i}.md", source_type=SourceType.REPO,
-            chunk_index=0, start_char=0, end_char=len(text), text=text,
+            relative_path=f"notes/{i}.md",
+            source_type=SourceType.REPO,
+            chunk_index=0,
+            start_char=0,
+            end_char=len(text),
+            text=text,
         )
         for i, text in enumerate(["离线检索\n", "local model"])
     ]

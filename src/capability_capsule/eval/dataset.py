@@ -8,10 +8,11 @@ from capability_capsule.eval.runner import RetrievalCase
 
 _CASES_ADAPTER = TypeAdapter(tuple[RetrievalCase, ...])
 
+
 def load_cases(path: Path) -> tuple[RetrievalCase, ...]:
     """Read a nonempty JSON array of evaluation cases."""
 
-    content = path.read_text(encoding = "utf-8")
+    content = path.read_text(encoding="utf-8")
     cases = _CASES_ADAPTER.validate_json(content)
 
     if not cases:

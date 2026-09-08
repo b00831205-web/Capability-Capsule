@@ -17,16 +17,23 @@ from capability_capsule.runtime.ollama import RagAnswer
 
 @pytest.mark.parametrize("with_sources", [True, False])
 def test_ask_json_outputs_complete_answer(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, with_sources: bool,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    with_sources: bool,
 ) -> None:
     index = tmp_path / "index.npz"
     index.touch()
     chunk = TextChunk(
-        relative_path="notes/说明.md", source_type=SourceType.REPO,
-        chunk_index=0, start_char=10, end_char=14, text="本地资料",
+        relative_path="notes/说明.md",
+        source_type=SourceType.REPO,
+        chunk_index=0,
+        start_char=10,
+        end_char=14,
+        text="本地资料",
     )
     answer = RagAnswer(
-        answer='回答含有 "引号" 和换行\n第二行。', generation_model="test-model",
+        answer='回答含有 "引号" 和换行\n第二行。',
+        generation_model="test-model",
         sources=(SearchResult(chunk=chunk, score=0.875),) if with_sources else (),
     )
     calls: list[bool] = []
@@ -37,9 +44,17 @@ def test_ask_json_outputs_complete_answer(
         return answer
 
     monkeypatch.setattr(cli, "answer_question", fake_answer)
-    result = CliRunner().invoke(cli.app, [
-        "ask", str(index), "问题", "--json", "--max-context-chars", "100",
-    ])
+    result = CliRunner().invoke(
+        cli.app,
+        [
+            "ask",
+            str(index),
+            "问题",
+            "--json",
+            "--max-context-chars",
+            "100",
+        ],
+    )
     assert result.exit_code == 0, result.output
     assert calls == [True]
     assert json.loads(result.stdout) == answer.model_dump(mode="json")
@@ -48,7 +63,9 @@ def test_ask_json_outputs_complete_answer(
 
 @pytest.mark.parametrize("failure", [ValueError("invalid"), httpx.ConnectError("offline")])
 def test_ask_json_failure_keeps_stdout_empty(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: Exception,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: Exception,
 ) -> None:
     index = tmp_path / "index.npz"
     index.touch()
@@ -69,14 +86,18 @@ def test_ask_json_failure_keeps_stdout_empty(
 
 
 def test_build_json_outputs_complete_summary(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     output = tmp_path / "知识 index.npz"
     config = tmp_path / "config.toml"
     config.write_text('[ollama]\nembedding_model = "test-embed"\n', encoding="utf-8")
     summary = IndexBuildResult(
-        output_path=output, document_count=2, chunk_count=3,
-        vector_dimensions=768, size_bytes=1234,
+        output_path=output,
+        document_count=2,
+        chunk_count=3,
+        vector_dimensions=768,
+        size_bytes=1234,
     )
     calls: list[bool] = []
 
@@ -88,10 +109,19 @@ def test_build_json_outputs_complete_summary(
         return summary
 
     monkeypatch.setattr(cli, "build_index", fake_build)
-    result = CliRunner().invoke(cli.app, [
-        "build", "--repo", str(tmp_path), "--output", str(output),
-        "--config", str(config), "--json",
-    ])
+    result = CliRunner().invoke(
+        cli.app,
+        [
+            "build",
+            "--repo",
+            str(tmp_path),
+            "--output",
+            str(output),
+            "--config",
+            str(config),
+            "--json",
+        ],
+    )
     assert result.exit_code == 0, result.output
     assert calls == [True]
     assert json.loads(result.stdout) == summary.model_dump(mode="json")
@@ -99,10 +129,13 @@ def test_build_json_outputs_complete_summary(
 
 
 @pytest.mark.parametrize(
-    "failure", [FileExistsError("exists"), ValueError("budget"), httpx.ConnectError("offline")],
+    "failure",
+    [FileExistsError("exists"), ValueError("budget"), httpx.ConnectError("offline")],
 )
 def test_build_json_failure_keeps_stdout_empty(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: Exception,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: Exception,
 ) -> None:
     calls: list[bool] = []
 
@@ -111,9 +144,17 @@ def test_build_json_failure_keeps_stdout_empty(
         raise failure
 
     monkeypatch.setattr(cli, "build_index", fake_build)
-    result = CliRunner().invoke(cli.app, [
-        "build", "--repo", str(tmp_path), "--output", str(tmp_path / "index.npz"), "--json",
-    ])
+    result = CliRunner().invoke(
+        cli.app,
+        [
+            "build",
+            "--repo",
+            str(tmp_path),
+            "--output",
+            str(tmp_path / "index.npz"),
+            "--json",
+        ],
+    )
     assert calls == [True]
     assert result.exit_code == 1
     assert isinstance(result.exception, SystemExit)

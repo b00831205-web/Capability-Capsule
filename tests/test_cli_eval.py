@@ -19,7 +19,9 @@ from capability_capsule.eval.runner import (
 
 @pytest.mark.parametrize("as_json", [False, True])
 def test_eval_cli_loads_inputs_and_prints_report(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, as_json: bool,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    as_json: bool,
 ) -> None:
     index = tmp_path / "index.npz"
     index.touch()
@@ -30,13 +32,18 @@ def test_eval_cli_loads_inputs_and_prints_report(
     config.write_text('[ollama]\nembedding_model = "test-embed"\n', encoding="utf-8")
     metrics = RetrievalMetrics(hit=False, recall=0, reciprocal_rank=0)
     report = RetrievalEvaluationReport(
-        top_k=2, cases=(RetrievalCaseResult(case=case, sources=(), metrics=metrics),),
+        top_k=2,
+        cases=(RetrievalCaseResult(case=case, sources=(), metrics=metrics),),
         summary=summarize_retrieval((metrics,)),
     )
     calls: list[bool] = []
 
     def fake_eval(
-        cases: Sequence[RetrievalCase], index_path: Path, settings: Settings, *, top_k: int,
+        cases: Sequence[RetrievalCase],
+        index_path: Path,
+        settings: Settings,
+        *,
+        top_k: int,
     ) -> RetrievalEvaluationReport:
         assert tuple(cases) == (case,)
         assert index_path == index
@@ -64,7 +71,9 @@ def test_eval_cli_loads_inputs_and_prints_report(
 
 @pytest.mark.parametrize("invalid", ["dataset", "config", "top_k"])
 def test_bad_eval_input_prevents_evaluation(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, invalid: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    invalid: str,
 ) -> None:
     index = tmp_path / "index.npz"
     index.touch()
@@ -95,7 +104,9 @@ def test_bad_eval_input_prevents_evaluation(
 
 @pytest.mark.parametrize("failure", [ValueError("index"), httpx.ConnectError("offline")])
 def test_eval_failure_keeps_stdout_empty(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: Exception,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: Exception,
 ) -> None:
     index = tmp_path / "index.npz"
     index.touch()
