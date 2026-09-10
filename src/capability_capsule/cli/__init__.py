@@ -12,8 +12,10 @@ from capability_capsule.eval.dataset import load_cases
 from capability_capsule.eval.runner import evaluate_retrieval
 from capability_capsule.packager.build import build_index
 from capability_capsule.packager.capsule import build_capsule, inspect_capsule
+from capability_capsule.runtime.agent import run_read_only_agent
 from capability_capsule.runtime.capsule import answer_from_capsule
 from capability_capsule.runtime.ollama import answer_question
+from capability_capsule.runtime.policy_config import load_tool_policy
 from capability_capsule.runtime.readiness import check_capsule_readiness
 from capability_capsule.telemetry.report import summarize_telemetry
 
@@ -428,3 +430,84 @@ def report_command(
 
         for error_type, count in report.error_types.items():
             typer.echo(f"- {error_type}: {count}")
+
+
+@app.command("agent")
+def agent_command(
+    task: Annotated[
+        str,
+        typer.Argument(help="Repository task for the read-only local agent"),
+    ],
+    workspace: Annotated[
+        Path,
+        typer.Option(
+            "--workspace",
+            exists=True,
+            file_okay=False,
+            help="Workspace directory the agent may inspect.",
+        ),
+    ],
+    policy_path: Annotated[
+        Path | None,
+        typer.Option(
+            "--policy",
+            exists=True,
+            dir_okay=False,
+            help="Optional host-controlled TOML tool policy.",
+        ),
+    ] = None,
+    config: Annotated[
+        Path | None,
+        typer.Option(
+            "--config", exists=True, dir_okay=False, help="Optional TOML configuration file."
+        ),
+    ] = None,
+    max_tool_rounds: Annotated[
+        int,
+        typer.Option("--max-tool-rounds", min=1, help="Maximum model-to-tool interaction rounds."),
+    ] = 8,
+    max_tool_calls: Annotated[
+        int,
+        typer.Option("--max-tool-calls", min=1, help="Maximum total tool calls."),
+    ] = 16,
+    json_output: Annotated[
+        bool,
+        typer.Option(
+            "--json",
+            help="Output the agent result as JSON",
+        ),
+    ] = False,
+) -> None:
+    """Run a bounded read-only local workspace agent."""
+
+    try:
+        settings = _load_settings(config)
+        policy = load_tool_policy(policy_path) if policy_path is not None else None
+        result = run_read_only_agent(
+            task,
+            workspace,
+            settings,
+            policy=policy,
+            max_tool_rounds=max_tool_rounds,
+            max_tool_calls=max_tool_calls,
+        )
+
+    except (
+        OSError,
+        ValueError,
+        RuntimeError,
+        httpx.HTTPError,
+    ) as error:
+        typer.echo(f"Agent failed: {error}", err=True)
+        raise typer.Exit(code=1) from error
+
+    if json_output:
+        typer.echo(result.model_dump_json(indent=2))
+        return
+
+    typer.echo(result.answer)
+    typer.echo()
+    typer.echo(f"Tool calls: {result.tool_call_count}")
+
+    if result.tool_names:
+        typer.echo(f"Tools used: {', '.join(result.tool_names)}")

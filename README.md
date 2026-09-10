@@ -1,30 +1,71 @@
 # Capability Capsule
 
-Capability Capsule builds portable, task-specific knowledge packages for local work when network
-access is unavailable. The current V0 flight MVP can scan a repository, build an Ollama-backed
-vector index, package and validate a capsule, check local model readiness, answer questions from the
-capsule, and summarize privacy-preserving local runtime telemetry.
+Capability Capsule is an Adapter-first system for building portable, task-specific capabilities for
+small local models. A future lightweight capsule will combine a verified LoRA adapter with its base
+model identity, runtime configuration, tool policy, evaluation evidence, and offline execution
+harness. The base model remains installed on the host; changing tasks means changing capsules rather
+than redistributing the full model.
 
-## Current scope
+The project is being migrated from a completed retrieval-based Flight MVP to this post-training
+architecture. Existing RAG components remain available as an optional knowledge layer and as a
+reproducible baseline, but they are no longer the product's central capability mechanism.
 
-The implemented offline chain is:
+## Current status
+
+Implemented and verified:
+
+- Repository and document scanning with ignore, binary, size, and path-boundary handling.
+- Ollama embeddings, local vector indexes, retrieval, and grounded question answering.
+- Flight capsule packaging, inspection, readiness checks, execution, and local telemetry reports.
+- Retrieval evaluation and real Ollama integration tests.
+- A bounded read-only workspace agent with `read_file` and `search_text` tools.
+- Host-controlled tool policy with allow, approval, explicit, and deny levels.
+- CLI text and JSON output for the read-only agent.
+
+Not implemented yet:
+
+- Codex Teacher Skill and training-data generation workflow.
+- Training-data validation, deduplication, splitting, and quality gates.
+- LoRA or QLoRA training.
+- Adapter conversion and quantized deployment validation.
+- Writable tools, approval interaction, or Git mutation tools.
+- Adapter-bearing capsule manifests and runtime activation.
+
+No command in the current project downloads a model, modifies global Python, starts Docker, or runs
+model training.
+
+## Adapter-first target architecture
 
 ```text
-repository -> pack -> inspect -> doctor -> run -> report
+Codex Teacher + project Skill
+        |
+        v
+validated training trajectories
+        |
+        v
+small non-thinking base model + LoRA
+        |
+        v
+quantized base model + task adapter
+        |
+        v
+lightweight capsule + controlled harness
 ```
 
-A capsule is a ZIP archive containing exactly:
+The initial feasibility study will compare a 0.8B candidate with an approximately 1.5B/2B candidate.
+The primary product metric is time-bounded task success, not token throughput alone. Quantized
+deployment must remain within a pre-registered quality margin of the high-precision LoRA reference.
 
-- `manifest.json`: task, build identity, model requirements, budget, and artifact provenance.
-- `settings.json`: the validated configuration snapshot used to build and run the capsule.
-- `index.npz`: text chunks, vector-index metadata, and embedding vectors.
-
-V0 does not include a cloud Teacher, model downloads, LoRA, a database, Docker, or a Web UI.
+The experimental protocol, including cycle replay, device stratification, formulas, statistical
+tests, and planned charts, is available at
+[`docs/research/offline-capability-decay-experiment-protocol.pdf`](docs/research/offline-capability-decay-experiment-protocol.pdf).
+The decisions that must remain visible across long Codex sessions are tracked in the editable
+[`docs/research/experiment-decisions.md`](docs/research/experiment-decisions.md) record.
 
 ## Development environment
 
-The supported development environment is Ubuntu on WSL2. The repository must be available at
-`/mnt/e/capsule`. Python and dependencies are managed inside the project by uv; the Windows and WSL
+The supported development environment is Ubuntu on WSL2 with the repository mounted at
+`/mnt/e/capsule`. Python and dependencies are managed by uv inside the project. Windows and WSL
 global Python environments are not modified.
 
 ```bash
@@ -34,35 +75,55 @@ uv run python --version
 uv run capsule --help
 ```
 
-The project targets Python 3.13 and uses Hatchling as its build backend.
+The runtime project targets Python 3.13 and uses Hatchling. A future ML training environment may need
+its own uv-managed Python version because PyTorch and trainer compatibility can differ from the
+runtime stack; it must remain isolated from global Python.
 
 ## Ollama
 
-Ollama runs on Windows and is accessed from WSL at `http://127.0.0.1:11434`. The default capsule
+Ollama runs on Windows and is accessed from WSL at `http://127.0.0.1:11434`. The current baseline
 configuration uses:
 
 - Generation: `qwen3.5:4b`
 - Embedding: `nomic-embed-text`
 
 WSL may inherit proxy variables. Keep `http.trust_env = false` so local Ollama requests bypass the
-proxy. Capability Capsule never installs Ollama or downloads missing models. Use `capsule doctor` to
-report missing requirements.
+proxy. Capability Capsule does not install Ollama or automatically download missing models.
 
-## Configuration
+## Read-only agent preview
 
-Copy `config.example.toml` to `config.toml` for local overrides. `config.toml` is ignored by Git.
+The current agent is a bounded Harness prototype. It can inspect a workspace but cannot modify files
+or run commands.
 
 ```bash
-cp config.example.toml config.toml
+uv run capsule agent \
+  "Find the CLI entry point and explain how it is created." \
+  --workspace /mnt/e/capsule
 ```
 
-The selected configuration is embedded in the capsule during `pack`. The `run` and `doctor`
-commands use that embedded snapshot rather than an external configuration file, keeping the runtime
-models consistent with the stored vectors.
+Use a host-controlled policy file and structured output when needed:
 
-## Flight MVP workflow
+```bash
+uv run capsule agent \
+  "Locate the runtime model call." \
+  --workspace /mnt/e/capsule \
+  --policy /path/to/policy.toml \
+  --max-tool-rounds 3 \
+  --max-tool-calls 5 \
+  --json
+```
 
-Build a capsule from a repository:
+The policy is loaded from the host, never from a capsule, and can only tighten the built-in policy.
+
+## Retrieval-based Flight MVP
+
+The completed legacy baseline remains usable:
+
+```text
+repository -> pack -> inspect -> doctor -> run -> report
+```
+
+Build and validate a retrieval capsule:
 
 ```bash
 uv run capsule pack \
@@ -70,65 +131,28 @@ uv run capsule pack \
   --output /path/to/flight.zip \
   --task "answer repository questions during a flight" \
   --config config.toml
-```
 
-Validate its archive, metadata, index, and declared size budget:
-
-```bash
 uv run capsule inspect /path/to/flight.zip
-```
-
-Check Ollama connectivity and required local models without downloading anything:
-
-```bash
 uv run capsule doctor /path/to/flight.zip
-```
-
-Ask a question directly from the capsule:
-
-```bash
 uv run capsule run /path/to/flight.zip "Where is the main entry point?"
-```
-
-Limit retrieval or source text when needed:
-
-```bash
-uv run capsule run /path/to/flight.zip "How is configuration loaded?" \
-  --top-k 3 \
-  --max-context-chars 8000
-```
-
-Each of `pack`, `inspect`, `doctor`, and `run` supports `--json` for structured output.
-
-## Local telemetry
-
-When enabled, each `run` writes one JSON event under the configured telemetry directory. Relative
-paths are resolved beside the capsule; the default is `.capsule/sessions`. Events include build ID,
-model, status, duration, question character count, source count, and error type. They do not include
-the question text or answer text and are never uploaded.
-
-Summarize the local events with:
-
-```bash
 uv run capsule report /path/to/.capsule/sessions
-uv run capsule report /path/to/.capsule/sessions --json
 ```
 
-Set `telemetry.enabled = false` in the configuration before packing to disable event files.
+This legacy ZIP contains `manifest.json`, `settings.json`, and `index.npz`. It contains no adapter or
+model weights. The format will not be silently treated as a post-training capsule.
 
-## Index and retrieval evaluation
+## Configuration
 
-The lower-level `build` and `ask` commands operate on a standalone `index.npz`. Retrieval evaluation
-uses a JSON case set and reports hit rate, mean recall, and mean reciprocal rank (MRR):
+Copy `config.example.toml` to the ignored local configuration file:
 
 ```bash
-uv run capsule build --repo /path/to/repository --output /path/to/index.npz
-uv run capsule ask /path/to/index.npz "How does this project work?"
-uv run capsule eval /path/to/index.npz --cases /path/to/cases.json
+cp config.example.toml config.toml
 ```
 
-Evaluation currently measures retrieval quality; it does not yet grade generated-answer correctness
-or automatically reject a capsule below a quality threshold.
+Current settings reserve the Ollama endpoint, generation and embedding models, proxy inheritance,
+capsule size budget, offline duration, RAG context limit, and telemetry output. Adapter identity,
+training provenance, and experiment references will be added only after their schemas and validation
+rules are implemented.
 
 ## Verification
 
@@ -141,24 +165,32 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-Real Ollama integration tests are opt-in:
+Real Ollama integration tests are opt-in and never download models:
 
 ```bash
 CAPSULE_RUN_OLLAMA=1 uv run pytest tests/test_flight_mvp_integration.py -q
 ```
 
-The integration test uses pytest temporary directories and exercises the complete
-`pack -> doctor -> run -> report` chain without downloading models.
-
 ## Package layout
 
 All Python packages live under `src/capability_capsule`:
 
-- `scanner`: repository and document discovery.
-- `rag`: chunking, embeddings, vector search, retrieval, and index storage.
-- `packager`: index building and capsule packaging/inspection.
-- `runtime`: Ollama generation, capsule execution, and readiness checks.
+- `scanner`: bounded repository and document discovery.
+- `rag`: optional chunking, embeddings, vector search, retrieval, and storage.
+- `packager`: current Flight capsule building and inspection.
+- `runtime`: Ollama calls, capsule execution, readiness, workspace tools, agent loop, and policy.
 - `telemetry`: privacy-preserving local event writing and aggregation.
-- `eval`: retrieval datasets, metrics, and evaluation runner.
+- `eval`: current retrieval evaluation and future post-training experiment analysis.
 - `planner`: reserved for later planning behavior.
 - `cli`: Typer command-line interface.
+
+## Next milestones
+
+1. Define Teacher trajectory, training dataset, experiment manifest, and per-case result schemas.
+2. Create the Codex Teacher Skill and generate the first auditable dataset.
+3. Lock independent validation fixtures and a short logical task cycle.
+4. Measure untrained 0.8B and approximately 1.5B/2B controls.
+5. Run small LoRA experiments in an isolated training environment.
+6. Compare high-precision adapters with quantized deployment under a fixed total-memory budget.
+7. Generate statistical summaries and experiment charts from immutable JSONL records.
+8. Add adapter identity and activation to the lightweight capsule format.

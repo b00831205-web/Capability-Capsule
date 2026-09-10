@@ -26,6 +26,7 @@ def test_help_and_version() -> None:
     assert "run" in help_result.output
     assert "doctor" in help_result.output
     assert "report" in help_result.output
+    assert "agent" in help_result.output
     assert "ask" in help_result.output
     version_result = runner.invoke(cli.app, ["--version"])
     assert version_result.exit_code == 0
