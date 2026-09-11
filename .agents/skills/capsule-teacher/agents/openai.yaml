@@ -1,0 +1,4 @@
+interface:
+  display_name: "Capsule Teacher"
+  short_description: "Generate auditable coding Teacher trajectories"
+  default_prompt: "Use $capsule-teacher to generate one auditable trajectory from the supplied fixture and task specification."
