@@ -1,0 +1,76 @@
+{
+  "schema_version": "0.1",
+  "plan_id": "smoke-pilot-001",
+  "assignments": [
+    {
+      "schema_version": "0.1",
+      "assignment_id": "smoke-pilot-001:smoke-train-cli-search-001",
+      "trajectory_id": "smoke-train-cli-search-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.1.0",
+      "authorized_fixture_root": "fixtures/smoke-pilot/train-cli-search",
+      "destination_jsonl": "datasets/teacher/smoke-pilot/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "smoke-train-cli-search-001",
+        "fixture_id": "smoke-cli-search-v1",
+        "fixture_family_id": "smoke-cli-entry-search",
+        "fixture_revision": "ce9ec83fcd2e65b03d94f2b4fde07f37b83a5328ad2a60d4446857e0e97cfee1",
+        "defect_family": "cli-entry-point-location",
+        "split": "train",
+        "category": "code_search",
+        "difficulty": "easy",
+        "task": "Identify the module that is executed as the CLI entry point and the function it invokes. Do not modify any files.",
+        "knowledge_distance": 0.1,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT2M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [],
+        "validation_ids": [
+          "exact-path:__main__.py",
+          "exact-symbol:cli_entry.main"
+        ]
+      }
+    },
+    {
+      "schema_version": "0.1",
+      "assignment_id": "smoke-pilot-001:smoke-validation-greeting-change-001",
+      "trajectory_id": "smoke-validation-greeting-change-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.1.0",
+      "authorized_fixture_root": "fixtures/smoke-pilot/validation-greeting-change",
+      "destination_jsonl": "datasets/teacher/smoke-pilot/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "smoke-validation-greeting-change-001",
+        "fixture_id": "smoke-greeting-change-v1",
+        "fixture_family_id": "smoke-greeting-change",
+        "fixture_revision": "ea57bb64d1d092a61259cd56bf51be8285396cd7e935c5cee04527c8dcf5cdfe",
+        "defect_family": "greeting-message",
+        "split": "validation",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Modify only greeting.py so greeting(\"Ada\") returns \"Welcome, Ada\" and the supplied test passes. Do not modify test_greeting.py.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT2M",
+        "allowed_tools": [
+          "exec_command",
+          "apply_patch"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py",
+          "exact-content:greeting.py"
+        ]
+      }
+    }
+  ]
+}
