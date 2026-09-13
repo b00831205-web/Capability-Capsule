@@ -1,6 +1,8 @@
 import json
+from hashlib import sha256
 from pathlib import Path
 from uuid import uuid4
+from zipfile import ZipFile
 
 import httpx
 import pytest
@@ -10,6 +12,7 @@ from capability_capsule.manifest import CapsuleManifest, SourceType
 from capability_capsule.packager.capsule import write_capsule
 from capability_capsule.rag.chunker import TextChunk
 from capability_capsule.rag.storage import save_index
+from capability_capsule.telemetry.knowledge_usage import knowledge_node_id
 
 
 def _capsule(tmp_path: Path) -> Path:
@@ -86,6 +89,24 @@ def test_answer_from_capsule_uses_embedded_index_and_settings(tmp_path: Path) ->
     assert event["question_chars"] == len("What does the flight capsule carry?")
     assert "What does the flight capsule carry?" not in events[0].read_text(encoding="utf-8")
 
+    knowledge_events = list(
+        (tmp_path / ".capsule" / "sessions" / "knowledge-usage").glob("*.json")
+    )
+    assert len(knowledge_events) == 1
+    knowledge_event = json.loads(knowledge_events[0].read_text(encoding="utf-8"))
+    with ZipFile(capsule_path, mode="r") as archive:
+        expected_tree_digest = sha256(archive.read("index.npz")).hexdigest()
+
+    assert knowledge_event["knowledge_tree_digest"] == expected_tree_digest
+    assert knowledge_event["activated_node_ids"] == [
+        knowledge_node_id(result.sources[0].chunk)
+    ]
+    assert knowledge_event["required_node_ids"] == []
+    assert knowledge_event["task_family_id"] == "unlabeled-runtime"
+    assert knowledge_event["cache_eligible"] is False
+    assert knowledge_event["cache_hit"] is False
+    assert knowledge_event["cold_start"] is True
+
 
 def test_answer_from_capsule_forwards_runtime_limits(tmp_path: Path) -> None:
     module = __import__("capability_capsule.runtime.capsule", fromlist=["answer_from_capsule"])
@@ -133,6 +154,9 @@ def test_answer_from_capsule_records_runtime_failure(tmp_path: Path) -> None:
     assert event["error_type"] == "HTTPStatusError"
     assert event["source_count"] == 0
     assert "private question" not in events[0].read_text(encoding="utf-8")
+    assert not (
+        tmp_path / ".capsule" / "sessions" / "knowledge-usage"
+    ).exists()
 
 
 def test_telemetry_write_failure_does_not_block_answer(
@@ -153,6 +177,37 @@ def test_telemetry_write_failure_does_not_block_answer(
         )
 
     monkeypatch.setattr(module, "write_run_telemetry", fail_telemetry)
+    result = module.answer_from_capsule(
+        capsule_path,
+        "question",
+        transport=httpx.MockTransport(handle),
+    )
+
+    assert result.answer == "answer"
+
+
+def test_knowledge_usage_write_failure_does_not_block_answer(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = __import__("capability_capsule.runtime.capsule", fromlist=["answer_from_capsule"])
+    capsule_path = _capsule(tmp_path)
+
+    def fail_knowledge_telemetry(*args: object, **kwargs: object) -> None:
+        raise OSError("knowledge telemetry disk unavailable")
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/embed":
+            return httpx.Response(200, json={"embeddings": [[1.0, 0.0]]})
+        return httpx.Response(
+            200,
+            json={"done": True, "message": {"role": "assistant", "content": "answer"}},
+        )
+
+    monkeypatch.setattr(
+        module,
+        "write_knowledge_usage_event",
+        fail_knowledge_telemetry,
+    )
     result = module.answer_from_capsule(
         capsule_path,
         "question",

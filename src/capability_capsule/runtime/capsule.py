@@ -5,13 +5,15 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import perf_counter
 from zipfile import ZipFile
+from hashlib import sha256
+from uuid import uuid4
 
 import httpx
 
 from capability_capsule.packager.capsule import inspect_capsule
 from capability_capsule.runtime.ollama import RagAnswer, answer_question
 from capability_capsule.telemetry.writer import write_run_telemetry
-
+from capability_capsule.telemetry.knowledge_usage import build_retrieval_usage_event, write_knowledge_usage_event
 
 def answer_from_capsule(
     capsule_path: Path,
@@ -61,6 +63,25 @@ def answer_from_capsule(
 
         raise
     duration_ms = (perf_counter() - started_at) * 1_000
+
+    knowledge_usage_event = build_retrieval_usage_event(
+        capsule_id= str(inspection.manifest.capsule_build_id),
+        knowledge_tree_digest=sha256(index_bytes).hexdigest(),
+        request_id = str(uuid4()),
+        task_family_id = "unlabeled-runtime",
+        sources= result.sources,
+        required_node_ids= (),
+        cache_eligible= False,
+        cache_hit = False,
+        cold_start = True,
+    )
+
+    with contextlib.suppress(OSError):
+        write_knowledge_usage_event(
+            inspection.settings.telemetry,
+            capsule_path = inspection.path,
+            event = knowledge_usage_event,
+        )
 
     with contextlib.suppress(OSError):
         write_run_telemetry(
