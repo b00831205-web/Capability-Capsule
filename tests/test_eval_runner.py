@@ -11,6 +11,7 @@ from capability_capsule.config import Settings
 from capability_capsule.manifest import SourceType
 from capability_capsule.rag.chunker import TextChunk
 from capability_capsule.rag.storage import save_index
+from capability_capsule.telemetry.knowledge_usage import KnowledgeNodeReference
 
 
 @pytest.mark.parametrize("top_k", [1, 2])
@@ -82,6 +83,40 @@ def test_retrieval_case_rejects_invalid_input(data: dict[str, Any]) -> None:
     module = importlib.import_module("capability_capsule.eval.runner")
     with pytest.raises(ValidationError):
         module.RetrievalCase.model_validate(data)
+
+
+def test_retrieval_case_accepts_exact_expected_knowledge_nodes() -> None:
+    module = importlib.import_module("capability_capsule.eval.runner")
+    reference = KnowledgeNodeReference(
+        relative_path="docs/guide.md",
+        source_type=SourceType.REPO,
+        chunk_index=2,
+    )
+
+    case = module.RetrievalCase(
+        question="How is the guide configured?",
+        expected_paths=("docs/guide.md",),
+        expected_nodes=(reference,),
+    )
+
+    assert case.expected_nodes == (reference,)
+
+
+def test_retrieval_case_rejects_node_outside_expected_paths() -> None:
+    module = importlib.import_module("capability_capsule.eval.runner")
+
+    with pytest.raises(ValidationError, match="expected paths"):
+        module.RetrievalCase(
+            question="How is the guide configured?",
+            expected_paths=("docs/guide.md",),
+            expected_nodes=(
+                KnowledgeNodeReference(
+                    relative_path="docs/other.md",
+                    source_type=SourceType.REPO,
+                    chunk_index=0,
+                ),
+            ),
+        )
 
 
 @pytest.mark.parametrize(("empty", "top_k"), [(True, 5), (False, 0), (False, -1)])

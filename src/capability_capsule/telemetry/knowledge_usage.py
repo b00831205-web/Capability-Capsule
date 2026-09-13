@@ -13,9 +13,27 @@ from capability_capsule.rag.index import SearchResult
 from pathlib import Path
 
 from capability_capsule.config import TelemetryConfig
+from capability_capsule.manifest import SourceType
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+
+class KnowledgeNodeReference(BaseModel):
+    """Authorable reference to one knowledge node in an index."""
+
+    model_config = ConfigDict(extra = "forbid", frozen = True)
+
+    relative_path: str = Field(min_length=1)
+    source_type: SourceType
+    chunk_index: int = Field(ge=0)
+
+    @field_validator("relative_path")
+    @classmethod
+    def reject_blank_path(cls, value:str) -> str:
+        if not value.strip():
+            raise ValueError("Knowledge node path must not be blank")
+
+        return value
 
 class KnowledgeUsageEvent(BaseModel):
     """One observable knowledge-tree and cache-use decision."""
@@ -90,13 +108,15 @@ class KnowledgeUsageSummary(BaseModel):
     total_latency_saved_ms: float = Field(ge = 0.0)
     total_input_tokens_saved: int = Field(ge=0)
 
-def knowledge_node_id(chunk: TextChunk) -> str:
+def knowledge_node_reference_id(
+        reference: KnowledgeNodeReference,
+) -> str:
     """Return a stable opaque identifier for one indexed knowledge node."""
 
     identity = {
-        "relative_path": chunk.relative_path,
-        "source_type": chunk.source_type.value,
-        "chunk_index": chunk.chunk_index,
+        "relative_path": reference.relative_path,
+        "source_type": reference.source_type.value,
+        "chunk_index": reference.chunk_index,
     }
 
     canonical = json.dumps(
@@ -107,6 +127,16 @@ def knowledge_node_id(chunk: TextChunk) -> str:
     ).encode("utf-8")
 
     return sha256(canonical).hexdigest()
+
+def knowledge_node_id(chunk: TextChunk) -> str:
+    """Return a stable opaque identifier for one indexed knowledge node."""
+
+    reference = KnowledgeNodeReference(
+        relative_path = chunk.relative_path,
+        source_type = chunk.source_type,
+        chunk_index = chunk.chunk_index
+    )
+    return knowledge_node_reference_id(reference)
 
 def build_retrieval_usage_event(
         *,

@@ -8,9 +8,11 @@ from capability_capsule.manifest import SourceType
 from capability_capsule.rag.chunker import TextChunk
 from capability_capsule.rag.index import SearchResult
 from capability_capsule.telemetry.knowledge_usage import (
+    KnowledgeNodeReference,
     KnowledgeUsageEvent,
     build_retrieval_usage_event,
     knowledge_node_id,
+    knowledge_node_reference_id,
     summarize_knowledge_usage,
     summarize_knowledge_usage_directory,
     write_knowledge_usage_event,
@@ -195,6 +197,18 @@ def test_knowledge_node_id_is_stable_across_context_truncation() -> None:
     )
     assert complete_id != knowledge_node_id(
         result(chunk_index=3).chunk
+    )
+
+
+def test_authored_node_reference_matches_runtime_chunk_identity() -> None:
+    reference = KnowledgeNodeReference(
+        relative_path="docs/guide.md",
+        source_type=SourceType.REPO,
+        chunk_index=2,
+    )
+
+    assert knowledge_node_reference_id(reference) == knowledge_node_id(
+        result().chunk
     )
 
 

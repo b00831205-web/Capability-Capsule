@@ -2,9 +2,10 @@
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Self
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from capability_capsule.config import Settings
 from capability_capsule.eval.retrieval import (
@@ -15,6 +16,7 @@ from capability_capsule.eval.retrieval import (
 )
 from capability_capsule.rag.index import SearchResult
 from capability_capsule.rag.retrieval import retrieve_many
+from capability_capsule.telemetry.knowledge_usage import KnowledgeNodeReference
 
 
 class RetrievalCase(BaseModel):
@@ -24,6 +26,10 @@ class RetrievalCase(BaseModel):
 
     question: str
     expected_paths: tuple[str, ...] = Field(min_length=1)
+    expected_nodes: tuple[KnowledgeNodeReference, ...] = Field(
+        default=(),
+        exclude_if = lambda value: not value
+    )
 
     @field_validator("question")
     @classmethod
@@ -40,6 +46,17 @@ class RetrievalCase(BaseModel):
 
         return value
 
+    @model_validator(mode="after")
+    def validate_expected_node(self) -> Self:
+        expected_paths = set(self.expected_paths)
+
+        if any(
+            node.relative_path not in expected_paths for node in self.expected_nodes
+        ):
+            raise ValueError(
+                "Expected knowledge nodes must belong to expected paths"
+            )
+        return self
 
 class RetrievalCaseResult(BaseModel):
     """Per-case results and aggregate metrics for a completed run."""
