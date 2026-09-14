@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from capability_capsule.eval.evaluation_suite import EvaluationSuiteIdentity
 from capability_capsule.eval.learning_curve_ledger import (
     load_learning_curve_points,
 )
@@ -19,6 +20,27 @@ from capability_capsule.eval.training_provenance import (
     TrainingRunManifest,
 )
 from capability_capsule.telemetry.knowledge_usage import KnowledgeUsageEvent
+
+
+def evaluation_suite(
+    *,
+    evaluation_split: DatasetSplit = DatasetSplit.VALIDATION,
+) -> EvaluationSuiteIdentity:
+    return EvaluationSuiteIdentity(
+        capability_id="repository-cli-navigation",
+        evaluation_suite_id="cli-validation-v1",
+        evaluation_split=evaluation_split,
+        case_count=1,
+        evaluation_suite_digest="c" * 64,
+    )
+
+
+def write_evaluation_suite(path: Path) -> None:
+    path.write_text(
+        '[{"question":"Where is the CLI entry point?",'
+        '"expected_paths":["src/capability_capsule/cli/__init__.py"]}]',
+        encoding="utf-8",
+    )
 
 
 def training_run() -> TrainingRunManifest:
@@ -90,6 +112,7 @@ def completion(*, model_id: str = "capsule-001") -> TrainingCheckpointCompleted:
         training_run=training_run(),
         experiment_id="validation-001",
         task_family_id="cli-search",
+        evaluation_suite=evaluation_suite(),
         evaluation_split=DatasetSplit.VALIDATION,
         results=(case_result("case-001", model_id=model_id),),
     )
@@ -98,13 +121,19 @@ def completion(*, model_id: str = "capsule-001") -> TrainingCheckpointCompleted:
 def test_process_completion_records_evaluated_checkpoint(tmp_path: Path) -> None:
     ledger = tmp_path / "curves" / "cli-search.jsonl"
 
+    completed = completion()
     recorded = process_training_checkpoint_completion(
-        completion(),
+        completed,
         ledger_path=ledger,
     )
 
+    assert completed.schema_version == "0.2"
     assert recorded.point.checkpoint_id == "capsule-001"
     assert recorded.point.training_run_id == "training-run-001"
+    assert recorded.point.base_model_id == "base-model-v1"
+    assert recorded.point.capability_id == "repository-cli-navigation"
+    assert recorded.point.evaluation_suite_id == "cli-validation-v1"
+    assert recorded.point.evaluation_suite_digest == "c" * 64
     assert recorded.point.cumulative_trajectory_count == 100
     assert recorded.point.success_rate == 1.0
     assert recorded.point_count == 1
@@ -114,6 +143,21 @@ def test_process_completion_records_evaluated_checkpoint(tmp_path: Path) -> None
 def test_completion_rejects_results_from_another_capsule() -> None:
     with pytest.raises(ValidationError, match="output capsule"):
         completion(model_id="another-capsule")
+
+
+def test_completion_rejects_mismatched_evaluation_split() -> None:
+    with pytest.raises(ValidationError, match="evaluation split"):
+        TrainingCheckpointCompleted(
+            completed_at=datetime(2026, 9, 14, 1, 0, tzinfo=UTC),
+            training_run=training_run(),
+            experiment_id="validation-001",
+            task_family_id="cli-search",
+            evaluation_suite=evaluation_suite(
+                evaluation_split=DatasetSplit.TEST,
+            ),
+            evaluation_split=DatasetSplit.VALIDATION,
+            results=(case_result("case-001"),),
+        )
 
 
 def test_invalid_completion_does_not_create_ledger(tmp_path: Path) -> None:
@@ -131,6 +175,7 @@ def test_process_training_checkpoint_files_loads_standard_artifacts(
 ) -> None:
     training_run_path = tmp_path / "training-run.json"
     results_path = tmp_path / "case-results.jsonl"
+    evaluation_suite_path = tmp_path / "evaluation-suite.json"
     knowledge_usage_dir = tmp_path / "knowledge-usage"
     ledger = tmp_path / "curves" / "cli-search.jsonl"
 
@@ -139,6 +184,7 @@ def test_process_training_checkpoint_files_loads_standard_artifacts(
         encoding="utf-8",
     )
     append_jsonl(results_path, case_result("case-001"))
+    write_evaluation_suite(evaluation_suite_path)
     knowledge_usage_dir.mkdir()
     knowledge_event = KnowledgeUsageEvent(
         capsule_id="capsule-001",
@@ -159,6 +205,9 @@ def test_process_training_checkpoint_files_loads_standard_artifacts(
     recorded = process_training_checkpoint_files(
         training_run_path=training_run_path,
         results_path=results_path,
+        evaluation_suite_path=evaluation_suite_path,
+        capability_id="repository-cli-navigation",
+        evaluation_suite_id="cli-validation-v1",
         knowledge_usage_dir=knowledge_usage_dir,
         ledger_path=ledger,
         completed_at=datetime(2026, 9, 14, 1, 0, tzinfo=UTC),
@@ -169,6 +218,10 @@ def test_process_training_checkpoint_files_loads_standard_artifacts(
 
     assert recorded.point.checkpoint_id == "capsule-001"
     assert recorded.point.success_rate == 1.0
+    assert recorded.point.base_model_id == "base-model-v1"
+    assert recorded.point.capability_id == "repository-cli-navigation"
+    assert recorded.point.evaluation_suite_id == "cli-validation-v1"
+    assert len(recorded.point.evaluation_suite_digest) == 64
     assert recorded.point.knowledge_node_coverage == 1.0
     assert load_learning_curve_points(ledger) == (recorded.point,)
 
@@ -178,14 +231,19 @@ def test_invalid_training_artifact_does_not_create_ledger(
 ) -> None:
     training_run_path = tmp_path / "training-run.json"
     results_path = tmp_path / "case-results.jsonl"
+    evaluation_suite_path = tmp_path / "evaluation-suite.json"
     ledger = tmp_path / "curve.jsonl"
     training_run_path.write_text("not json", encoding="utf-8")
     append_jsonl(results_path, case_result("case-001"))
+    write_evaluation_suite(evaluation_suite_path)
 
     with pytest.raises(ValueError):
         process_training_checkpoint_files(
             training_run_path=training_run_path,
             results_path=results_path,
+            evaluation_suite_path=evaluation_suite_path,
+            capability_id="repository-cli-navigation",
+            evaluation_suite_id="cli-validation-v1",
             ledger_path=ledger,
             completed_at=datetime(2026, 9, 14, 1, 0, tzinfo=UTC),
             experiment_id="validation-001",

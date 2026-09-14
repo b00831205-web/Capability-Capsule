@@ -26,9 +26,13 @@ class LearningCurvePoint(BaseModel):
 
     model_config = ConfigDict(extra= "forbid", frozen= True)
 
-    schema_version: Literal["0.1"] = "0.1"
+    schema_version: Literal["0.2"] = "0.2"
     checkpoint_id: str = Field(min_length=1)
     training_run_id: str = Field(min_length=1)
+    base_model_id: str = Field(min_length=1)
+    capability_id: str = Field(min_length=1)
+    evaluation_suite_id: str = Field(min_length=1)
+    evaluation_suite_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     task_family_id: str = Field(min_length=1)
     evaluation_split: DatasetSplit
     cumulative_trajectory_count: int = Field(ge = 0)
@@ -45,7 +49,10 @@ class LearningCurvePoint(BaseModel):
         "checkpoint_id",
         "training_run_id",
         "task_family_id",
-        "tokenizer_id"
+        "tokenizer_id",
+        "base_model_id",
+        "capability_id",
+        "evaluation_suite_id",
     )
     @classmethod
     def reject_blank_identifier(
@@ -91,7 +98,7 @@ class TaskLearningRateSummary(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    schema_version: Literal["0.1"] = "0.1"
+    schema_version: Literal["0.2"] = "0.2"
     task_family_id: str = Field(min_length=1)
     evaluation_split: DatasetSplit
     tokenizer_id: str | None = None
@@ -111,6 +118,12 @@ class TaskLearningRateSummary(BaseModel):
         ge=0.0
     )
     plateau_interval_count: int = Field(gt=0)
+    base_model_id: str = Field(min_length=1)
+    capability_id: str = Field(min_length=1)
+    evaluation_suite_id: str = Field(min_length=1)
+    evaluation_suite_digest: str = Field(
+        pattern=r"^[0-9a-f]{64}$"
+    )
 
 def _build_interval(
         previous: LearningCurvePoint,
@@ -181,6 +194,10 @@ def learning_curve_point_from_evaluation(
         evaluation_split: DatasetSplit,
         checkpoint_id: str | None = None,
         knowledge_usage: KnowledgeUsageSummary | None = None,
+        base_model_id: str,
+        capability_id: str,
+        evaluation_suite_id: str,
+        evaluation_suite_digest: str,
 ) -> LearningCurvePoint:
     """Convert one training evaluation into a learning-curve point."""
 
@@ -204,7 +221,11 @@ def learning_curve_point_from_evaluation(
         tokenizer_id = evaluation.train_tokenizer_id,
         cumulative_token_count=evaluation.train_exact_token_count,
         success_rate=evaluation.success_rate,
-        knowledge_node_coverage=knowledge_node_coverage
+        knowledge_node_coverage=knowledge_node_coverage,
+        base_model_id=base_model_id,
+        capability_id=capability_id,
+        evaluation_suite_id=evaluation_suite_id,
+        evaluation_suite_digest=evaluation_suite_digest,
     )
 
 def summarize_task_learning_rate(
@@ -252,6 +273,39 @@ def summarize_task_learning_rate(
     ):
         raise ValueError(
             "All learning-curve points must use one evaluation split"
+        )
+    if any(
+        point.base_model_id != first.base_model_id
+        for point in ordered_points
+    ):
+        raise ValueError(
+            "All learning-curve points must use one base model"
+        )
+
+    if any(
+        point.capability_id != first.capability_id
+        for point in ordered_points
+    ):
+        raise ValueError(
+            "All learning-curve points must measure one capability"
+        )
+
+    if any(
+        point.evaluation_suite_id
+        != first.evaluation_suite_id
+        for point in ordered_points
+    ):
+        raise ValueError(
+            "All learning-curve points must use one evaluation suite"
+        )
+
+    if any(
+        point.evaluation_suite_digest
+        != first.evaluation_suite_digest
+        for point in ordered_points
+    ):
+        raise ValueError(
+            "All learning-curve points must use unchanged evaluation cases"
         )
 
     checkpoint_ids = [
@@ -343,5 +397,9 @@ def summarize_task_learning_rate(
             plateau_threshold_percentage_points_per_100_trajectories
         ),
         plateau_interval_count=plateau_interval_count,
-        plateau_detected=plateau_detected
+        plateau_detected=plateau_detected,
+        base_model_id=first.base_model_id,
+        capability_id=first.capability_id,
+        evaluation_suite_id=first.evaluation_suite_id,
+        evaluation_suite_digest=first.evaluation_suite_digest,
     )

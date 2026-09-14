@@ -26,6 +26,10 @@ def point(
     return LearningCurvePoint(
         checkpoint_id=checkpoint_id,
         training_run_id=f"run-{checkpoint_id}",
+        base_model_id="base-model-v1",
+        capability_id="repository-cli-navigation",
+        evaluation_suite_id="cli-validation-v1",
+        evaluation_suite_digest="c" * 64,
         task_family_id=task_family_id,
         evaluation_split=DatasetSplit.VALIDATION,
         cumulative_trajectory_count=trajectories,
@@ -128,6 +132,10 @@ def test_learning_curve_point_rejects_partial_token_measurement() -> None:
         LearningCurvePoint(
             checkpoint_id="c0",
             training_run_id="run-c0",
+            base_model_id="base-model-v1",
+            capability_id="repository-cli-navigation",
+            evaluation_suite_id="cli-validation-v1",
+            evaluation_suite_digest="c" * 64,
             task_family_id="cli-search",
             evaluation_split=DatasetSplit.VALIDATION,
             cumulative_trajectory_count=0,
@@ -180,13 +188,22 @@ def test_build_learning_curve_point_from_training_evaluation() -> None:
 
     curve_point = learning_curve_point_from_evaluation(
         evaluation_summary(),
+        base_model_id="base-model-v1",
+        capability_id="repository-cli-navigation",
+        evaluation_suite_id="cli-validation-v1",
+        evaluation_suite_digest="c" * 64,
         task_family_id="cli-search",
         evaluation_split=DatasetSplit.VALIDATION,
         knowledge_usage=knowledge_summary,
     )
 
+    assert curve_point.schema_version == "0.2"
     assert curve_point.checkpoint_id == "capsule-002"
     assert curve_point.training_run_id == "training-run-002"
+    assert curve_point.base_model_id == "base-model-v1"
+    assert curve_point.capability_id == "repository-cli-navigation"
+    assert curve_point.evaluation_suite_id == "cli-validation-v1"
+    assert curve_point.evaluation_suite_digest == "c" * 64
     assert curve_point.cumulative_trajectory_count == 200
     assert curve_point.tokenizer_id == "test-tokenizer"
     assert curve_point.cumulative_token_count == 250_000
@@ -200,6 +217,10 @@ def test_unknown_required_nodes_do_not_become_zero_coverage() -> None:
     curve_point = learning_curve_point_from_evaluation(
         evaluation_summary(),
         checkpoint_id="checkpoint-002",
+        base_model_id="base-model-v1",
+        capability_id="repository-cli-navigation",
+        evaluation_suite_id="cli-validation-v1",
+        evaluation_suite_digest="c" * 64,
         task_family_id="cli-search",
         evaluation_split=DatasetSplit.VALIDATION,
         knowledge_usage=empty_knowledge_summary,

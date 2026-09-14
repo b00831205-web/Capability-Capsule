@@ -19,10 +19,18 @@ def point(
     *,
     task_family_id: str = "cli-search",
     split: DatasetSplit = DatasetSplit.VALIDATION,
+    base_model_id: str = "base-model-v1",
+    capability_id: str = "repository-cli-navigation",
+    evaluation_suite_id: str = "cli-validation-v1",
+    evaluation_suite_digest: str = "c" * 64,
 ) -> LearningCurvePoint:
     return LearningCurvePoint(
         checkpoint_id=checkpoint_id,
         training_run_id=f"run-{checkpoint_id}",
+        base_model_id=base_model_id,
+        capability_id=capability_id,
+        evaluation_suite_id=evaluation_suite_id,
+        evaluation_suite_digest=evaluation_suite_digest,
         task_family_id=task_family_id,
         evaluation_split=split,
         cumulative_trajectory_count=trajectories,
@@ -78,6 +86,10 @@ def test_duplicate_checkpoint_is_rejected_without_modifying_ledger(
         point("c2", 200, 50_000, 0.50),
         point("c2", 200, 200_000, 0.50, task_family_id="greeting"),
         point("c2", 200, 200_000, 0.50, split=DatasetSplit.TEST),
+        point("c2", 200, 200_000, 0.50, base_model_id="base-model-v2"),
+        point("c2", 200, 200_000, 0.50, capability_id="debugging"),
+        point("c2", 200, 200_000, 0.50, evaluation_suite_id="cli-validation-v2"),
+        point("c2", 200, 200_000, 0.50, evaluation_suite_digest="d" * 64),
     ],
 )
 def test_incompatible_append_is_rejected_without_modifying_ledger(

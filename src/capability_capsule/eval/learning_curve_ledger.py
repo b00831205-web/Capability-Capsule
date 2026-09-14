@@ -38,6 +38,32 @@ def _validate_append(
     first = existing[0]
     latest = existing[-1]
 
+    if candidate.base_model_id != first.base_model_id:
+        raise ValueError(
+            "A learning-curve ledger must use one base model"
+        )
+
+    if candidate.capability_id != first.capability_id:
+        raise ValueError(
+            "A learning-curve ledger must contain one capability"
+        )
+
+    if (
+        candidate.evaluation_suite_id
+        != first.evaluation_suite_id
+    ):
+        raise ValueError(
+            "A learning-curve ledger must use one evaluation suite"
+        )
+
+    if (
+        candidate.evaluation_suite_digest
+        != first.evaluation_suite_digest
+    ):
+        raise ValueError(
+            "A learning-curve ledger must use unchanged evaluation cases"
+        )
+
     if candidate.task_family_id != first.task_family_id:
         raise ValueError(
             "A learning-curve ledger must contain one task family"

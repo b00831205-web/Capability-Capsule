@@ -538,6 +538,29 @@ def record_checkpoint_command(
             help = "Evaluated case results JSONL file."
         ),
     ],
+    evaluation_suite_path: Annotated[
+        Path,
+        typer.Option(
+            "--evaluation-suite",
+            exists=True,
+            dir_okay = False,
+            help = "Capability-specific evaluation suite JSON file."
+        ),
+    ],
+    capability_id: Annotated[
+        str,
+        typer.Option(
+            "--capability-id",
+            help = "Capability measured by this evaluation suite."
+        )
+    ],
+    evaluation_suite_id: Annotated[
+        str,
+        typer.Option(
+            "--evaluation-suite-id",
+            help = "Stable version identifier for the evaluation suite."
+        )
+    ],
     ledger_path: Annotated[
         Path,
         typer.Option(
@@ -640,6 +663,9 @@ def record_checkpoint_command(
         recorded = process_training_checkpoint_files(
             training_run_path= training_run_path,
             results_path = results_path,
+            evaluation_suite_path= evaluation_suite_path,
+            capability_id= capability_id,
+            evaluation_suite_id= evaluation_suite_id,
             knowledge_usage_dir= knowledge_usage_dir,
             ledger_path = ledger_path,
             completed_at= parsed_completed_at,
@@ -666,6 +692,9 @@ def record_checkpoint_command(
     point = recorded.point
 
     typer.echo(f"Checkpoint: {point.checkpoint_id}")
+    typer.echo(f"Base model: {point.base_model_id}")
+    typer.echo(f"Capability: {point.capability_id}")
+    typer.echo(f"Evaluation suite: {point.evaluation_suite_id}")
     typer.echo(f"Task family: {point.task_family_id}")
     typer.echo(f"Split: {point.evaluation_split.value}")
     typer.echo(
@@ -687,4 +716,4 @@ def record_checkpoint_command(
         summary = recorded.learning_rate_summary
         typer.echo(f"Forgetting rate: {summary.forgetting_rate:.1%}")
         typer.echo(f"Regression detected: {str(summary.regression_detected).lower()}")
-        typer.echo(f"Plateau detected: {str(summary.regression_detected).lower()}")
+        typer.echo(f"Plateau detected: {str(summary.plateau_detected).lower()}")

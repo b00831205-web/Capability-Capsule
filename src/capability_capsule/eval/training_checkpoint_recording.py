@@ -56,6 +56,10 @@ def record_training_checkpoint(
         evaluation: TrainingEvaluationSummary,
         *,
         ledger_path: Path,
+        base_model_id: str,
+        capability_id: str,
+        evaluation_suite_id: str,
+        evaluation_suite_digest: str,
         task_family_id: str,
         evaluation_split: DatasetSplit,
         checkpoint_id: str | None = None,
@@ -74,6 +78,10 @@ def record_training_checkpoint(
 
     point = learning_curve_point_from_evaluation(
         evaluation,
+        base_model_id = base_model_id,
+        capability_id = capability_id,
+        evaluation_suite_id = evaluation_suite_id,
+        evaluation_suite_digest = evaluation_suite_digest,
         checkpoint_id = checkpoint_id,
         task_family_id = task_family_id,
         evaluation_split = evaluation_split,

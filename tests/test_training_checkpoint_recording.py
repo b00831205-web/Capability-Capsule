@@ -48,11 +48,19 @@ def test_record_training_checkpoint_builds_ledger_then_summary(
     first = record_training_checkpoint(
         evaluation("capsule-c0", 0, 0, 0.20),
         ledger_path=ledger,
+        base_model_id="base-model-v1",
+        capability_id="repository-cli-navigation",
+        evaluation_suite_id="cli-validation-v1",
+        evaluation_suite_digest="c" * 64,
         task_family_id="cli-search",
         evaluation_split=DatasetSplit.VALIDATION,
     )
 
     assert first.point.checkpoint_id == "capsule-c0"
+    assert first.point.base_model_id == "base-model-v1"
+    assert first.point.capability_id == "repository-cli-navigation"
+    assert first.point.evaluation_suite_id == "cli-validation-v1"
+    assert first.point.evaluation_suite_digest == "c" * 64
     assert first.point_count == 1
     assert first.learning_rate_summary is None
     assert len(load_learning_curve_points(ledger)) == 1
@@ -60,6 +68,10 @@ def test_record_training_checkpoint_builds_ledger_then_summary(
     second = record_training_checkpoint(
         evaluation("capsule-c1", 100, 100_000, 0.44),
         ledger_path=ledger,
+        base_model_id="base-model-v1",
+        capability_id="repository-cli-navigation",
+        evaluation_suite_id="cli-validation-v1",
+        evaluation_suite_digest="c" * 64,
         task_family_id="cli-search",
         evaluation_split=DatasetSplit.VALIDATION,
         target_success_rate=0.40,
@@ -83,6 +95,10 @@ def test_invalid_checkpoint_does_not_modify_existing_ledger(
     record_training_checkpoint(
         baseline,
         ledger_path=ledger,
+        base_model_id="base-model-v1",
+        capability_id="repository-cli-navigation",
+        evaluation_suite_id="cli-validation-v1",
+        evaluation_suite_digest="c" * 64,
         task_family_id="cli-search",
         evaluation_split=DatasetSplit.VALIDATION,
     )
@@ -92,6 +108,10 @@ def test_invalid_checkpoint_does_not_modify_existing_ledger(
         record_training_checkpoint(
             baseline,
             ledger_path=ledger,
+            base_model_id="base-model-v1",
+            capability_id="repository-cli-navigation",
+            evaluation_suite_id="cli-validation-v1",
+            evaluation_suite_digest="c" * 64,
             task_family_id="cli-search",
             evaluation_split=DatasetSplit.VALIDATION,
         )
@@ -106,6 +126,10 @@ def test_invalid_summary_settings_do_not_append_checkpoint(
     record_training_checkpoint(
         evaluation("capsule-c0", 0, 0, 0.20),
         ledger_path=ledger,
+        base_model_id="base-model-v1",
+        capability_id="repository-cli-navigation",
+        evaluation_suite_id="cli-validation-v1",
+        evaluation_suite_digest="c" * 64,
         task_family_id="cli-search",
         evaluation_split=DatasetSplit.VALIDATION,
     )
@@ -115,6 +139,10 @@ def test_invalid_summary_settings_do_not_append_checkpoint(
         record_training_checkpoint(
             evaluation("capsule-c1", 100, 100_000, 0.44),
             ledger_path=ledger,
+            base_model_id="base-model-v1",
+            capability_id="repository-cli-navigation",
+            evaluation_suite_id="cli-validation-v1",
+            evaluation_suite_digest="c" * 64,
             task_family_id="cli-search",
             evaluation_split=DatasetSplit.VALIDATION,
             plateau_threshold_percentage_points_per_100_trajectories=-1.0,

@@ -13,6 +13,11 @@ from pydantic import (
     model_validator,
 )
 
+from capability_capsule.eval.evaluation_suite import (
+    EvaluationSuiteIdentity,
+    inspect_evaluation_suite,
+)
+
 from capability_capsule.eval.records import (
     CaseResult,
     DatasetSplit,
@@ -38,12 +43,13 @@ class TrainingCheckpointCompleted(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    schema_version: Literal["0.1"] = "0.1"
+    schema_version: Literal["0.2"] = "0.2"
     completed_at: datetime
     training_run: TrainingRunManifest
     experiment_id: str = Field(min_length=1)
     task_family_id: str = Field(min_length=1)
     evaluation_split: DatasetSplit
+    evaluation_suite: EvaluationSuiteIdentity
     results: tuple[CaseResult, ...] = Field(min_length=1)
     knowledge_usage: KnowledgeUsageSummary | None = None
 
@@ -72,6 +78,12 @@ class TrainingCheckpointCompleted(BaseModel):
 
     @model_validator(mode="after")
     def validate_result(self) -> Self:
+        if self.evaluation_suite.evaluation_split != self.evaluation_split:
+            raise ValueError(
+                "Evaluation suite evaluation split does not match "
+                "the training completion evaluation split"
+            )
+
         for result in self.results:
             if result.experiment_id != self.experiment_id:
                 raise ValueError(
@@ -125,6 +137,10 @@ def process_training_checkpoint_completion(
     return record_training_checkpoint(
         evaluation,
         ledger_path = ledger_path,
+        base_model_id = completion.training_run.base_model_id,
+        capability_id= completion.evaluation_suite.capability_id,
+        evaluation_suite_id = completion.evaluation_suite.evaluation_suite_id,
+        evaluation_suite_digest = completion.evaluation_suite.evaluation_suite_digest,
         checkpoint_id = checkpoint_id,
         task_family_id = completion.task_family_id,
         evaluation_split = completion.evaluation_split,
@@ -177,6 +193,9 @@ def process_training_checkpoint_files(
         *,
         training_run_path: Path,
         results_path: Path,
+        evaluation_suite_path: Path,
+        capability_id: str,
+        evaluation_suite_id: str,
         ledger_path: Path,
         completed_at: datetime,
         experiment_id: str,
@@ -197,7 +216,12 @@ def process_training_checkpoint_files(
         results_path,
         CaseResult,
     )
-
+    evaluation_suite = inspect_evaluation_suite(
+        evaluation_suite_path,
+        capability_id = capability_id,
+        evaluation_suite_id = evaluation_suite_id,
+        evaluation_split = evaluation_split
+    )
     knowledge_usage: KnowledgeUsageSummary | None = None
 
     if knowledge_usage_dir is not None:
@@ -213,6 +237,7 @@ def process_training_checkpoint_files(
         experiment_id= experiment_id,
         task_family_id= task_family_id,
         evaluation_split= evaluation_split,
+        evaluation_suite = evaluation_suite,
         results = results,
         knowledge_usage= knowledge_usage,
     )
