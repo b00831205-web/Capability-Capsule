@@ -4,23 +4,17 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Literal, Self
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    field_validator,
-    model_validator
-)
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from capability_capsule.eval.dataset_validation import(
+from capability_capsule.eval.dataset_validation import (
     validate_teacher_dataset,
 )
-
 from capability_capsule.eval.jsonl import load_jsonl
 from capability_capsule.eval.records import (
     DatasetSplit,
     TeacherTrajectory,
 )
+from capability_capsule.eval.student_target import StudentTarget
 from capability_capsule.eval.tasks import TaskSpec
 from capability_capsule.eval.teacher_collection import TeacherAssignment
 
@@ -30,9 +24,10 @@ class TeacherCollectionPlan(BaseModel):
 
     model_config = ConfigDict(extra = "forbid", frozen = True)
 
-    schema_version: Literal["0.1"] = "0.1"
+    schema_version: Literal["0.1", "0.2"] = "0.2"
     plan_id: str = Field(min_length=1)
     assignments: tuple[TeacherAssignment, ...] = Field(min_length=1)
+    student_target: StudentTarget | None = None
 
     @field_validator("plan_id")
     @classmethod
@@ -48,6 +43,9 @@ class TeacherCollectionPlan(BaseModel):
         trajectory_ids: set[str] = set()
         task_ids: set[str] = set()
         split_by_group: dict[str, DatasetSplit] = {}
+
+        if self.schema_version == "0.1" and self.student_target is not None:
+            raise ValueError("Schema 0.1 plans cannot contain a Student target")
 
         for assignment in self.assignments:
             if assignment.assignment_id in assignment_ids:
@@ -94,6 +92,11 @@ class TeacherCollectionPlan(BaseModel):
                 )
             split_by_group[group] = task.split
 
+            if assignment.student_target != self.student_target:
+                raise ValueError(
+                    "Every assignment must reference the plan's Student target"
+                )
+
         return self
 
 def build_teacher_collection_plan(
@@ -105,6 +108,7 @@ def build_teacher_collection_plan(
         fixture_roots: Mapping[str, str],
         destination_jsonl: Path,
         trajectory_ids: Mapping[str, str],
+        student_target: StudentTarget | None = None,
 ) -> TeacherCollectionPlan:
     """Build an ordered collection plan from explicit provenance"""
 
@@ -134,13 +138,15 @@ def build_teacher_collection_plan(
                 teacher_skill_version = teacher_skill_version,
                 authorized_fixture_root = fixture_root,
                 destination_jsonl = destination_jsonl,
-                task = task
+                task = task,
+                student_target=student_target,
             )
         )
 
     return TeacherCollectionPlan(
         plan_id = plan_id,
         assignments= tuple(assignments),
+        student_target=student_target,
     )
 
 def _load_trajectory_index(

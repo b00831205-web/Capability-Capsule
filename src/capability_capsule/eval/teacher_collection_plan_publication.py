@@ -9,10 +9,9 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from capability_capsule.eval.teacher_collection_plan import(
+from capability_capsule.eval.teacher_collection_plan import (
     TeacherCollectionPlan,
 )
-
 
 _PLAN_FILENAME = "collection-plan.json"
 _MANIFEST_FILENAME = "manifest.json"
@@ -42,7 +41,7 @@ class PublishedTeacherCollectionPlan(BaseModel):
 
     model_config = ConfigDict(extra = "forbid", frozen = True)
 
-    schema_version: Literal["0.1"] = "0.1"
+    schema_version: Literal["0.1", "0.2"] = "0.2"
     plan_id: str = Field(min_length=1)
     plan_filename: Literal["collection-plan.json"] = "collection-plan.json"
     byte_count: int = Field(ge=0)
@@ -148,7 +147,7 @@ def load_teacher_collection_plan(
     except (OSError, ValueError) as error:
         raise ValueError(
             f"Invalid collection plan manifest: {manifest_path}"
-        )
+        ) from error
 
     if published.plan_id != plan_dir.name:
         raise ValueError(

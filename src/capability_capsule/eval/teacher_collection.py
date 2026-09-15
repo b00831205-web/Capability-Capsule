@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Literal, Self
 
-from pydantic import(
+from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
@@ -19,6 +19,7 @@ from capability_capsule.eval.records import (
     DatasetSplit,
     TeacherTrajectory,
 )
+from capability_capsule.eval.student_target import StudentTarget, verify_student_target
 from capability_capsule.eval.tasks import TaskSpec
 
 
@@ -27,7 +28,7 @@ class TeacherAssignment(BaseModel):
 
     model_config = ConfigDict(extra = "forbid", frozen = True)
 
-    schema_version: Literal["0.1"] = "0.1"
+    schema_version: Literal["0.1", "0.2"] = "0.2"
     assignment_id: str = Field(min_length = 1)
     trajectory_id: str = Field(min_length=1)
     teacher_model: str = Field(min_length=1)
@@ -35,6 +36,7 @@ class TeacherAssignment(BaseModel):
     authorized_fixture_root: str = Field(min_length=1)
     destination_jsonl: Path
     task: TaskSpec
+    student_target: StudentTarget | None = None
 
     @field_validator(
         "assignment_id",
@@ -66,10 +68,20 @@ class TeacherAssignment(BaseModel):
                 "Teacher assignments must not use the locked test split"
             )
 
+        if self.schema_version == "0.1" and self.student_target is not None:
+            raise ValueError("Schema 0.1 assignments cannot contain a Student target")
+
         return self
 
-def render_teacher_prompt(assignment: TeacherAssignment) -> str:
+def render_teacher_prompt(
+    assignment: TeacherAssignment,
+    *,
+    artifact_root: Path | None = None,
+) -> str:
     """Render a complete prompt for the Capsule Teacher skill."""
+
+    if assignment.student_target is not None:
+        verify_student_target(assignment.student_target, artifact_root=artifact_root)
 
     assignment_json = assignment.model_dump_json(indent=2)
 
