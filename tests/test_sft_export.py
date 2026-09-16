@@ -46,6 +46,29 @@ class RecordingTokenizer:
         }
 
 
+class PrefixFallbackTokenizer:
+    """Template double without generation blocks or a native assistant mask."""
+
+    _prefix_lengths = {1: 2, 2: 4, 3: 5, 4: 7}
+
+    def apply_chat_template(
+        self,
+        conversation: list[dict[str, Any]],
+        **kwargs: Any,
+    ) -> Any:
+        length = self._prefix_lengths[len(conversation)]
+        input_ids = list(range(10, 10 + length))
+
+        if kwargs.get("return_dict"):
+            return {
+                "input_ids": input_ids,
+                "attention_mask": [1] * length,
+                "assistant_masks": [0] * length,
+            }
+
+        return input_ids
+
+
 def make_trajectory(
     trajectory_id: str,
     split: DatasetSplit,
@@ -139,6 +162,17 @@ def test_encode_trajectory_rejects_template_without_trainable_assistant_tokens()
             tokenizer=tokenizer,
             max_length=2048,
         )
+
+
+def test_encode_trajectory_derives_assistant_spans_from_message_prefixes() -> None:
+    example = encode_sft_trajectory(
+        make_trajectory("train-001", DatasetSplit.TRAIN),
+        tokenizer=PrefixFallbackTokenizer(),
+        max_length=2048,
+    )
+
+    assert example.input_ids == (10, 11, 12, 13, 14, 15, 16)
+    assert example.labels == (-100, -100, 12, 13, -100, 15, 16)
 
 
 def test_export_sft_dataset_is_immutable_and_traceable(tmp_path: Path) -> None:

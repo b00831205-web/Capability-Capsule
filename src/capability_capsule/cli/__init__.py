@@ -24,6 +24,7 @@ from capability_capsule.eval.training_completion import (
     process_training_checkpoint_files,
 )
 
+
 app = typer.Typer(
     name="capsule",
     help="build local knowledge indexs and answer questions with Ollama.",

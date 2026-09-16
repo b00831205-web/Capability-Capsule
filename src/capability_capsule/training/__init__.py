@@ -10,7 +10,6 @@ from capability_capsule.training.lora import (
     reload_lora_adapter,
     run_lora_training,
 )
-
 from capability_capsule.training.sft import (
     SFTArtifact,
     SFTExample,
@@ -18,6 +17,10 @@ from capability_capsule.training.sft import (
     encode_sft_trajectory,
     export_sft_dataset,
     load_sft_examples,
+)
+from capability_capsule.training.transformers_peft import (
+    TransformersPeftAdapterLoader,
+    TransformersPeftBackend,
 )
 
 __all__ = [
@@ -30,6 +33,8 @@ __all__ = [
     "SavedAdapterCheckpoint",
     "TrainerProcessEvent",
     "TrainingMetric",
+    "TransformersPeftAdapterLoader",
+    "TransformersPeftBackend",
     "encode_sft_trajectory",
     "export_sft_dataset",
     "load_sft_examples",
