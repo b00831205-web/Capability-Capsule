@@ -3,7 +3,7 @@
 ## Objective
 
 Prove one minimal, reproducible path from a Teacher model to an offline capsule that lets a user
-continue a real project through the Codex App while offline:
+continue a real project through a selected existing coding harness while offline:
 
 ```text
 Teacher model
@@ -15,8 +15,8 @@ Teacher model
   -> trained adapter/checkpoint
   -> evaluated and recorded capsule model
   -> quantized capsule package and local inference service
-  -> CLI injects the capsule model configuration into Codex App
-  -> Codex App uses its existing harness to execute tools
+  -> CLI injects the capsule model configuration into the selected harness
+  -> Codex, Claude Code, DeepSeek, or another supported harness executes tools
   -> usable offline task result
 ```
 
@@ -30,13 +30,15 @@ harness configuration. For example:
 
 ```text
 I will be on a plane for the next 12 hours. Prepare a capsule with which I can continue developing
-this project offline in Codex App.
+this project offline in my selected coding app.
 ```
 
 Developer-maintained project recipes and fixture catalogs resolve the authorized train and
-validation inputs. The build system creates the collection plan, trajectories, dataset, adapter,
-runtime configuration, and offline handoff. The user continues to interact in Codex App; CLI
-commands are an internal provisioning and model-injection mechanism, not the user interface.
+validation inputs. During provisioning, the CLI discovers supported installed harnesses and asks the
+consumer to choose one when it was not supplied explicitly. The build system creates the collection
+plan, harness-aligned trajectories, dataset, adapter, runtime configuration, and offline handoff. The
+user continues to interact in the selected coding app; CLI commands are an internal provisioning and
+model-injection mechanism, not the user interface.
 
 A capsule is the complete project-scoped execution package, not only model weights:
 
@@ -46,7 +48,7 @@ base model or local model reference
   + project knowledge and handoff state
   + prompt and tool policy
   + local inference-service configuration
-  + Codex App launch/injection configuration
+  + selected-harness launch/injection configuration
   + validators and evaluation evidence
 ```
 
@@ -59,12 +61,67 @@ base model or local model reference
 - Record only observable Teacher messages, real tool calls, tool results, patches, and validation.
 - Every published input and output must have a stable identifier and content digest.
 - A failed validator or evaluation remains a failed record; no component may rewrite it as success.
-- Reuse the Codex App harness, tool loop, sandbox, approvals, and task UI. Do not build a parallel
-  agent harness for the MVP.
+- Reuse the selected existing harness, tool loop, sandbox, approvals, and task UI. Do not build a
+  parallel agent harness for the MVP.
 - Treat CLI and app-server integration as provisioning and configuration channels. Users interact
   with the capsule through Codex App, not through a training or harness CLI.
 - Keep model serving separate from the harness: the local runtime loads the adapter or quantized
-  model, while Codex App receives only a local provider and model configuration.
+  model, while the selected app receives only its versioned harness profile, local provider, and
+  model configuration.
+
+## Harness target strategy
+
+The harness is an explicit build target, not an assumption embedded in Teacher prompts or model
+weights. The first provisioning command accepts a target such as `codex`, `claude-code`, or
+`deepseek`; when omitted, the CLI detects supported installed harnesses and asks the user to choose.
+It must not silently select one.
+
+Each supported target has a versioned `HarnessProfile` containing at least:
+
+- harness ID and pinned version;
+- provider protocol and model-injection method;
+- exact Student-visible tool schemas and allowed-tool policy;
+- prompt/template digest and fixed context overhead;
+- shell and filesystem semantics;
+- tool-result envelope, approval, sandbox, and multi-turn behavior;
+- parallel-task capability and harness-specific validators.
+
+Teacher execution tools and Student-visible tools are separate. A Teacher may use its own tools to
+prepare and validate fixtures, but a Student trajectory may contain only tools exposed by the chosen
+`HarnessProfile`. Core project knowledge may be shared, while harness-alignment datasets and adapters
+remain separate for the MVP unless cross-harness compatibility is independently demonstrated.
+
+## Offline-duration workload budget
+
+`--offline-for 12h` is a capacity requirement, not merely a service uptime setting. Before sizing the
+knowledge tree, benchmark the exact model, quantization, runtime, harness profile, and deployment
+device. Hardware-spec estimates are provisional; a capsule is ready only after measured evidence is
+available.
+
+Measure at least cold start, short- and long-context prefill throughput, decode throughput, first-tool
+latency, complete edit-and-validate cycle time, retry rate, peak memory, and sustained-performance
+degradation. Model one task class as:
+
+```text
+cycle_time = input_tokens / prefill_tokens_per_second
+           + output_tokens / decode_tokens_per_second
+           + tool_time
+           + validation_time
+           + retry_probability * recovery_time
+```
+
+Maintain two deliberately different estimates:
+
+- readiness/build ETA uses a conservative slow sustained rate so the capsule can finish before the
+  user's deadline;
+- offline coverage uses the fastest measured sustainable task-cycle rate with user delay set to zero,
+  producing an upper bound on how much work the model could consume during the offline interval.
+
+Do not assume that a person is always slower than the model for every edit. Setting user delay to zero
+already gives the safe maximum-consumption bound for a single foreground interaction loop. Convert
+that bound into task-class counts, tool calls, validations, affected project areas, and knowledge
+nodes; raw output-token count alone does not define knowledge-tree size. Add an explicit reserve and
+report assumptions rather than promising autonomous useful work solely from tokens per second.
 
 ## MVP model strategy
 
@@ -73,7 +130,8 @@ base model or local model reference
 2. Use Qwen3.5-2B as the first primary capability candidate after the smoke loop works.
 3. Keep both models in single-model executor mode for MVP. Their initial roles are `executor` and
    `coder`.
-4. Run deployment inference under the confirmed WSL hardware profile with an initial 8K context.
+4. Run deployment inference under the confirmed WSL hardware profile with at least a 32K context.
+   An 8K context was measured as insufficient for the complete Codex tool and safety prompt.
 5. Prefer a GPU host for useful LoRA training. A CPU run is acceptable only to prove that the trainer
    starts, consumes the dataset, saves a checkpoint, and exits; it is not a performance experiment.
 
@@ -83,12 +141,16 @@ Required inputs:
 
 - confirmed hardware profile;
 - provisional base-model recommendation;
+- selected harness ID and a pinned `HarnessProfile`;
+- requested offline duration and build-ready deadline;
+- measured or explicitly provisional runtime benchmark;
+- derived offline work budget and knowledge-tree coverage boundary;
 - exact Teacher model and skill version;
 - one fixture family with train and validation tasks;
 - explicit allowed tools and validators;
 - raw and curated dataset destinations;
 - training output directory and random seed.
-- pinned Codex App/CLI version and one verified local-provider injection method;
+- pinned selected-app/CLI version and one verified local-provider injection method;
 - an offline handoff destination for the project task state.
 
 Exit condition:
@@ -108,10 +170,12 @@ Minimum scale:
 
 Execution:
 
-1. Build a `TeacherCollectionPlan` whose assignments reference the accepted `StudentTarget`.
+1. Build a `TeacherCollectionPlan` whose assignments reference the accepted `StudentTarget`,
+   `HarnessProfile`, and offline work budget.
 2. Render each assignment with `render_teacher_prompt`.
 3. Invoke `$capsule-teacher` with the immutable assignment JSON.
-4. Let the Teacher use real tools only inside the authorized fixture.
+4. Let the Teacher use real tools only inside the authorized fixture, while recording Student tool
+   calls exclusively in the schema and shell semantics exposed by the selected harness.
 5. Validate and append each result with `append_teacher_trajectory`.
 6. Resume interrupted collection with `pending_teacher_assignments`.
 
@@ -124,6 +188,8 @@ Artifacts:
 Exit condition:
 
 - one complete Teacher trajectory passes schema, provenance, tool-policy, fixture, and validator checks.
+- its serialized prompt, tool requests, and observable results also pass target-harness replay or an
+  equivalent schema-and-envelope validator.
 
 ## Stage 2: Curate and export SFT data
 
@@ -208,6 +274,8 @@ At every evaluated checkpoint:
 4. Preserve knowledge coverage with `write_knowledge_usage_event` and pass its summary into checkpoint
    recording when retrieval is exercised.
 5. Record capsule runtime latency and status with `write_run_telemetry` during harness evaluation.
+6. Compare measured task-cycle throughput with the offline work budget and update its evidence status
+   without rewriting the original estimate.
 
 Required artifacts:
 
@@ -242,38 +310,39 @@ Exit condition:
 - the local provider loads the capsule offline under WSL and returns a valid response without
   accessing the network.
 
-## Stage 6: Inject the capsule into Codex App
+## Stage 6: Inject the capsule into the selected harness
 
-The Codex App and its existing harness remain responsible for the agent loop:
+The selected coding app and its existing harness remain responsible for the agent loop:
 
 ```text
 start local capsule provider
-  -> generate a capsule-specific Codex configuration
-  -> invoke the Codex CLI/App configuration channel
+  -> generate a capsule-specific configuration from its HarnessProfile
+  -> invoke the selected CLI/App configuration channel
   -> open or create the offline handoff task in Codex App
   -> user interacts with the capsule through the normal App UI
-  -> Codex harness validates and executes tool requests
+  -> selected harness validates and executes tool requests
   -> an independent evaluator runs the task validator
   -> evaluation records CaseResult and telemetry
 ```
 
-The Capsule implementation must not duplicate Codex's agent loop, tool dispatcher, sandbox, approval
+The Capsule implementation must not duplicate the selected harness's agent loop, tool dispatcher, sandbox, approval
 UI, or task interface. It implements only:
 
 - local model-service lifecycle and health checks;
-- Codex model/provider configuration generation;
+- harness-specific model/provider configuration generation;
 - CLI-driven App launch or configuration injection;
 - offline task handoff generation;
 - structured event capture for automated checkpoint evaluation;
 - independent validator execution and evidence recording.
 
-Use `codex exec --json` only for automated checkpoint evaluation of the same capsule configuration.
-It is not the consumer interaction surface. The consumer always works in Codex App.
+For a Codex target, use `codex exec --json` only for automated checkpoint evaluation of the same
+capsule configuration. Equivalent non-interactive entry points may be used for other harnesses. They
+are not the consumer interaction surface; the consumer works in the selected app.
 
 Required integration boundaries:
 
 - workspace-root confinement;
-- Codex sandbox and approval policy remain active;
+- the selected harness's sandbox and approval policy remain active;
 - no network in offline mode;
 - observable tool calls and results;
 - validator result independent from the model's final claim.
@@ -284,7 +353,7 @@ Required integration boundaries:
 
 Exit condition:
 
-- Codex App opens an offline handoff task using the local capsule model; one unseen validation task
+- the selected app opens an offline handoff task using the local capsule model; one unseen validation task
   causes at least one valid tool call through the existing Codex harness, produces the expected
   project change or answer, passes its independent validator, and writes evaluation evidence.
 
@@ -303,6 +372,30 @@ Exit condition:
 - the 2B capsule beats its untrained baseline on the fixed validation suite without violating the WSL
   memory budget or regressing below the agreed safety thresholds.
 
+## Current smoke evidence
+
+- The Teacher-to-SFT-to-LoRA-to-checkpoint-to-reload-to-GGUF path completes for Qwen3.5-2B.
+- The pinned Qwen3.5 chat template has no native `{% generation %}` assistant mask. The SFT exporter
+  now falls back to message-prefix tokenization; a real harness-aligned sample exported 462 tokens
+  with 295 assistant/tool-call tokens selected for training, and tests cover both missing and all-zero
+  tokenizer mask responses.
+- The 32-step exec-only run reduced held-out validation loss from `1.378` to `0.799`; its adapter
+  reload emitted a valid first `exec_command` call.
+- The quantized Q4_K_M artifact loads in LM Studio with a 32K context and is callable through
+  `codex exec --oss --local-provider lmstudio`.
+- The unseen greeting fixture still fails under the complete Codex harness: the 2B model inspects the
+  correct file but cannot reliably construct a valid Windows edit command. The fixture remains
+  unchanged and the failure is recorded rather than promoted.
+- The existing `smoke-pilot-2b-exec-v2` publication is exec-only training data, not a verified Codex
+  `HarnessProfile`: it records the `exec_command` name and `cmd` argument but uses simplified result
+  text and does not pin the complete Codex prompt, tool schema, or result envelope.
+- Executable contract tests now define the next implementation boundary: an immutable, digest-checked
+  `HarnessProfileReference` must load the pinned Codex profile and reject artifact tampering. These
+  tests remain expected failures until source implementation is explicitly authorized.
+- After that contract is implemented, the next blocking experiment is harness-aligned Teacher data
+  using the verified Codex profile, or a larger primary capability model. Additional generic
+  configuration work stays deferred.
+
 ## MVP completion definition
 
 The MVP is complete only when all of the following are true:
@@ -313,7 +406,10 @@ The MVP is complete only when all of the following are true:
 - training configuration and process metrics were persisted;
 - checkpoint evaluation was appended through the existing learning-curve functions;
 - a quantized capsule ran offline;
-- Codex App used the injected local capsule through its existing harness on an unseen validation task;
+- the explicitly selected app used the injected local capsule through its existing harness on an
+  unseen validation task;
+- the runtime benchmark and offline work budget show enough measured capacity and knowledge coverage
+  for the requested offline interval under their recorded assumptions;
 - the task validator passed and telemetry was written;
 - every artifact can be traced by IDs, revisions, and digests.
 

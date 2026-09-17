@@ -17,6 +17,7 @@ from capability_capsule.eval.records import (
 from capability_capsule.eval.student_target import StudentTarget
 from capability_capsule.eval.tasks import TaskSpec
 from capability_capsule.eval.teacher_collection import TeacherAssignment
+from capability_capsule.eval.harness_profile import HarnessProfileReference, HarnessProfile, verify_harness_profile
 
 
 class TeacherCollectionPlan(BaseModel):
@@ -24,10 +25,11 @@ class TeacherCollectionPlan(BaseModel):
 
     model_config = ConfigDict(extra = "forbid", frozen = True)
 
-    schema_version: Literal["0.1", "0.2"] = "0.2"
+    schema_version: Literal["0.1", "0.2", "0.3"] = "0.2"
     plan_id: str = Field(min_length=1)
     assignments: tuple[TeacherAssignment, ...] = Field(min_length=1)
     student_target: StudentTarget | None = None
+    harness_profile: HarnessProfileReference | None = None
 
     @field_validator("plan_id")
     @classmethod
@@ -46,6 +48,15 @@ class TeacherCollectionPlan(BaseModel):
 
         if self.schema_version == "0.1" and self.student_target is not None:
             raise ValueError("Schema 0.1 plans cannot contain a Student target")
+
+        if self.schema_version in {"0.1", "0.2"} and self.harness_profile is not None:
+            raise ValueError(
+                f"Schema {self.schema_version} plans cannot contain a HarnessProfile"
+            )
+        if self.schema_version =="0.3" and self.harness_profile is None:
+            raise ValueError(
+                "Schema 0.3 plans require a HarnessProfile"
+            )
 
         for assignment in self.assignments:
             if assignment.assignment_id in assignment_ids:
@@ -97,6 +108,11 @@ class TeacherCollectionPlan(BaseModel):
                     "Every assignment must reference the plan's Student target"
                 )
 
+            if assignment.harness_profile != self.harness_profile:
+                raise ValueError(
+                    "Every assignment must reference the plan's HarnessProfile"
+                )
+
         return self
 
 def build_teacher_collection_plan(
@@ -109,9 +125,11 @@ def build_teacher_collection_plan(
         destination_jsonl: Path,
         trajectory_ids: Mapping[str, str],
         student_target: StudentTarget | None = None,
+        harness_profile: HarnessProfileReference | None = None,
 ) -> TeacherCollectionPlan:
     """Build an ordered collection plan from explicit provenance"""
 
+    schema_version: Literal["0.2", "0.3"] = "0.3" if harness_profile is not None else "0.2"
     assignments: list[TeacherAssignment] = []
 
     for task in tasks:
@@ -132,6 +150,7 @@ def build_teacher_collection_plan(
 
         assignments.append(
             TeacherAssignment(
+                schema_version=schema_version,
                 assignment_id = f"{plan_id}:{task.task_id}",
                 trajectory_id = trajectory_id,
                 teacher_model = teacher_model,
@@ -140,13 +159,16 @@ def build_teacher_collection_plan(
                 destination_jsonl = destination_jsonl,
                 task = task,
                 student_target=student_target,
+                harness_profile= harness_profile,
             )
         )
 
     return TeacherCollectionPlan(
+        schema_version=schema_version,
         plan_id = plan_id,
         assignments= tuple(assignments),
         student_target=student_target,
+        harness_profile=harness_profile,
     )
 
 def _load_trajectory_index(
@@ -175,6 +197,8 @@ def _load_trajectory_index(
 def _validate_completed_assignment(
         assignment: TeacherAssignment,
         trajectory: TeacherTrajectory,
+        *,
+        harness_profile: HarnessProfile | None = None
 ) -> None:
     if trajectory.teacher_model != assignment.teacher_model:
         raise ValueError(
@@ -193,13 +217,19 @@ def _validate_completed_assignment(
     validate_teacher_dataset(
         (trajectory,),
         tasks = (assignment.task,),
+        harness_profile= harness_profile,
     )
 
 def pending_teacher_assignments(
         plan: TeacherCollectionPlan,
+        *,
+        artifact_root: Path | None = None
 ) -> tuple[TeacherAssignment, ...]:
     """Return assignments not yet present in their raw JSONL destinations."""
 
+    harness_profile = None
+    if plan.harness_profile is not None:
+        harness_profile = verify_harness_profile(plan.harness_profile, artifact_root=artifact_root)
     index_by_destination: dict[Path, dict[str, TeacherTrajectory]] = {}
     pending: list[TeacherAssignment] = []
 
@@ -221,7 +251,8 @@ def pending_teacher_assignments(
 
         _validate_completed_assignment(
             assignment,
-            existing
+            existing,
+            harness_profile = harness_profile
         )
 
     return tuple(pending)

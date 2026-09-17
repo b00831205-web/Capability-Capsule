@@ -215,6 +215,49 @@ def _token_vector(value: Any, *, field_name: str) -> tuple[int, ...]:
 
     return tuple(result)
 
+def _derive_assistant_mask_from_prefixes(
+        messages: list[dict[str, Any]],
+        *,
+        tokenizer: ChatTemplateTokenizer,
+        input_ids: tuple[int, ...],
+        max_length: int,
+) -> tuple[int, ...]:
+    """Derive assistant spans when the chat template has no generation blocks."""
+
+    assistant_mask = [0] * len(input_ids)
+    previous_prefix: tuple[int, ...] = ()
+
+    for end, message in enumerate(messages, start=1):
+        rendered = tokenizer.apply_chat_template(
+            messages[:end],
+            tokenize = True,
+            add_generation_prompt = False,
+            truncation = True,
+            max_length = max_length,
+        )
+
+        if hasattr(rendered, "get"):
+            rendered = rendered.get("input_ids")
+
+        prefix_ids = _token_vector(rendered, field_name="prefix input_ids")
+        if len(prefix_ids) < len(previous_prefix):
+            raise ValueError(
+                "Chat-template prefixes must grow monotonically"
+            )
+
+        if (len(prefix_ids) > len(input_ids) or input_ids[: len(prefix_ids)] != prefix_ids):
+            raise ValueError(
+                "Chat-template prefix tokens do not match full conversation"
+            )
+
+        if message["role"] == "assistant":
+            for position in range(len(previous_prefix), len(prefix_ids)):
+                assistant_mask[position] = 1
+
+        previous_prefix = prefix_ids
+
+    return tuple(assistant_mask)
+
 
 def encode_sft_trajectory(
     trajectory: TeacherTrajectory,
@@ -232,8 +275,9 @@ def encode_sft_trajectory(
             "SFT export requires a trajectory source revision"
         )
 
+    messages = _chat_messages(trajectory)
     encoded = tokenizer.apply_chat_template(
-        _chat_messages(trajectory),
+        messages,
         tokenize=True,
         add_generation_prompt=False,
         return_dict=True,
@@ -263,10 +307,26 @@ def encode_sft_trajectory(
     if assistant_mask_value is None:
         assistant_mask_value = encoded.get("assistant_tokens_mask")
 
-    assistant_mask = _token_vector(
-        assistant_mask_value,
-        field_name="assistant mask",
-    )
+    if assistant_mask_value is None:
+        assistant_mask = _derive_assistant_mask_from_prefixes(
+            messages,
+            tokenizer = tokenizer,
+            input_ids= input_ids,
+            max_length= max_length,
+        )
+
+    else:
+        assistant_mask = _token_vector(
+            assistant_mask_value,
+            field_name= "assistant mask"
+        )
+        if not any(assistant_mask):
+            assistant_mask = _derive_assistant_mask_from_prefixes(
+                messages,
+                tokenizer= tokenizer,
+                input_ids= input_ids,
+                max_length= max_length,
+            )
 
     if not (
         len(input_ids)

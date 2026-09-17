@@ -2,16 +2,11 @@
 
 from __future__ import annotations
 
+from collections import UserDict
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import pytest
-from capability_capsule.training.sft import (
-    SFTExample,
-    encode_sft_trajectory,
-    export_sft_dataset,
-    load_sft_examples,
-)
 
 from capability_capsule.eval.dataset_pipeline import CuratedTeacherDataset
 from capability_capsule.eval.dataset_publication import publish_teacher_dataset
@@ -21,6 +16,12 @@ from capability_capsule.eval.records import (
     TeacherTrajectory,
     ToolCallRecord,
     TrajectoryMessage,
+)
+from capability_capsule.training.sft import (
+    SFTExample,
+    encode_sft_trajectory,
+    export_sft_dataset,
+    load_sft_examples,
 )
 
 
@@ -49,7 +50,10 @@ class RecordingTokenizer:
 class PrefixFallbackTokenizer:
     """Template double without generation blocks or a native assistant mask."""
 
-    _prefix_lengths = {1: 2, 2: 4, 3: 5, 4: 7}
+    _prefix_lengths: ClassVar[dict[int, int]] = {1: 2, 2: 4, 3: 5, 4: 7}
+
+    def __init__(self, *, include_zero_mask: bool = True) -> None:
+        self.include_zero_mask = include_zero_mask
 
     def apply_chat_template(
         self,
@@ -60,13 +64,15 @@ class PrefixFallbackTokenizer:
         input_ids = list(range(10, 10 + length))
 
         if kwargs.get("return_dict"):
-            return {
+            result = {
                 "input_ids": input_ids,
                 "attention_mask": [1] * length,
-                "assistant_masks": [0] * length,
             }
+            if self.include_zero_mask:
+                result["assistant_masks"] = [0] * length
+            return result
 
-        return input_ids
+        return UserDict({"input_ids": input_ids})
 
 
 def make_trajectory(
@@ -164,10 +170,13 @@ def test_encode_trajectory_rejects_template_without_trainable_assistant_tokens()
         )
 
 
-def test_encode_trajectory_derives_assistant_spans_from_message_prefixes() -> None:
+@pytest.mark.parametrize("include_zero_mask", [False, True])
+def test_encode_trajectory_derives_assistant_spans_from_message_prefixes(
+    include_zero_mask: bool,
+) -> None:
     example = encode_sft_trajectory(
         make_trajectory("train-001", DatasetSplit.TRAIN),
-        tokenizer=PrefixFallbackTokenizer(),
+        tokenizer=PrefixFallbackTokenizer(include_zero_mask=include_zero_mask),
         max_length=2048,
     )
 
