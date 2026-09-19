@@ -41,7 +41,7 @@ class PublishedTeacherCollectionPlan(BaseModel):
 
     model_config = ConfigDict(extra = "forbid", frozen = True)
 
-    schema_version: Literal["0.1", "0.2"] = "0.2"
+    schema_version: Literal["0.1", "0.2", "0.3"] = "0.2"
     plan_id: str = Field(min_length=1)
     plan_filename: Literal["collection-plan.json"] = "collection-plan.json"
     byte_count: int = Field(ge=0)
@@ -87,6 +87,7 @@ def publish_teacher_collection_plan(
         plan_path.write_bytes(plan_bytes)
 
         published = PublishedTeacherCollectionPlan(
+            schema_version=plan.schema_version,
             plan_id = validated_plan_id,
             byte_count=len(plan_bytes),
             sha256 = sha256(plan_bytes).hexdigest(),

@@ -389,12 +389,40 @@ Exit condition:
 - The existing `smoke-pilot-2b-exec-v2` publication is exec-only training data, not a verified Codex
   `HarnessProfile`: it records the `exec_command` name and `cmd` argument but uses simplified result
   text and does not pin the complete Codex prompt, tool schema, or result envelope.
-- Executable contract tests now define the next implementation boundary: an immutable, digest-checked
-  `HarnessProfileReference` must load the pinned Codex profile and reject artifact tampering. These
-  tests remain expected failures until source implementation is explicitly authorized.
-- After that contract is implemented, the next blocking experiment is harness-aligned Teacher data
-  using the verified Codex profile, or a larger primary capability model. Additional generic
-  configuration work stays deferred.
+- `HarnessProfileReference` is now implemented end to end: prompt rendering, new trajectory append,
+  resumed-collection validation, tool arguments, and normalized tool-result envelopes all verify the
+  same digest-pinned profile. The focused suite passes 49 tests without skips.
+- The observable Codex `0.154.0-alpha.6.2` contract snapshot records the full MVP `exec_command`
+  schema and a conservative measured prompt cost of 9,916 tokens. Two minimal local-provider calls
+  were correctly rejected by their 8,192-token contexts, preserving the measured failure evidence
+  and confirming the 32K deployment target. The snapshot does not claim to copy Codex's hidden
+  system prompt.
+- `smoke-pilot-003` is the first formally published and collected schema `0.3` plan. Its manifest
+  pins the exact plan bytes and digest, while its one validation assignment resolves the pinned
+  Student and HarnessProfile and embeds the verified contract in the Teacher prompt. The observable
+  23-message trajectory contains real `exec_command` requests, result envelopes, failure recovery,
+  and passing `pytest` plus exact-content evidence; independent reload reports one record and zero
+  pending assignments. This is a validation smoke result, not the required Stage 1 dataset.
+- `stage1-codex-001` now publishes the complete minimum Stage 1 assignment set: 8 train and 2
+  validation trajectories, all pinned to the accepted Student and Codex HarnessProfile. Collection
+  completed in disposable workspaces without modifying the registered fixtures. Independent curation
+  retained all 10 unique trajectories with zero duplicates, and the immutable publication records
+  8 train plus 2 validation artifacts with verified byte counts and SHA-256 digests.
+- The canonical Qwen export is `stage1-codex-001-qwen35-2b-v2`, pinned to the accepted Qwen3.5-2B
+  tokenizer revision with a 4K sequence budget. It preserves all 10 trajectories without truncation:
+  7,537 total tokens, 6,087 trainable assistant/tool-call tokens, and a measured maximum sequence of
+  2,167 tokens. The earlier 2K `v1` export is retained only as immutable truncation evidence.
+- `stage1-codex-qwen35-2b-001` consumed that canonical export for one epoch and 8 optimization steps
+  with seed 42, LoRA rank 8, and batch size 1. The completed recovery attempt recorded training loss
+  `1.509` and held-out validation loss `1.087`, saved a 1,674,328-byte safetensors adapter, verified
+  its checkpoint hashes, and reloaded it against base revision
+  `15852e8c16360a2fea060d615a32b45270f8a8fc` as `PeftModelForCausalLM`.
+- The initial attempt validated both examples after every step and caused the CPU-only WSL VM to
+  restart after step 3. Its terminal log and explicit failure event are retained. The recovery
+  restarted from the pinned base and seed, ran all 8 steps, and evaluated once at the end; this is
+  checkpoint-production evidence, not a throughput benchmark or proof of validation-task quality.
+  The next blocking step is unchanged held-out checkpoint evaluation through the learning-curve
+  recording path.
 
 ## MVP completion definition
 

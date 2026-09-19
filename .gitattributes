@@ -1,0 +1,5 @@
+plans/harness/**/*.json text eol=lf
+plans/teacher/smoke-pilot-003/*.json text eol=lf
+plans/teacher/stage1-codex-001/*.json text eol=lf
+datasets/teacher/published/stage1-codex-001/*.jsonl -text
+datasets/teacher/published/stage1-codex-001/manifest.json text eol=lf

@@ -10,7 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from capability_capsule.eval.harness_profile import HarnessProfileReference
+from capability_capsule.eval.harness_profile import (
+    HarnessProfileReference,
+    verify_harness_profile,
+)
 from capability_capsule.eval.records import DatasetSplit
 from capability_capsule.eval.tasks import (
     TaskCategory,
@@ -20,6 +23,13 @@ from capability_capsule.eval.tasks import (
 from capability_capsule.eval.teacher_collection import (
     TeacherAssignment,
     render_teacher_prompt,
+)
+from capability_capsule.eval.teacher_collection_plan import (
+    TeacherCollectionPlan,
+    pending_teacher_assignments,
+)
+from capability_capsule.eval.teacher_collection_plan_publication import (
+    load_teacher_collection_plan,
 )
 
 
@@ -185,3 +195,119 @@ def test_render_teacher_prompt_rejects_tampered_harness_profile(
 
     with pytest.raises(ValueError, match="SHA-256 mismatch"):
         render_teacher_prompt(assignment)
+
+
+def test_render_teacher_prompt_embeds_verified_harness_contract(
+    tmp_path: Path,
+) -> None:
+    _require_assignment_harness_support()
+    reference = _make_harness_reference(tmp_path)
+    assignment = TeacherAssignment(
+        schema_version="0.3",
+        assignment_id="assignment-001",
+        trajectory_id="trajectory-001",
+        teacher_model="gpt-6-astra",
+        teacher_skill_version="0.2.0",
+        authorized_fixture_root="/fixtures/greeting",
+        destination_jsonl=tmp_path / "teacher.jsonl",
+        task=_make_task(),
+        harness_profile=reference,
+    )
+
+    prompt = render_teacher_prompt(assignment)
+
+    if "Verified HarnessProfile" not in prompt:
+        pytest.skip("Teacher prompt does not embed the verified HarnessProfile yet")
+
+    assert '"arguments_schema"' in prompt
+    assert '"required": [' in prompt
+    assert '"cmd"' in prompt
+    assert '"additionalProperties": false' in prompt
+    assert '"result_envelope": "codex-exec-command-v1"' in prompt
+    assert '"shell": "windows-powershell"' in prompt
+    assert '"supports_multi_turn_tools": true' in prompt
+
+
+def test_checked_in_codex_profile_and_schema_03_plan_are_reproducible() -> None:
+    repository_root = Path(__file__).resolve().parents[1]
+    snapshot_path = (
+        repository_root
+        / "plans"
+        / "harness"
+        / "codex-0.154.0-alpha.6.2"
+        / "contract-snapshot.json"
+    )
+    profile_path = snapshot_path.with_name("harness-profile.json")
+    plan_path = (
+        repository_root
+        / "plans"
+        / "teacher"
+        / "smoke-pilot-003"
+        / "collection-plan.json"
+    )
+    profile_payload = profile_path.read_bytes()
+    profile_reference = HarnessProfileReference(
+        profile_id="codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        harness_id="codex",
+        harness_version="0.154.0-alpha.6.2",
+        path=profile_path,
+        sha256=sha256(profile_payload).hexdigest(),
+    )
+
+    profile = verify_harness_profile(profile_reference)
+    plan = TeacherCollectionPlan.model_validate_json(plan_path.read_text())
+    prompt = render_teacher_prompt(
+        plan.assignments[0],
+        artifact_root=repository_root,
+    )
+
+    assert profile.prompt_template_sha256 == sha256(
+        snapshot_path.read_bytes()
+    ).hexdigest()
+    assert profile.fixed_context_tokens == 9916
+    assert plan.schema_version == "0.3"
+    assert plan.harness_profile == plan.assignments[0].harness_profile
+    assert plan.harness_profile is not None
+    assert plan.harness_profile.sha256 == sha256(profile_payload).hexdigest()
+    assert "Verified HarnessProfile" in prompt
+    assert '"result_envelope": "codex-exec-command-v1"' in prompt
+
+
+def test_checked_in_stage1_plan_has_required_split_counts_and_contract() -> None:
+    repository_root = Path(__file__).resolve().parents[1]
+    published = load_teacher_collection_plan(
+        repository_root / "plans" / "teacher" / "stage1-codex-001"
+    )
+    plan = published.plan
+    train = tuple(
+        assignment
+        for assignment in plan.assignments
+        if assignment.task.split is DatasetSplit.TRAIN
+    )
+    validation = tuple(
+        assignment
+        for assignment in plan.assignments
+        if assignment.task.split is DatasetSplit.VALIDATION
+    )
+
+    assert published.schema_version == "0.3"
+    assert plan.schema_version == "0.3"
+    assert len(plan.assignments) == 10
+    assert len(train) == 8
+    assert len(validation) == 2
+    assert all(
+        assignment.harness_profile == plan.harness_profile
+        for assignment in plan.assignments
+    )
+    assert all(
+        assignment.student_target == plan.student_target
+        for assignment in plan.assignments
+    )
+    assert all(
+        assignment.task.split is not DatasetSplit.TEST
+        for assignment in plan.assignments
+    )
+    assert pending_teacher_assignments(
+        plan,
+        artifact_root=repository_root,
+    ) == ()

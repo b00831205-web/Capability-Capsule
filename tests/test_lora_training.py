@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
+from hashlib import sha256
+import json
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +13,7 @@ import pytest
 from capability_capsule.training.lora import (
     BackendCheckpoint,
     LoraTrainingConfig,
+    SavedAdapterCheckpoint,
     TrainerProcessEvent,
     TrainingMetric,
     reload_lora_adapter,
@@ -280,3 +283,76 @@ def test_training_rejects_manifest_identity_mismatch(tmp_path: Path) -> None:
             output_root=tmp_path / "runs",
             backend=SuccessfulBackend(),
         )
+
+
+def test_stage1_codex_training_run_has_verified_checkpoint_and_reload() -> None:
+    root = Path(__file__).resolve().parents[1]
+    run_dir = root / "runs" / "training" / "stage1-codex-qwen35-2b-001"
+
+    training_run = TrainingRunManifest.model_validate_json(
+        (run_dir / "training-run.json").read_bytes()
+    )
+    checkpoint = SavedAdapterCheckpoint.model_validate_json(
+        (run_dir / "checkpoint.json").read_bytes()
+    )
+    events = load_jsonl(
+        run_dir / "trainer-process.jsonl",
+        TrainerProcessEvent,
+    )
+    recovery = json.loads((run_dir / "recovery.json").read_text("utf-8"))
+    reload_validation = json.loads(
+        (run_dir / "adapter-reload-validation.json").read_text("utf-8")
+    )
+
+    assert training_run.run_id == "stage1-codex-qwen35-2b-001"
+    assert training_run.dataset_id == "stage1-codex-001"
+    assert training_run.dataset_digest == (
+        "989582326bb6e9c0e34a3afe3c3dd847ea1bbc3ed322f6366af042f4b27ad3cb"
+    )
+    assert training_run.dataset_stats.train.exact_token_count == 4803
+    assert training_run.dataset_stats.validation.exact_token_count == 2734
+    assert training_run.hyperparameters["sft_export_id"] == (
+        "stage1-codex-001-qwen35-2b-v2"
+    )
+    assert training_run.hyperparameters["max_steps"] == 8
+
+    assert checkpoint.step == 8
+    assert checkpoint.base_model_revision == (
+        "15852e8c16360a2fea060d615a32b45270f8a8fc"
+    )
+    assert checkpoint.adapter_config_sha256 == (
+        "04a7470914b5d504d3e281d4ed1f4f92d45866001a878d59e87fa702996f0821"
+    )
+    assert checkpoint.adapter_model_sha256 == (
+        "68505fb0cc54421c04e05b58e75f948d2b6d02ab6d69e19cd84681f2a7918cc5"
+    )
+    adapter_dir = run_dir / checkpoint.adapter_directory
+    assert sha256((adapter_dir / "adapter_config.json").read_bytes()).hexdigest() == (
+        checkpoint.adapter_config_sha256
+    )
+    assert sha256(
+        (adapter_dir / "adapter_model.safetensors").read_bytes()
+    ).hexdigest() == checkpoint.adapter_model_sha256
+
+    assert [event.event for event in events] == [
+        "started",
+        "failed",
+        "started",
+        "metric",
+        "checkpoint_saved",
+        "completed",
+    ]
+    assert events[1].error_type == "WSLProcessTerminated"
+    assert events[3].step == 8
+    assert events[3].training_loss == pytest.approx(1.5090183913707733)
+    assert events[3].validation_loss == pytest.approx(1.0871495008468628)
+    assert recovery["recovery_policy"]["evaluation_strategy"] == (
+        "single validation pass after final optimization step"
+    )
+    assert (run_dir / "terminal.log").is_file()
+    assert (run_dir / "terminal-retry.log").is_file()
+
+    assert reload_validation["base_model_revision_verified"] is True
+    assert reload_validation["adapter_hashes_verified"] is True
+    assert reload_validation["loader_class"] == "PeftModelForCausalLM"
+    assert reload_validation["active_adapters"] == ["default"]

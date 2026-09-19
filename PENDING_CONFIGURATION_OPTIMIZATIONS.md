@@ -44,10 +44,18 @@ pipeline cannot run or cannot produce trustworthy evidence without it.
 - Optimize deadline-aware selection between local training, remote GPU training, adapter reuse, and
   an untrained local-model fallback after the MVP implements one conservative readiness estimate.
 - Resume/recovery across interrupted training jobs.
+- Replace the one-off Stage 1 recovery override with a persisted, configurable evaluation cadence.
+  On the CPU-only profile, validating the 2,167-token example after every optimization step restarted
+  WSL after step 3; one validation pass after the final step completed the full 8-step run. Keep the
+  per-step policy only for hardware that passes an explicit memory check.
 - Distributed and multi-GPU training.
 
 ## Deferred dataset optimization work
 
+- Materialize disposable fixtures directly from their pinned snapshots with byte-preserving line
+  endings. The first schema `0.3` smoke collection exposed both a stale working-tree trailing LF and
+  Windows Git CRLF conversion; collection recovered without touching the registered fixture, but
+  larger batches should not require manual snapshot reconstruction or line-ending normalization.
 - Project-level Capsule recipes that let developers register fixture catalogs, allowed splits,
   validators, Student targets, and dataset destinations once.
 - Consumer-facing fixture discovery so a user can request a smoke capsule without knowing fixture
@@ -100,15 +108,16 @@ pipeline cannot run or cannot produce trustworthy evidence without it.
 The following is no longer a deferred optimization because the real harness run proved it blocks
 correctness:
 
-- Add an explicit CLI harness choice and versioned `HarnessProfile`; never hard-code Codex into the
-  Teacher dataset or silently choose a detected app.
+- Add explicit CLI harness discovery and choice beyond the now-pinned Codex MVP profile; never
+  silently choose a detected app.
 - Maintain separate harness-alignment publications containing the actual Student-visible tool schema,
   prompt envelope, shell semantics, command-result envelope, and multi-turn behavior.
 - Preserve at least a 32K local-provider context for Codex; the earlier 8K smoke setting is too small
   for the complete tool and safety prompt.
-- Add harness-aligned Teacher trajectories that use the actual Codex `exec_command` schema, Windows
-  command-result envelope, and multi-turn prompt shape. Direct adapter generation is not a substitute
-  for this end-to-end evidence.
+- Evaluate the `stage1-codex-qwen35-2b-001` checkpoint on the unchanged held-out fixtures and append
+  its result through the learning-curve recording path. The completed 8-step CPU run consumed the
+  canonical 4K export and reloaded successfully, but its `1.087` validation loss alone does not prove
+  correct tool use or justify promotion.
 - Decide from measured validation whether to keep Qwen3.5-2B as a narrowly scripted executor or move
   the primary coding capsule to the next larger model that fits the confirmed hardware budget.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
@@ -122,12 +131,26 @@ correctness:
   capsule is provisioned for the requested offline duration.
 
 The first `HarnessProfile` implementation is intentionally narrow: one immutable Codex profile,
-SHA-256 verification, one exact `exec_command` argument schema, and one result-envelope identifier.
-Automatic installed-app discovery, profile migration, multiple shells, and schema negotiation remain
-deferred until this contract passes and is connected to collection-plan validation.
+SHA-256 verification, one exact `exec_command` argument schema, and one normalized result-envelope
+identifier. The contract now passes prompt, append, resume, request-schema, and result-envelope
+validation. The schema `0.3` smoke trajectory now passes independent validation, and the minimum
+Stage 1 harness-aligned dataset has completed one checkpoint-producing run. Automatic installed-app
+discovery, profile migration, multiple shells, and schema negotiation remain deferred until the new
+adapter passes unchanged held-out checkpoint evaluation.
 
 ### Resolved blocking configuration compatibility
 
+- The Codex `0.154.0-alpha.6.2` observable contract is pinned by digest and referenced by the first
+  formally published schema `0.3` collection plan. Its publication manifest verifies the exact plan
+  bytes before collection. A minimal real invocation measured 9,916 prompt tokens and proved the 8K
+  configuration insufficient; the profile preserves this as observed evidence rather than claiming
+  access to the hidden Codex system prompt.
+- `stage1-codex-001` now has a verified immutable dataset publication containing 8 train and 2
+  validation trajectories with zero duplicates. All tool requests and result envelopes pass the
+  pinned HarnessProfile after publication reload; all registered fixture snapshots remain unchanged.
+- `stage1-codex-001-qwen35-2b-v2` is the verified, untruncated Qwen SFT export: 7,537 total tokens and
+  6,087 trainable assistant/tool-call tokens at a 4K maximum sequence length. The 2K export clipped
+  the 2,167-token recovery trajectory and is retained only for auditability.
 - Qwen3.5 tokenizers whose chat template omits `{% generation %}` no longer depend on a native
   assistant mask for SFT export. The minimal fallback derives trainable spans from tokenized message
   prefixes; broader template-family compatibility and performance optimization remain deferred until

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import UserDict
+from hashlib import sha256
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -19,6 +20,7 @@ from capability_capsule.eval.records import (
 )
 from capability_capsule.training.sft import (
     SFTExample,
+    SFTExportManifest,
     encode_sft_trajectory,
     export_sft_dataset,
     load_sft_examples,
@@ -240,3 +242,44 @@ def test_export_sft_dataset_is_immutable_and_traceable(tmp_path: Path) -> None:
             tokenizer_id="Qwen/Qwen3.5-0.8B@revision-001",
             max_length=2048,
         )
+
+
+def test_checked_in_stage1_qwen_export_is_complete_and_untruncated() -> None:
+    repository_root = Path(__file__).resolve().parents[1]
+    export_dir = (
+        repository_root
+        / "artifacts"
+        / "sft"
+        / "stage1-codex-001-qwen35-2b-v2"
+    )
+    manifest = SFTExportManifest.model_validate_json(
+        (export_dir / "manifest.json").read_text(encoding="utf-8")
+    )
+    train = load_sft_examples(export_dir / "train.jsonl")
+    validation = load_sft_examples(export_dir / "validation.jsonl")
+    examples = train + validation
+
+    assert manifest.source_dataset_id == "stage1-codex-001"
+    assert manifest.source_dataset_digest == sha256(
+        (
+            repository_root
+            / "datasets"
+            / "teacher"
+            / "published"
+            / "stage1-codex-001"
+            / "manifest.json"
+        ).read_bytes()
+    ).hexdigest()
+    assert manifest.tokenizer_id == (
+        "Qwen/Qwen3.5-2B@15852e8c16360a2fea060d615a32b45270f8a8fc"
+    )
+    assert manifest.max_length == 4096
+    assert len(train) == 8
+    assert len(validation) == 2
+    assert max(len(example.input_ids) for example in examples) == 2167
+    assert all(len(example.input_ids) < manifest.max_length for example in examples)
+
+    for artifact in manifest.artifacts:
+        payload = (export_dir / artifact.filename).read_bytes()
+        assert artifact.byte_count == len(payload)
+        assert artifact.sha256 == sha256(payload).hexdigest()

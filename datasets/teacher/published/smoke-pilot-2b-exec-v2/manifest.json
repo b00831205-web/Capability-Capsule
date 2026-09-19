@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1",
+  "dataset_id": "smoke-pilot-2b-exec-v2",
+  "artifacts": [
+    {
+      "filename": "train.jsonl",
+      "record_count": 8,
+      "byte_count": 20359,
+      "sha256": "fcabc8b728744910a5f1afbf530c19b940266b1e2690295e32ac99844baa6b3d"
+    },
+    {
+      "filename": "validation.jsonl",
+      "record_count": 1,
+      "byte_count": 2164,
+      "sha256": "a3cf8b937dd023f4909dd03415912d1e413a9c9c306946ccd3d377b29c31c5fe"
+    },
+    {
+      "filename": "duplicates.jsonl",
+      "record_count": 0,
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

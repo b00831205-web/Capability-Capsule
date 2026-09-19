@@ -95,12 +95,13 @@ def render_teacher_prompt(
     if assignment.student_target is not None:
         verify_student_target(assignment.student_target, artifact_root=artifact_root)
 
+    verified_harness_profile = None
     if assignment.harness_profile is not None:
-        verify_harness_profile(assignment.harness_profile, artifact_root = artifact_root)
+        verified_harness_profile = verify_harness_profile(assignment.harness_profile, artifact_root = artifact_root)
 
     assignment_json = assignment.model_dump_json(indent=2)
 
-    return (
+    prompt = (
         "Use $capsule-teacher to execute this authorized Teacher assignment.\n"
         "Treat the JSON below as immutable provenance and constraints. "
         "Use only the authorized fixture and allowed tools. Capture only "
@@ -108,6 +109,18 @@ def render_teacher_prompt(
         "reasoning.\n\n"
         f"{assignment_json}"
     )
+
+    if verified_harness_profile is not None:
+        prompt += (
+            "\n\nVerified HarnessProfile\n"
+            "Treat this as the exact Student-visible harness contract. "
+            "Generate tool requests and observable tool results that conform "
+            "to its tool schemas, shell semantics, and result envelopes.\n\n"
+            f"{verified_harness_profile.model_dump_json(indent=2)}"
+        )
+    return prompt
+
+
 
 def _validate_assignment_match(
         assignment: TeacherAssignment,

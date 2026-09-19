@@ -9,11 +9,16 @@ from capability_capsule.eval.dataset_integrity import (
 )
 from capability_capsule.eval.dataset_pipeline import CuratedTeacherDataset
 from capability_capsule.eval.dataset_publication import publish_teacher_dataset
+from capability_capsule.eval.dataset_validation import validate_teacher_dataset
+from capability_capsule.eval.harness_profile import verify_harness_profile
 from capability_capsule.eval.records import (
     DatasetSplit,
     MessageRole,
     TeacherTrajectory,
     TrajectoryMessage,
+)
+from capability_capsule.eval.teacher_collection_plan_publication import (
+    load_teacher_collection_plan,
 )
 
 
@@ -144,3 +149,34 @@ def test_load_teacher_dataset_publication_rejects_wrong_directory_name(
 
     with pytest.raises(ValueError, match="dataset_id"):
         load_teacher_dataset_publication(renamed_dir)
+
+
+def test_checked_in_stage1_publication_is_complete_and_harness_aligned() -> None:
+    repository_root = Path(__file__).resolve().parents[1]
+    verified = load_teacher_dataset_publication(
+        repository_root
+        / "datasets"
+        / "teacher"
+        / "published"
+        / "stage1-codex-001"
+    )
+    plan = load_teacher_collection_plan(
+        repository_root / "plans" / "teacher" / "stage1-codex-001"
+    ).plan
+    profile = verify_harness_profile(
+        plan.harness_profile,
+        artifact_root=repository_root,
+    )
+    trajectories = verified.dataset.train + verified.dataset.validation
+
+    validate_teacher_dataset(
+        trajectories,
+        tasks=tuple(assignment.task for assignment in plan.assignments),
+        harness_profile=profile,
+    )
+
+    assert verified.manifest.dataset_id == "stage1-codex-001"
+    assert len(verified.dataset.train) == 8
+    assert len(verified.dataset.validation) == 2
+    assert verified.dataset.duplicates == ()
+    assert len({record.trajectory_id for record in trajectories}) == 10
