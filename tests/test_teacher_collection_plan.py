@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from capability_capsule.eval.harness_profile import HarnessProfileReference
-from capability_capsule.eval.jsonl import append_jsonl
+from capability_capsule.eval.jsonl import append_jsonl, load_jsonl
 from capability_capsule.eval.records import (
     DatasetSplit,
     MessageRole,
@@ -24,6 +24,9 @@ from capability_capsule.eval.teacher_collection_plan import (
     TeacherCollectionPlan,
     build_teacher_collection_plan,
     pending_teacher_assignments,
+)
+from capability_capsule.eval.teacher_collection_plan_publication import (
+    load_teacher_collection_plan,
 )
 
 
@@ -397,3 +400,35 @@ def test_pending_assignments_revalidates_existing_tool_calls(
 
     with pytest.raises(ValueError, match="exec_command"):
         pending_teacher_assignments(plan, artifact_root=tmp_path)
+
+
+def test_checked_in_stage1_powershell_collection_is_complete() -> None:
+    repository_root = Path(__file__).resolve().parents[1]
+    published = load_teacher_collection_plan(
+        repository_root
+        / "plans"
+        / "teacher"
+        / "stage1-codex-powershell-002"
+    )
+    raw_path = (
+        repository_root
+        / "datasets"
+        / "teacher"
+        / "stage1-codex-powershell-002"
+        / "raw.jsonl"
+    )
+    trajectories = load_jsonl(raw_path, TeacherTrajectory)
+
+    assert len(published.plan.assignments) == 8
+    assert len(trajectories) == 8
+    assert {trajectory.split for trajectory in trajectories} == {
+        DatasetSplit.TRAIN
+    }
+    assert all(
+        "powershell-native" in trajectory.tags
+        for trajectory in trajectories
+    )
+    assert pending_teacher_assignments(
+        published.plan,
+        artifact_root=repository_root,
+    ) == ()

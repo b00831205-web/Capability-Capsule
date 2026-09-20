@@ -180,3 +180,40 @@ def test_checked_in_stage1_publication_is_complete_and_harness_aligned() -> None
     assert len(verified.dataset.validation) == 2
     assert verified.dataset.duplicates == ()
     assert len({record.trajectory_id for record in trajectories}) == 10
+
+
+def test_checked_in_stage1_powershell_publication_combines_increment() -> None:
+    root = Path(__file__).resolve().parents[1]
+    verified = load_teacher_dataset_publication(
+        root
+        / "datasets"
+        / "teacher"
+        / "published"
+        / "stage1-codex-powershell-002"
+    )
+    original_plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-001"
+    ).plan
+    increment_plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-powershell-002"
+    ).plan
+    profile = verify_harness_profile(
+        increment_plan.harness_profile,
+        artifact_root=root,
+    )
+    trajectories = verified.dataset.train + verified.dataset.validation
+
+    validate_teacher_dataset(
+        trajectories,
+        tasks=tuple(
+            assignment.task
+            for assignment in original_plan.assignments
+            + increment_plan.assignments
+        ),
+        harness_profile=profile,
+    )
+
+    assert len(verified.dataset.train) == 16
+    assert len(verified.dataset.validation) == 2
+    assert verified.dataset.duplicates == ()
+    assert len({record.trajectory_id for record in trajectories}) == 18

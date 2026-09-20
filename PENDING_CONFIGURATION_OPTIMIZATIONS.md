@@ -114,10 +114,17 @@ correctness:
   prompt envelope, shell semantics, command-result envelope, and multi-turn behavior.
 - Preserve at least a 32K local-provider context for Codex; the earlier 8K smoke setting is too small
   for the complete tool and safety prompt.
-- Evaluate the `stage1-codex-qwen35-2b-001` checkpoint on the unchanged held-out fixtures and append
-  its result through the learning-curve recording path. The completed 8-step CPU run consumed the
-  canonical 4K export and reloaded successfully, but its `1.087` validation loss alone does not prove
-  correct tool use or justify promotion.
+- Block promotion of `stage1-codex-qwen35-2b-001`. Its digest-pinned two-case evaluation scored
+  `0/2`: the adapter repeatedly generated Unix `sed -i` and Bash heredoc commands for a Windows
+  PowerShell harness, accumulated 1 and 3 invalid tool calls, and reached the four-round limit.
+- The separately versioned `stage1-codex-powershell-002` increment is now published as a combined
+  16-train/2-validation dataset and exported without truncation as
+  `stage1-codex-powershell-002-qwen35-2b-v1`. Training remains blocked by WSL process termination:
+  one recovery completed all 16 optimization steps with loss `1.268` but died during final validation
+  before adapter save; two save-first retries died before model loading. Preserve these failed runs.
+  After an authorized WSL restart, complete save-first training and evaluate the new checkpoint on
+  digest `3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb`.
+  Do not loosen the evaluator to accept Unix commands merely to improve the score.
 - Decide from measured validation whether to keep Qwen3.5-2B as a narrowly scripted executor or move
   the primary coding capsule to the next larger model that fits the confirmed hardware budget.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
@@ -133,10 +140,11 @@ correctness:
 The first `HarnessProfile` implementation is intentionally narrow: one immutable Codex profile,
 SHA-256 verification, one exact `exec_command` argument schema, and one normalized result-envelope
 identifier. The contract now passes prompt, append, resume, request-schema, and result-envelope
-validation. The schema `0.3` smoke trajectory now passes independent validation, and the minimum
-Stage 1 harness-aligned dataset has completed one checkpoint-producing run. Automatic installed-app
-discovery, profile migration, multiple shells, and schema negotiation remain deferred until the new
-adapter passes unchanged held-out checkpoint evaluation.
+validation. The schema `0.3` smoke trajectory passes independent validation, and the minimum Stage 1
+dataset has completed one checkpoint-producing run plus one digest-pinned evaluation. That adapter
+failed both executable cases because its edit syntax did not match Windows PowerShell. Automatic
+installed-app discovery, profile migration, multiple shells, and schema negotiation remain deferred
+until a new adapter passes the unchanged suite and a genuinely unseen validation fixture.
 
 ### Resolved blocking configuration compatibility
 
@@ -148,6 +156,16 @@ adapter passes unchanged held-out checkpoint evaluation.
 - `stage1-codex-001` now has a verified immutable dataset publication containing 8 train and 2
   validation trajectories with zero duplicates. All tool requests and result envelopes pass the
   pinned HarnessProfile after publication reload; all registered fixture snapshots remain unchanged.
+- `stage1-codex-powershell-002` has a digest-pinned schema `0.3` collection plan and 8 completed
+  train trajectories. Its observable file operations are Windows PowerShell-native, its environment
+  recovery is retained as real evidence, and all assignments report complete under the pinned
+  HarnessProfile. The combined immutable publication has 16 train, 2 validation, and zero duplicate
+  records; the 4K SFT export contains 16,888 tokens with a 2,167-token maximum. Training checkpoint
+  production and evaluation remain pending because the WSL training process terminated.
+- `stage1-codex-validation-v2` preserves both fixed v1 cases and adds one revision-pinned fixture that
+  is absent from all Teacher and SFT data. Its three-case digest is
+  `3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb`;
+  execution must wait for a valid new adapter rather than reusing the failed v1 checkpoint.
 - `stage1-codex-001-qwen35-2b-v2` is the verified, untruncated Qwen SFT export: 7,537 total tokens and
   6,087 trainable assistant/tool-call tokens at a 4K maximum sequence length. The 2K export clipped
   the 2,167-token recovery trajectory and is retained only for auditability.

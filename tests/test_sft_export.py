@@ -279,6 +279,29 @@ def test_checked_in_stage1_qwen_export_is_complete_and_untruncated() -> None:
     assert max(len(example.input_ids) for example in examples) == 2167
     assert all(len(example.input_ids) < manifest.max_length for example in examples)
 
+
+def test_checked_in_stage1_powershell_qwen_export_is_untruncated() -> None:
+    root = Path(__file__).resolve().parents[1]
+    export_dir = (
+        root
+        / "artifacts"
+        / "sft"
+        / "stage1-codex-powershell-002-qwen35-2b-v1"
+    )
+    manifest = SFTExportManifest.model_validate_json(
+        (export_dir / "manifest.json").read_bytes()
+    )
+    train = load_sft_examples(export_dir / "train.jsonl")
+    validation = load_sft_examples(export_dir / "validation.jsonl")
+    examples = train + validation
+
+    assert manifest.source_dataset_id == "stage1-codex-powershell-002"
+    assert manifest.max_length == 4096
+    assert len(train) == 16
+    assert len(validation) == 2
+    assert max(len(example.input_ids) for example in examples) == 2167
+    assert all(len(example.input_ids) < manifest.max_length for example in examples)
+
     for artifact in manifest.artifacts:
         payload = (export_dir / artifact.filename).read_bytes()
         assert artifact.byte_count == len(payload)

@@ -421,8 +421,38 @@ Exit condition:
   restart after step 3. Its terminal log and explicit failure event are retained. The recovery
   restarted from the pinned base and seed, ran all 8 steps, and evaluated once at the end; this is
   checkpoint-production evidence, not a throughput benchmark or proof of validation-task quality.
-  The next blocking step is unchanged held-out checkpoint evaluation through the learning-curve
-  recording path.
+- The unchanged `stage1-codex-validation-v1` checkpoint suite now runs through a bounded coding
+  evaluator over revision-verified disposable fixture copies. It records real model turns, normalized
+  result envelopes, independent validators, tokens, duration, peak RSS, invalid tool calls, and a
+  digest-pinned learning-curve point. The step-8 adapter scored `0/2`: after valid reads it repeatedly
+  emitted Unix `sed -i` or Bash heredoc edits under the pinned Windows PowerShell harness, reached the
+  four-tool-round limit, and left both fixtures failing. Peak RSS was about 4.68 GB; case durations
+  were 56.3 and 93.6 seconds. This is a measured harness-alignment failure, so this checkpoint must
+  not be promoted or packaged as the MVP capsule.
+- `stage1-codex-powershell-002` now contains 8 additional train trajectories collected from
+  revision-verified disposable copies. Every trajectory uses guarded Windows PowerShell reads and
+  edits, records the real missing-`pytest` failure from the Windows interpreter, recovers through the
+  repository's pinned WSL validator, and passes its independent fixture tests. The schema `0.3` plan
+  and all tool requests/results validate against the same digest-pinned Codex HarnessProfile; the
+  original fixtures and all earlier raw or published datasets remain unchanged.
+- The combined immutable `stage1-codex-powershell-002` publication contains 16 train and 2 validation
+  trajectories with zero duplicates. Its `stage1-codex-powershell-002-qwen35-2b-v1` export preserves
+  all 18 trajectories without truncation: 16,888 total tokens, 13,344 trainable tokens, and a measured
+  maximum sequence of 2,167 tokens under the same pinned 4K Qwen tokenizer contract.
+- The new training attempts preserve their failures rather than claiming a checkpoint. The first
+  attempt still evaluated every step and was stopped after step 2. `recovery-001` completed all 16
+  optimization steps with training loss `1.268` but the WSL process terminated during final
+  validation before saving an adapter. Two save-first retries then terminated before model loading,
+  despite the VM later reporting about 14 GiB available. No new checkpoint exists yet.
+- `stage1-codex-validation-v2` preserves the two fixed v1 case models exactly and adds
+  `validation-powershell-salutation-unseen-001`, revision
+  `bdece654c046d50688c9c3a33eb556c9d728ada54487ba289301e92cb5c0fd0a`, which appears in no Teacher
+  publication, SFT export, or training loss. The three-case suite digest is
+  `3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb`.
+- The next blocking step is an explicitly authorized WSL restart, followed by the save-first training
+  recovery, separate-process validation-loss measurement, adapter reload, and execution of the v2
+  suite. The current two fixed validation trajectories contributed validation loss during training,
+  so only the third case can support a genuinely unseen generalization claim.
 
 ## MVP completion definition
 
