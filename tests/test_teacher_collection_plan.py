@@ -432,3 +432,31 @@ def test_checked_in_stage1_powershell_collection_is_complete() -> None:
         published.plan,
         artifact_root=repository_root,
     ) == ()
+
+
+def test_checked_in_powershell_edit_collection_is_complete() -> None:
+    repository_root = Path(__file__).resolve().parents[1]
+    published = load_teacher_collection_plan(
+        repository_root
+        / "plans"
+        / "teacher"
+        / "stage1-codex-powershell-edit-003"
+    )
+    trajectories = load_jsonl(
+        repository_root
+        / "datasets"
+        / "teacher"
+        / "stage1-codex-powershell-edit-003"
+        / "raw.jsonl",
+        TeacherTrajectory,
+    )
+
+    assert len(published.plan.assignments) == 8
+    assert len(trajectories) == 8
+    assert all(trajectory.split is DatasetSplit.TRAIN for trajectory in trajectories)
+    assert all("powershell-edit-template" in trajectory.tags for trajectory in trajectories)
+    assert all("environment-recovery" in trajectory.tags for trajectory in trajectories)
+    assert pending_teacher_assignments(
+        published.plan,
+        artifact_root=repository_root,
+    ) == ()

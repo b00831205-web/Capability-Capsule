@@ -117,16 +117,20 @@ correctness:
 - Block promotion of `stage1-codex-qwen35-2b-001`. Its digest-pinned two-case evaluation scored
   `0/2`: the adapter repeatedly generated Unix `sed -i` and Bash heredoc commands for a Windows
   PowerShell harness, accumulated 1 and 3 invalid tool calls, and reached the four-round limit.
-- The separately versioned `stage1-codex-powershell-002` increment is now published as a combined
+- The separately versioned `stage1-codex-powershell-002` increment is published as a combined
   16-train/2-validation dataset and exported without truncation as
-  `stage1-codex-powershell-002-qwen35-2b-v1`. Training remains blocked by WSL process termination:
-  one recovery completed all 16 optimization steps with loss `1.268` but died during final validation
-  before adapter save; two save-first retries died before model loading. Preserve these failed runs.
-  After an authorized WSL restart, complete save-first training and evaluate the new checkpoint on
-  digest `3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb`.
-  Do not loosen the evaluator to accept Unix commands merely to improve the score.
+  `stage1-codex-powershell-002-qwen35-2b-v1`. After restart, save-first recovery `004` trained 16
+  steps, saved and independently reloaded its adapter, and measured validation loss `1.022`; it then
+  scored `0/3` on fixed-plus-unseen suite digest
+  `3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb`.
+  Add a new data increment for inspect→PowerShell-edit→validate transitions, but never add that suite
+  or its execution results to training. Do not loosen the evaluator to accept Unix commands merely to
+  improve the score.
 - Decide from measured validation whether to keep Qwen3.5-2B as a narrowly scripted executor or move
   the primary coding capsule to the next larger model that fits the confirmed hardware budget.
+- Train a fresh checkpoint from the canonical
+  `stage1-codex-powershell-edit-003-qwen35-2b-v1` SFT on the same pinned base. Keep all v2 fixtures
+  and v2 results excluded, then repeat the unchanged fixed-plus-unseen v2 suite.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
   prefill throughput separate from decode throughput and include tool, validation, retry, memory, and
   sustained-performance costs.
@@ -160,12 +164,14 @@ until a new adapter passes the unchanged suite and a genuinely unseen validation
   train trajectories. Its observable file operations are Windows PowerShell-native, its environment
   recovery is retained as real evidence, and all assignments report complete under the pinned
   HarnessProfile. The combined immutable publication has 16 train, 2 validation, and zero duplicate
-  records; the 4K SFT export contains 16,888 tokens with a 2,167-token maximum. Training checkpoint
-  production and evaluation remain pending because the WSL training process terminated.
+  records; the 4K SFT export contains 16,888 tokens with a 2,167-token maximum. Recovery `004`
+  produced a hash-verified step-16 adapter and separate-process validation loss `1.022`, but its
+  fixed-plus-unseen v2 result is `0/3`, so it remains blocked from promotion.
 - `stage1-codex-validation-v2` preserves both fixed v1 cases and adds one revision-pinned fixture that
   is absent from all Teacher and SFT data. Its three-case digest is
-  `3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb`;
-  execution must wait for a valid new adapter rather than reusing the failed v1 checkpoint.
+  `3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb`.
+  The recovered checkpoint executed it with `0/3` success; its failure reports are retained as
+  evidence for the next data increment.
 - `stage1-codex-001-qwen35-2b-v2` is the verified, untruncated Qwen SFT export: 7,537 total tokens and
   6,087 trainable assistant/tool-call tokens at a 4K maximum sequence length. The 2K export clipped
   the 2,167-token recovery trajectory and is retained only for auditability.

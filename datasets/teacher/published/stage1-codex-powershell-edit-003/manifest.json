@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1",
+  "dataset_id": "stage1-codex-powershell-edit-003",
+  "artifacts": [
+    {
+      "filename": "train.jsonl",
+      "record_count": 24,
+      "byte_count": 102443,
+      "sha256": "739f73408a83d022d05c00a4b257b2e902fcb74bfdc1380f31c7e1a0582914e6"
+    },
+    {
+      "filename": "validation.jsonl",
+      "record_count": 2,
+      "byte_count": 10300,
+      "sha256": "b3a00bc7b1e7d1f6608ddd060f8cc7faa412485ba658bbdd281509111d168f2a"
+    },
+    {
+      "filename": "duplicates.jsonl",
+      "record_count": 0,
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

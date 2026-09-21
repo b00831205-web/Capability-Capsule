@@ -217,3 +217,47 @@ def test_checked_in_stage1_powershell_publication_combines_increment() -> None:
     assert len(verified.dataset.validation) == 2
     assert verified.dataset.duplicates == ()
     assert len({record.trajectory_id for record in trajectories}) == 18
+
+
+def test_checked_in_powershell_edit_publication_combines_increment() -> None:
+    root = Path(__file__).resolve().parents[1]
+    verified = load_teacher_dataset_publication(
+        root
+        / "datasets"
+        / "teacher"
+        / "published"
+        / "stage1-codex-powershell-edit-003"
+    )
+    base_plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-001"
+    ).plan
+    powershell_plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-powershell-002"
+    ).plan
+    edit_plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-powershell-edit-003"
+    ).plan
+    profile = verify_harness_profile(
+        edit_plan.harness_profile,
+        artifact_root=root,
+    )
+    trajectories = verified.dataset.train + verified.dataset.validation
+
+    validate_teacher_dataset(
+        trajectories,
+        tasks=tuple(
+            assignment.task
+            for assignment in (
+                base_plan.assignments
+                + powershell_plan.assignments
+                + edit_plan.assignments
+            )
+        ),
+        harness_profile=profile,
+    )
+
+    assert verified.manifest.dataset_id == "stage1-codex-powershell-edit-003"
+    assert len(verified.dataset.train) == 24
+    assert len(verified.dataset.validation) == 2
+    assert verified.dataset.duplicates == ()
+    assert len({record.trajectory_id for record in trajectories}) == 26

@@ -356,3 +356,44 @@ def test_stage1_codex_training_run_has_verified_checkpoint_and_reload() -> None:
     assert reload_validation["adapter_hashes_verified"] is True
     assert reload_validation["loader_class"] == "PeftModelForCausalLM"
     assert reload_validation["active_adapters"] == ["default"]
+
+
+def test_stage1_powershell_recovery_checkpoint_is_saved_and_reloaded() -> None:
+    root = Path(__file__).resolve().parents[1]
+    run_dir = root / "runs/training/stage1-codex-qwen35-2b-002-recovery-004"
+    training_run = TrainingRunManifest.model_validate_json(
+        (run_dir / "training-run.json").read_bytes()
+    )
+    checkpoint = SavedAdapterCheckpoint.model_validate_json(
+        (run_dir / "checkpoint.json").read_bytes()
+    )
+    events = load_jsonl(run_dir / "trainer-process.jsonl", TrainerProcessEvent)
+    training_metrics = json.loads(
+        (run_dir / "training-phase-metrics.json").read_text("utf-8")
+    )
+    validation_metrics = json.loads(
+        (run_dir / "validation-phase-metrics.json").read_text("utf-8")
+    )
+
+    assert training_run.dataset_id == "stage1-codex-powershell-002"
+    assert training_run.hyperparameters["sft_export_id"] == (
+        "stage1-codex-powershell-002-qwen35-2b-v1"
+    )
+    assert training_run.hyperparameters["evaluation_strategy"] == (
+        "separate process after adapter save"
+    )
+    assert checkpoint.step == 16
+    assert checkpoint.adapter_config_sha256 == (
+        "604cd23943abad5ee3c58a175969f0f4e013c8b9695debbd56594de4f13e1723"
+    )
+    assert checkpoint.adapter_model_sha256 == (
+        "8a4c9043f95cb40765b1c17bc427f8cfd7b33892e57057bd20f42df2bc665cc1"
+    )
+    assert [event.event for event in events] == [
+        "started",
+        "checkpoint_saved",
+        "completed",
+    ]
+    assert training_metrics["training_loss"] == pytest.approx(1.2680502831935883)
+    assert validation_metrics["validation_loss"] == pytest.approx(1.022344172000885)
+    assert validation_metrics["model_class"] == "PeftModelForCausalLM"

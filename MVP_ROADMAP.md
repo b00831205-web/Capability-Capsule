@@ -439,20 +439,35 @@ Exit condition:
   trajectories with zero duplicates. Its `stage1-codex-powershell-002-qwen35-2b-v1` export preserves
   all 18 trajectories without truncation: 16,888 total tokens, 13,344 trainable tokens, and a measured
   maximum sequence of 2,167 tokens under the same pinned 4K Qwen tokenizer contract.
-- The new training attempts preserve their failures rather than claiming a checkpoint. The first
-  attempt still evaluated every step and was stopped after step 2. `recovery-001` completed all 16
-  optimization steps with training loss `1.268` but the WSL process terminated during final
-  validation before saving an adapter. Two save-first retries then terminated before model loading,
-  despite the VM later reporting about 14 GiB available. No new checkpoint exists yet.
-- `stage1-codex-validation-v2` preserves the two fixed v1 case models exactly and adds
+- Earlier attempts remain retained as failure evidence, but after the WSL restart the save-first
+  `stage1-codex-qwen35-2b-002-recovery-004` completed 16 steps with training loss `1.268`, saved
+  a hash-verified adapter, reloaded it as `PeftModelForCausalLM`, and measured validation loss
+  `1.022` in a separate process. This removes the training-memory blocker but does not imply task
+  success or promotion readiness.
+- `stage1-codex-validation-v2` preserves the two fixed v1 cases exactly and adds
   `validation-powershell-salutation-unseen-001`, revision
   `bdece654c046d50688c9c3a33eb556c9d728ada54487ba289301e92cb5c0fd0a`, which appears in no Teacher
   publication, SFT export, or training loss. The three-case suite digest is
   `3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb`.
-- The next blocking step is an explicitly authorized WSL restart, followed by the save-first training
-  recovery, separate-process validation-loss measurement, adapter reload, and execution of the v2
-  suite. The current two fixed validation trajectories contributed validation loss during training,
-  so only the third case can support a genuinely unseen generalization claim.
+- The recovered adapter still scored `0/3` on v2. It emitted one Unix `sed -i` edit on the first fixed
+  case and repeated read-only `cat greeting.py` calls on the second fixed case and the truly unseen
+  case; all reached the four-tool-round limit. Peak RSS was 4.63–4.67 GB. The original first fixed
+  fixture had drifted, so the evaluator used a digest-matching unmodified v1 workspace snapshot as a
+  one-time source; it did not modify the drifted original fixture.
+- The next blocking step is a separately versioned data increment that teaches short, observable
+  transitions from inspection to a guarded PowerShell edit and then validation, without adding any
+  v2 fixture or result to training. Re-train from the pinned base, then repeat v2 unchanged.
+- `stage1-codex-powershell-edit-003` has now collected and independently published that separately
+  versioned increment: 8 new
+  train trajectories from revision-verified disposable fixture copies. Each records PowerShell
+  `Get-Content`, a guarded `.Replace` followed by `Set-Content`, Windows pytest absence, WSL
+  recovery, and passing independent fixture tests. Three source-spelling guards safely stopped and
+  were corrected after a fresh read; the workspace task also retained a real failed assertion and
+  its targeted correction. The immutable combined publication contains 24 train and 2 validation
+  trajectories with zero duplicates; its three artifact hashes are recorded in its manifest. The
+  canonical `stage1-codex-powershell-edit-003-qwen35-2b-v1` export preserves all 26 trajectories
+  without truncation at the pinned 4K tokenizer budget: 20,263 trainable tokens and a 2,986-token
+  maximum sequence. It is not yet trained or used in the unchanged v2 suite.
 
 ## MVP completion definition
 

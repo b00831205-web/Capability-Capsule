@@ -217,3 +217,32 @@ def test_stage1_validation_v2_preserves_fixed_cases_and_adds_unseen_fixture() ->
     assert current.identity().evaluation_suite_digest == (
         "3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb"
     )
+
+
+def test_stage1_powershell_checkpoint_evaluation_records_fixed_and_unseen_failure() -> None:
+    root = Path(__file__).resolve().parents[1]
+    run = (
+        root
+        / "runs"
+        / "evaluation"
+        / "stage1-codex-qwen35-2b-002-recovery-004-rerun-001"
+    )
+    results = load_jsonl(run / "case-results.jsonl", CaseResult)
+    points = load_jsonl(run / "learning-curve.jsonl", LearningCurvePoint)
+    unseen_workspace = run / "workspaces" / "validation-powershell-salutation-unseen-001"
+
+    assert [result.case_id for result in results] == [
+        "smoke-validation-greeting-change-codex-001",
+        "validation-greeting-exec-exec-002",
+        "validation-powershell-salutation-unseen-001",
+    ]
+    assert [result.success for result in results] == [False, False, False]
+    assert [result.invalid_tool_call_count for result in results] == [1, 0, 0]
+    assert all(result.error_type == "ToolRoundLimitExceeded" for result in results)
+    assert points[0].checkpoint_id == "stage1-codex-qwen35-2b-002-step-16"
+    assert points[0].success_rate == 0.0
+    assert points[0].cumulative_trajectory_count == 16
+    assert points[0].evaluation_suite_digest == (
+        "3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb"
+    )
+    assert "Hello, {name}" in (unseen_workspace / "greeting.py").read_text("utf-8")
