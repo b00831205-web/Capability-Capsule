@@ -261,3 +261,37 @@ def test_checked_in_powershell_edit_publication_combines_increment() -> None:
     assert len(verified.dataset.validation) == 2
     assert verified.dataset.duplicates == ()
     assert len({record.trajectory_id for record in trajectories}) == 26
+
+
+def test_checked_in_contract_004_publication_is_cmd_only_and_complete() -> None:
+    root = Path(__file__).resolve().parents[1]
+    verified = load_teacher_dataset_publication(
+        root
+        / "datasets"
+        / "teacher"
+        / "published"
+        / "stage1-codex-powershell-contract-004"
+    )
+    plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-powershell-contract-004"
+    ).plan
+    profile = verify_harness_profile(plan.harness_profile, artifact_root=root)
+
+    validate_teacher_dataset(
+        verified.dataset.train,
+        tasks=tuple(assignment.task for assignment in plan.assignments),
+        harness_profile=profile,
+    )
+
+    assert verified.manifest.dataset_id == "stage1-codex-powershell-contract-004"
+    assert len(verified.dataset.train) == 8
+    assert verified.dataset.validation == ()
+    assert verified.dataset.duplicates == ()
+    tool_calls = [
+        tool_call
+        for trajectory in verified.dataset.train
+        for message in trajectory.messages
+        for tool_call in message.tool_calls
+    ]
+    assert len(tool_calls) == 25
+    assert all(set(tool_call.arguments) == {"cmd"} for tool_call in tool_calls)

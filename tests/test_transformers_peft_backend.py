@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from collections.abc import Callable
 from pathlib import Path
@@ -271,6 +272,48 @@ def test_backend_trains_tokenized_examples_and_saves_adapter(
     assert fake_training_libraries.tokenizer.saved == [
         tmp_path / "adapter-final"
     ]
+
+
+def test_backend_supports_save_first_training_without_validation(
+    tmp_path: Path,
+    fake_training_libraries: SimpleNamespace,
+) -> None:
+    from capability_capsule.training.transformers_peft import (
+        TransformersPeftBackend,
+    )
+
+    metrics: list[TrainingMetric] = []
+    checkpoint = TransformersPeftBackend().train(
+        config=make_config(),
+        train_examples=(make_example("train-001"),),
+        validation_examples=(),
+        run_dir=tmp_path,
+        on_metric=metrics.append,
+    )
+
+    trainer = FakeTrainer.latest
+    assert trainer is not None
+    assert trainer.kwargs["eval_dataset"] is None
+    assert fake_training_libraries.calls.training_arguments[0][
+        "eval_strategy"
+    ] == "no"
+    assert fake_training_libraries.calls.training_arguments[0][
+        "eval_steps"
+    ] is None
+    assert metrics == []
+    assert checkpoint.step == 2
+    assert (checkpoint.adapter_directory / "adapter_model.safetensors").is_file()
+    training_metrics = json.loads(
+        (tmp_path / "training-phase-metrics.json").read_text("utf-8")
+    )
+    assert training_metrics == {
+        "schema_version": "0.1",
+        "run_id": tmp_path.name,
+        "step": 2,
+        "epoch": 1.0,
+        "training_loss": 1.0,
+        "evaluation_strategy": "none; independent checkpoint evaluation",
+    }
 
 
 def test_loader_uses_pinned_base_revision_and_adapter(

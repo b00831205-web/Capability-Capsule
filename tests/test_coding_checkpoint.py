@@ -246,3 +246,96 @@ def test_stage1_powershell_checkpoint_evaluation_records_fixed_and_unseen_failur
         "3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb"
     )
     assert "Hello, {name}" in (unseen_workspace / "greeting.py").read_text("utf-8")
+
+
+def test_contract_004_checkpoint_records_protocol_aligned_behavior_failure() -> None:
+    root = Path(__file__).resolve().parents[1]
+    run = (
+        root
+        / "runs"
+        / "evaluation"
+        / "stage1-codex-qwen35-2b-004-contract-v2"
+    )
+    suite = load_coding_evaluation_suite(run / "evaluation-suite.json")
+    results = load_jsonl(run / "case-results.jsonl", CaseResult)
+    points = load_jsonl(run / "learning-curve.jsonl", LearningCurvePoint)
+    reports = [
+        json.loads((run / "case-reports" / f"{result.case_id}.json").read_text("utf-8"))
+        for result in results
+    ]
+
+    assert suite.identity().evaluation_suite_digest == (
+        "3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb"
+    )
+    assert [result.case_id for result in results] == [
+        "smoke-validation-greeting-change-codex-001",
+        "validation-greeting-exec-exec-002",
+        "validation-powershell-salutation-unseen-001",
+    ]
+    assert [result.success for result in results] == [False, False, False]
+    assert [result.invalid_tool_call_count for result in results] == [4, 3, 3]
+    assert all(result.error_type == "ToolRoundLimitExceeded" for result in results)
+    assert all(result.tool_call_count == 4 for result in results)
+
+    point = points[0]
+    assert point.checkpoint_id == "stage1-codex-qwen35-2b-004-contract-step-8"
+    assert point.cumulative_trajectory_count == 8
+    assert point.cumulative_token_count == 5905
+    assert point.success_rate == 0.0
+    assert point.evaluation_suite_digest == (
+        "3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb"
+    )
+
+    completions = ["\n".join(report["completions"]) for report in reports]
+    assert "Get-ChildItem" in completions[0]
+    assert "cat greeting.py" in completions[1]
+    assert "cat greeting.py" in completions[2]
+    assert "cat > greeting.py <<" in completions[1]
+    assert "cat > greeting.py <<" in completions[2]
+    assert all(not validator["passed"] for report in reports for validator in report["validators"])
+
+
+def test_contract_004_higher_exposure_checkpoint_stops_before_tool_use() -> None:
+    root = Path(__file__).resolve().parents[1]
+    run = (
+        root
+        / "runs"
+        / "evaluation"
+        / "stage1-codex-qwen35-2b-005-contract-32step-v2"
+    )
+    suite = load_coding_evaluation_suite(run / "evaluation-suite.json")
+    results = load_jsonl(run / "case-results.jsonl", CaseResult)
+    points = load_jsonl(run / "learning-curve.jsonl", LearningCurvePoint)
+    reports = [
+        json.loads((run / "case-reports" / f"{result.case_id}.json").read_text("utf-8"))
+        for result in results
+    ]
+
+    assert suite.identity().evaluation_suite_digest == (
+        "3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb"
+    )
+    assert len(results) == 3
+    assert all(result.status is RunStatus.COMPLETED for result in results)
+    assert all(result.success is False for result in results)
+    assert all(result.score == 0.0 for result in results)
+    assert all(result.tool_call_count == 0 for result in results)
+    assert all(result.invalid_tool_call_count == 0 for result in results)
+    assert all(result.error_type is None for result in results)
+    assert all(
+        report["completions"] == [
+            "Inspect the current file before editing.<|im_end|>"
+        ]
+        for report in reports
+    )
+    assert all(not validator["passed"] for report in reports for validator in report["validators"])
+
+    point = points[0]
+    assert point.checkpoint_id == (
+        "stage1-codex-qwen35-2b-005-contract-32step-step-32"
+    )
+    assert point.cumulative_trajectory_count == 8
+    assert point.cumulative_token_count == 5905
+    assert point.success_rate == 0.0
+    assert point.evaluation_suite_digest == (
+        "3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb"
+    )

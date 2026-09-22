@@ -252,9 +252,6 @@ def _validate_dataset_counts(
     if not train_examples:
         raise ValueError("LoRA training split must not be empty")
 
-    if not validation_examples:
-        raise ValueError("LoRA validation split must not be empty")
-
     if len(train_examples) != training_run.dataset_stats.train.trajectory_count:
         raise ValueError("SFT train record count does not match training manifest")
 

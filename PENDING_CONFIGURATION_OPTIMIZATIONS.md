@@ -128,9 +128,15 @@ correctness:
   improve the score.
 - Decide from measured validation whether to keep Qwen3.5-2B as a narrowly scripted executor or move
   the primary coding capsule to the next larger model that fits the confirmed hardware budget.
-- Train a fresh checkpoint from the canonical
-  `stage1-codex-powershell-edit-003-qwen35-2b-v1` SFT on the same pinned base. Keep all v2 fixtures
-  and v2 results excluded, then repeat the unchanged fixed-plus-unseen v2 suite.
+- Keep both contract checkpoints blocked from publication. The controlled 4-epoch / 32-step run held
+  data, model, seed, learning rate, and LoRA configuration fixed and still scored `0/3` on unchanged
+  v2. It produced zero tool calls because schema `0.2` encodes narration and its following tool call
+  as separate assistant turns; the model learned the narration-only turn plus its end marker. Promote
+  SFT turn normalization back into blocking work: coalesce adjacent assistant narration and tool-call
+  records into one assistant turn, assert decoded trainable tokens contain narration followed by the
+  tool call before one `<|im_end|>`, export a new immutable SFT version, and only then retrain. Do not
+  collect more data, increase steps again, expose v2 fixtures, or change model size before this
+  serialization defect is tested.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
   prefill throughput separate from decode throughput and include tool, validation, retry, memory, and
   sustained-performance costs.
@@ -179,6 +185,22 @@ until a new adapter passes the unchanged suite and a genuinely unseen validation
   assistant mask for SFT export. The minimal fallback derives trainable spans from tokenized message
   prefixes; broader template-family compatibility and performance optimization remain deferred until
   another supported harness or model demonstrates a need.
+- `stage1-codex-powershell-contract-004` is the published cmd-only contract increment: a digest-pinned
+  schema `0.3` plan plus 8 train trajectories whose every tool request carries only a `cmd` argument
+  and whose commands are the accepted Get-Content, guarded `.Replace` + Set-Content, and pytest
+  sequence. One trajectory records a genuinely executed exit-126 rejection recovery, and the set
+  excludes git apply, Copy-Item, WSL commands, prompt-level edit hints, and every v2 fixture or
+  result. Its schema `0.2` Qwen export carries the identical evaluation contract and remains
+  untruncated; `stage1-codex-qwen35-2b-004-contract` completed 8 save-first steps, saved verified
+  adapter hashes, and passed an independent reload. The unchanged v2 suite then scored it `0/3`.
+  Unlike earlier checkpoints, every generated tool request was structurally cmd-only, proving the
+  SFT contract fix reached inference; however, generated command policy still used directory probes,
+  Bash heredocs, and nested PowerShell invocations instead of the trained guarded edit form. Treat
+  this as an optimization-exposure question first, not evidence that the 2B model is incapable.
+- `stage1-codex-qwen35-2b-005-contract-32step` resolved that optimization-exposure question: training
+  loss dropped to `0.4665`, yet every unchanged-v2 case emitted the exact narration-only first SFT
+  turn and stopped without a tool call. The defect is now localized to adjacent assistant-turn
+  serialization rather than insufficient steps or cmd-only schema alignment.
 
 ## Deferred consumer experience work
 

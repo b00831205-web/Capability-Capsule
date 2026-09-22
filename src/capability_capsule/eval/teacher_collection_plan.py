@@ -1,7 +1,7 @@
 """Reproducible and resumable batch Teacher collection plans."""
 
 from collections.abc import Mapping, Sequence
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -194,6 +194,32 @@ def _load_trajectory_index(
 
     return index
 
+
+def _resolve_destination_path(
+    path: Path,
+    *,
+    artifact_root: Path | None,
+) -> Path:
+    if path.is_absolute() or artifact_root is None:
+        return path
+
+    raw_path = str(path)
+    windows_path = PureWindowsPath(raw_path)
+    root = Path(artifact_root)
+
+    if windows_path.is_absolute():
+        relative_parts = list(windows_path.parts[1:])
+        root_name = root.name.casefold()
+        for index, part in enumerate(relative_parts):
+            if part.casefold() == root_name:
+                return root.joinpath(*relative_parts[index + 1 :])
+        return path
+
+    if "\\" in raw_path:
+        return root.joinpath(*windows_path.parts)
+
+    return root / path
+
 def _validate_completed_assignment(
         assignment: TeacherAssignment,
         trajectory: TeacherTrajectory,
@@ -234,7 +260,10 @@ def pending_teacher_assignments(
     pending: list[TeacherAssignment] = []
 
     for assignment in plan.assignments:
-        destination = assignment.destination_jsonl
+        destination = _resolve_destination_path(
+            assignment.destination_jsonl,
+            artifact_root=artifact_root,
+        )
 
         if destination not in index_by_destination:
             index_by_destination[destination] = (

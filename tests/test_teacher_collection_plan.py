@@ -460,3 +460,49 @@ def test_checked_in_powershell_edit_collection_is_complete() -> None:
         published.plan,
         artifact_root=repository_root,
     ) == ()
+
+
+def test_checked_in_contract_collection_is_complete() -> None:
+    repository_root = Path(__file__).resolve().parents[1]
+    published = load_teacher_collection_plan(
+        repository_root
+        / "plans"
+        / "teacher"
+        / "stage1-codex-powershell-contract-004"
+    )
+    trajectories = load_jsonl(
+        repository_root
+        / "datasets"
+        / "teacher"
+        / "stage1-codex-powershell-contract-004"
+        / "raw.jsonl",
+        TeacherTrajectory,
+    )
+
+    assert len(published.plan.assignments) == 8
+    assert len(trajectories) == 8
+    assert all(trajectory.split is DatasetSplit.TRAIN for trajectory in trajectories)
+    assert all("cmd-only-contract" in trajectory.tags for trajectory in trajectories)
+
+    recovery = [
+        trajectory
+        for trajectory in trajectories
+        if "rejection-recovery" in trajectory.tags
+    ]
+    assert len(recovery) == 1
+
+    # Every tool request carries only the single cmd argument, and no trajectory
+    # teaches the rejected workdir / git apply / Copy-Item / WSL mechanisms.
+    for trajectory in trajectories:
+        assert "powershell" not in trajectory.task.lower()
+        for message in trajectory.messages:
+            for tool_call in message.tool_calls:
+                assert set(tool_call.arguments) == {"cmd"}
+                command = tool_call.arguments["cmd"]
+                for forbidden in ("workdir", "git apply", "Copy-Item", "wsl"):
+                    assert forbidden not in command
+
+    assert pending_teacher_assignments(
+        published.plan,
+        artifact_root=repository_root,
+    ) == ()

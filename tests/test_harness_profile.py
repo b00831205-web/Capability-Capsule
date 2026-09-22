@@ -114,6 +114,29 @@ def test_harness_profile_reference_rejects_tampered_artifact(tmp_path: Path) -> 
         verify(reference)
 
 
+def test_harness_profile_reference_resolves_windows_relative_path_on_posix(
+    tmp_path: Path,
+) -> None:
+    profile_directory = tmp_path / "plans" / "harness" / "pinned"
+    profile_directory.mkdir(parents=True)
+    profile_path = profile_directory / "harness-profile.json"
+    digest = _write_profile(profile_path)
+    reference = HarnessProfileReference(
+        profile_id="codex-windows-powershell-001",
+        harness_id="codex",
+        harness_version="pinned-version-001",
+        path=Path(r"plans\harness\pinned\harness-profile.json"),
+        sha256=digest,
+    )
+
+    verified = verify_harness_profile(
+        reference,
+        artifact_root=tmp_path,
+    )
+
+    assert verified.profile_id == "codex-windows-powershell-001"
+
+
 def _make_harness_reference(tmp_path: Path) -> HarnessProfileReference:
     profile_path = tmp_path / "codex-profile.json"
     digest = _write_profile(profile_path)

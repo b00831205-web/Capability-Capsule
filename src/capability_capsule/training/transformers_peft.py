@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -166,6 +167,7 @@ class TransformersPeftBackend:
         libraries = _load_training_libraries()
         _disable_shadowed_dataset_namespace(libraries.Trainer)
         libraries.set_seed(config.seed)
+        has_validation = bool(validation_examples)
 
         run_dir = Path(run_dir)
         trainer_output = run_dir / "trainer-work"
@@ -216,8 +218,8 @@ class TransformersPeftBackend:
             gradient_accumulation_steps=config.gradient_accumulation_steps,
             logging_strategy="steps",
             logging_steps=1,
-            eval_strategy="steps",
-            eval_steps=1,
+            eval_strategy="steps" if has_validation else "no",
+            eval_steps=1 if has_validation else None,
             save_strategy="no",
             seed=config.seed,
             data_seed=config.seed,
@@ -229,7 +231,11 @@ class TransformersPeftBackend:
             model=model,
             args=arguments,
             train_dataset=_TokenizedDataset(train_examples),
-            eval_dataset=_TokenizedDataset(validation_examples),
+            eval_dataset=(
+                _TokenizedDataset(validation_examples)
+                if has_validation
+                else None
+            ),
             data_collator=collator,
             processing_class=tokenizer,
         )
@@ -243,36 +249,63 @@ class TransformersPeftBackend:
             if fallback_loss_value is not None
             else None
         )
+        if fallback_loss is None:
+            for record in reversed(trainer.state.log_history):
+                if record.get("loss") is not None:
+                    fallback_loss = float(record["loss"])
+                    break
 
-        emitted = _emit_training_metrics(
-            trainer.state.log_history,
-            default_learning_rate=config.learning_rate,
-            fallback_training_loss=fallback_loss,
-            started_at=started_at,
-            on_metric=on_metric,
-        )
-        if emitted == 0:
-            evaluation = trainer.evaluate()
-            validation_loss = evaluation.get("eval_loss")
-            if validation_loss is None or fallback_loss is None:
-                raise RuntimeError(
-                    "Trainer did not produce training and validation loss"
-                )
+        if has_validation:
+            emitted = _emit_training_metrics(
+                trainer.state.log_history,
+                default_learning_rate=config.learning_rate,
+                fallback_training_loss=fallback_loss,
+                started_at=started_at,
+                on_metric=on_metric,
+            )
+            if emitted == 0:
+                evaluation = trainer.evaluate()
+                validation_loss = evaluation.get("eval_loss")
+                if validation_loss is None or fallback_loss is None:
+                    raise RuntimeError(
+                        "Trainer did not produce training and validation loss"
+                    )
 
-            on_metric(
-                TrainingMetric(
-                    step=int(trainer.state.global_step),
-                    epoch=float(config.epochs),
-                    training_loss=fallback_loss,
-                    validation_loss=float(validation_loss),
-                    learning_rate=config.learning_rate,
-                    elapsed_seconds=max(0.0, monotonic() - started_at),
+                on_metric(
+                    TrainingMetric(
+                        step=int(trainer.state.global_step),
+                        epoch=float(config.epochs),
+                        training_loss=fallback_loss,
+                        validation_loss=float(validation_loss),
+                        learning_rate=config.learning_rate,
+                        elapsed_seconds=max(0.0, monotonic() - started_at),
+                    )
                 )
+        elif fallback_loss is None:
+            raise RuntimeError(
+                "Trainer did not produce training loss"
             )
 
         global_step = int(trainer.state.global_step)
         if global_step < 1:
             raise RuntimeError("Trainer completed without an optimization step")
+
+        if not has_validation:
+            assert fallback_loss is not None
+            metrics_payload = {
+                "schema_version": "0.1",
+                "run_id": run_dir.name,
+                "step": global_step,
+                "epoch": float(config.epochs),
+                "training_loss": fallback_loss,
+                "evaluation_strategy": "none; independent checkpoint evaluation",
+            }
+            with (run_dir / "training-phase-metrics.json").open(
+                "x",
+                encoding="utf-8",
+            ) as stream:
+                json.dump(metrics_payload, stream, indent=2)
+                stream.write("\n")
 
         model.save_pretrained(
             adapter_directory,

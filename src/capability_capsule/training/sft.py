@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+import json
 from collections.abc import Sequence
 from hashlib import sha256
 from pathlib import Path
@@ -24,6 +25,80 @@ from capability_capsule.eval.jsonl import load_jsonl
 from capability_capsule.eval.records import TeacherTrajectory
 
 
+class  SFTChatContract(BaseModel):
+    """Exact Student-visible system prompt and tool contract"""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal["0.1"] = "0.1"
+    contract_id: str = Field(min_length=1)
+    system_prompt: str = Field(min_length=1)
+    tools: tuple[dict[str, Any], ...] = Field(min_length=1)
+    enable_thinking: bool = False
+
+    @field_validator("contract_id", "system_prompt")
+    @classmethod
+    def reject_blank_content_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("SFT chat-contract fields must not be blank")
+        return value
+
+    @field_validator("tools")
+    @classmethod
+    def validate_tools(cls, value: tuple[dict[str, Any], ...]) -> tuple[dict[str, Any], ...]:
+        names: list[str] = []
+
+        for tool in value:
+            if tool.get("type") != "function":
+                raise ValueError("SFT tools must use function definitions")
+
+            function = tool.get("function")
+            if not isinstance(function, dict):
+                raise ValueError("SFT function tools must contain function metadata")
+
+            name = function.get("name")
+            if not isinstance(name, str) or not name.strip():
+                raise ValueError("SFT function tools must have a non-blank name")
+
+            parameters = function.get("parameters")
+            if not isinstance(parameters, dict):
+                raise ValueError(
+                    f"SFT too {name!r} must contain a parameter schema"
+                )
+
+            if parameters.get("type") != "object":
+                raise ValueError(f"SFT tool {name!r} parameters must describe an object")
+
+            properties = parameters.get("properties")
+            if not isinstance(properties, dict):
+                raise ValueError(f"SFT tool {name!r} parameters must contain properties")
+
+            required = parameters.get("required", [])
+            if (not isinstance(required, list) or not all(isinstance(item, str) for item in required) or len(required) != len(set(required))):
+                raise ValueError(f"SFT tool {name!r} required fields must be unique strings")
+
+            if set(required) - set(properties):
+                raise ValueError(f"SFT tool {name!r} requires undeclared properties")
+
+            if parameters.get("additionalProperties") is not False:
+                raise ValueError(f"SFT tool {name!r} must reject additional properties")
+
+            names.append(name)
+
+        if len(names) != len(set(names)):
+            raise ValueError("SFT tool name must be unique")
+
+        return value
+
+    def sha256(self) -> str:
+        payload = json.dumps(
+            self.model_dump(mode = "json"),
+            ensure_ascii= False,
+            sort_keys= True,
+            separators= (",", ":")
+        ).encode("utf-8")
+        return sha256(payload).hexdigest()
+
 class ChatTemplateTokenizer(Protocol):
     """Tokenizer surface required by the exporter."""
 
@@ -33,6 +108,7 @@ class ChatTemplateTokenizer(Protocol):
         **kwargs: Any,
     ) -> Any:
         """Render and tokenize one chat trajectory."""
+
 
 
 class SFTExample(BaseModel):
@@ -100,12 +176,14 @@ class SFTExportManifest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    schema_version: Literal["0.1"] = "0.1"
+    schema_version: Literal["0.1", "0.2"] = "0.1"
     export_id: str = Field(min_length=1)
     source_dataset_id: str = Field(min_length=1)
     source_dataset_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     tokenizer_id: str = Field(min_length=1)
     max_length: int = Field(gt=0)
+    chat_contract: SFTChatContract | None = None
+    chat_contract_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     artifacts: tuple[SFTArtifact, ...] = Field(
         min_length=2,
         max_length=2,
@@ -136,6 +214,26 @@ class SFTExportManifest(BaseModel):
             )
         return value
 
+    @model_validator(mode="after")
+    def validate_chat_contract(self) -> Self:
+        if self.schema_version == "0.1":
+            if self.chat_contract is not None or self.chat_contract_sha256 is not None:
+                raise ValueError("SFT manifest schema 0.1 cannot contain a chat contract")
+
+            return self
+
+        if self.chat_contract is None:
+            raise ValueError("SFT manifest schema 0.2 requires a chat contract")
+
+        if self.chat_contract_sha256 is None:
+            raise ValueError("SFT manifest schema 0.2 requires a chat-contract digest")
+
+        actual_digest = self.chat_contract.sha256()
+        if self.chat_contract_sha256 != actual_digest:
+            raise ValueError("SFT chat-contract SHA-256 mismatch")
+
+        return self
+
 
 def _validate_export_id(export_id: str) -> str:
     if (
@@ -154,10 +252,19 @@ def _validate_export_id(export_id: str) -> str:
 
 def _chat_messages(
     trajectory: TeacherTrajectory,
+    *,
+    chat_contract: SFTChatContract
 ) -> list[dict[str, Any]]:
-    rendered: list[dict[str, Any]] = []
+    rendered: list[dict[str, Any]] = [
+        {
+            "role": "system",
+            "content": chat_contract.system_prompt,
+        }
+    ]
 
     for message in trajectory.messages:
+        if message.role.value == "system":
+            raise ValueError("Teacher trajectories must not supply their own system message")
         item: dict[str, Any] = {
             "role": message.role.value,
             "content": message.content,
@@ -182,6 +289,90 @@ def _chat_messages(
 
     return rendered
 
+def _matches_json_type(value: object, expected_type: str) -> bool:
+    if expected_type == "string":
+        return isinstance(value, str)
+    if expected_type == "boolean":
+        return isinstance(value, bool)
+    if expected_type == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if expected_type == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if expected_type == "object":
+        return isinstance(value, dict)
+    if expected_type == "array":
+        return isinstance(value, list)
+    if expected_type == "null":
+        return value is None
+    raise ValueError(f"Unsupported SFT tool JSON type {expected_type!r}")
+
+def _tool_contracts(
+    chat_contract: SFTChatContract,
+) -> dict[str, dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {}
+
+    for tool in chat_contract.tools:
+        function = tool["function"]
+        result[function["name"]] = function
+
+    return result
+
+def _validate_trajectory_tool_contract(
+        trajectory: TeacherTrajectory,
+        *,
+        chat_contract: SFTChatContract,
+) -> None:
+    tools = _tool_contracts(chat_contract)
+
+    for message in trajectory.messages:
+        for tool_call in message.tool_calls:
+            function = tools.get(tool_call.name)
+            if function is None:
+                raise ValueError(
+                    f"Trajectory {trajectory.trajectory_id!r} calls under tool {tool_call.name!r}"
+                )
+
+            parameters = function["parameters"]
+            properties = parameters["properties"]
+            required = set(parameters.get("required", []))
+            arguments = tool_call.arguments
+
+            missing = required - set(arguments)
+            if missing:
+                raise ValueError(
+                    f"Trajectory {trajectory.trajectory_id!r} tool {tool_call.name!r} is missing arguments: {", ".join(sorted(missing))}"
+                )
+
+            if parameters.get("additionalProperties") is False:
+                unexpected = set(arguments) - set(properties)
+                if unexpected:
+                    raise ValueError(
+                        f"Trajectory {trajectory.trajectory_id!r} tool {tool_call.name!r} contains arguments outside the SFT contract: {", ".join(sorted(unexpected))}"
+                    )
+
+            for argument_name, argument_value in arguments.items():
+                property_schema = properties.get(argument_name)
+                if not isinstance(property_schema, dict):
+                    continue
+
+                expected_type = property_schema.get("type")
+                if expected_type is None:
+                    continue
+
+                if not isinstance(expected_type, str):
+                    raise ValueError(
+                        f"SFT tool {tool_call.name!r} argument schema for {argument_name!r} must contain one JSON type"
+                    )
+
+                if not _matches_json_type(argument_value, expected_type):
+                    raise ValueError(
+                        f"Trajectory {trajectory.trajectory_id!r} tool {tool_call.name!r} argument {argument_name!r} must have JSON type {expected_type!r}"
+                    )
+
+        if message.tool_name is not None and message.tool_name not in tools:
+            raise ValueError(
+                f"Trajectory {trajectory.trajectory_id!r} contains a result for undeclared tool {message.tool_name!r}"
+            )
 
 def _token_vector(value: Any, *, field_name: str) -> tuple[int, ...]:
     if hasattr(value, "tolist"):
@@ -219,6 +410,7 @@ def _derive_assistant_mask_from_prefixes(
         messages: list[dict[str, Any]],
         *,
         tokenizer: ChatTemplateTokenizer,
+        chat_contract: SFTChatContract,
         input_ids: tuple[int, ...],
         max_length: int,
 ) -> tuple[int, ...]:
@@ -228,10 +420,16 @@ def _derive_assistant_mask_from_prefixes(
     previous_prefix: tuple[int, ...] = ()
 
     for end, message in enumerate(messages, start=1):
+        prefix_messages = messages[:end]
+        if not any(item["role"] == "user" for item in prefix_messages):
+            continue
+
         rendered = tokenizer.apply_chat_template(
-            messages[:end],
+            prefix_messages,
+            tools = list(chat_contract.tools),
             tokenize = True,
             add_generation_prompt = False,
+            enable_thinking = chat_contract.enable_thinking,
             truncation = True,
             max_length = max_length,
         )
@@ -263,6 +461,7 @@ def encode_sft_trajectory(
     trajectory: TeacherTrajectory,
     *,
     tokenizer: ChatTemplateTokenizer,
+    chat_contract: SFTChatContract,
     max_length: int,
 ) -> SFTExample:
     """Tokenize one trajectory and mask every non-assistant token."""
@@ -275,11 +474,15 @@ def encode_sft_trajectory(
             "SFT export requires a trajectory source revision"
         )
 
-    messages = _chat_messages(trajectory)
+    _validate_trajectory_tool_contract(trajectory, chat_contract= chat_contract)
+    messages = _chat_messages(trajectory, chat_contract= chat_contract)
+
     encoded = tokenizer.apply_chat_template(
         messages,
+        tools = list(chat_contract.tools),
         tokenize=True,
         add_generation_prompt=False,
+        enable_thinking = chat_contract.enable_thinking,
         return_dict=True,
         return_assistant_tokens_mask=True,
         truncation=True,
@@ -311,6 +514,7 @@ def encode_sft_trajectory(
         assistant_mask = _derive_assistant_mask_from_prefixes(
             messages,
             tokenizer = tokenizer,
+            chat_contract= chat_contract,
             input_ids= input_ids,
             max_length= max_length,
         )
@@ -324,6 +528,7 @@ def encode_sft_trajectory(
             assistant_mask = _derive_assistant_mask_from_prefixes(
                 messages,
                 tokenizer= tokenizer,
+                chat_contract= chat_contract,
                 input_ids= input_ids,
                 max_length= max_length,
             )
@@ -398,6 +603,7 @@ def export_sft_dataset(
     export_id: str,
     tokenizer: ChatTemplateTokenizer,
     tokenizer_id: str,
+    chat_contract: SFTChatContract,
     max_length: int,
 ) -> SFTExportManifest:
     """Export one verified Teacher publication without overwriting."""
@@ -421,6 +627,7 @@ def export_sft_dataset(
         encode_sft_trajectory(
             trajectory,
             tokenizer=tokenizer,
+            chat_contract= chat_contract,
             max_length=max_length,
         )
         for trajectory in verified.dataset.train
@@ -429,6 +636,7 @@ def export_sft_dataset(
         encode_sft_trajectory(
             trajectory,
             tokenizer=tokenizer,
+            chat_contract= chat_contract,
             max_length=max_length,
         )
         for trajectory in verified.dataset.validation
@@ -462,11 +670,14 @@ def export_sft_dataset(
             ),
         )
         manifest = SFTExportManifest(
+            schema_version= "0.2",
             export_id=validated_export_id,
             source_dataset_id=verified.manifest.dataset_id,
             source_dataset_digest=source_dataset_digest,
             tokenizer_id=tokenizer_id,
             max_length=max_length,
+            chat_contract= chat_contract,
+            chat_contract_sha256= chat_contract.sha256(),
             artifacts=artifacts,
         )
         manifest_bytes = (

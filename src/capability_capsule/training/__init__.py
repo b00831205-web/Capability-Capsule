@@ -17,6 +17,7 @@ from capability_capsule.training.sft import (
     encode_sft_trajectory,
     export_sft_dataset,
     load_sft_examples,
+    SFTChatContract,
 )
 from capability_capsule.training.transformers_peft import (
     TransformersPeftAdapterLoader,
@@ -40,4 +41,5 @@ __all__ = [
     "load_sft_examples",
     "reload_lora_adapter",
     "run_lora_training",
+    "SFTChatContract"
 ]

@@ -468,6 +468,48 @@ Exit condition:
   canonical `stage1-codex-powershell-edit-003-qwen35-2b-v1` export preserves all 26 trajectories
   without truncation at the pinned 4K tokenizer budget: 20,263 trainable tokens and a 2,986-token
   maximum sequence. It is not yet trained or used in the unchanged v2 suite.
+- Failure analysis of `stage1-codex-qwen35-2b-003` found a zero-percent tool-argument protocol match:
+  all 88 training calls include `workdir`, while the v2 evaluator accepts only `cmd`. The next
+  blocking implementation is SFT schema `0.2`, which renders and pins the same system prompt and
+  cmd-only tool definition used at evaluation, passes that contract through every chat-template
+  render including assistant-mask fallback, and rejects undeclared tool arguments before export.
+- `stage1-codex-powershell-contract-004` has now collected the cmd-only contract increment that the
+  failure analysis called for: 8 new train trajectories from 8 fresh greeting fixtures (no v2 fixture
+  or evaluation result). Each records a bare task prompt, a single `cmd` tool argument, `Get-Content`,
+  a guarded `.Replace` plus `Set-Content`, and a passing `pytest`; one trajectory additionally records
+  a genuinely executed exit-126 refusal of a `sed` edit followed by recovery to the accepted form. No
+  trajectory uses `workdir`, `git apply`, `Copy-Item`, or WSL. The schema 0.3 plan and raw JSONL
+  validate against the pinned Codex HarnessProfile, and the cmd-only arguments satisfy the SFT schema
+  0.2 contract check. Its immutable publication contains 8 train trajectories, no validation records,
+  and zero duplicates. The schema `0.2` Qwen export pins the exact v2 system prompt and cmd-only tool
+  schema, preserves all 8 examples without truncation (5,905 total tokens; 838-token maximum), and
+  rejects undeclared tool arguments. Run `stage1-codex-qwen35-2b-004-contract` trained 8 save-first
+  steps without in-training validation, reached training loss `0.7776523232460022`, saved a
+  hash-verified adapter, and independently reloaded it as `PeftModelForCausalLM`.
+- The unchanged `stage1-codex-validation-v2` suite then scored that checkpoint `0/3` at suite digest
+  `3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb`.
+  Tool serialization is now aligned: every generated request used `exec_command` with only `cmd`.
+  Behavioral transfer still failed. The first fixed case spent four denied calls on directory
+  enumeration; the other fixed case and the truly unseen case read `greeting.py`, then attempted a
+  Bash heredoc and nested `powershell -Command` forms rejected by the constrained PowerShell
+  executor. All cases hit the four-round limit and all validators failed. This separates the former
+  contract defect from the remaining optimization problem: one 8-step pass over 8 trajectories is
+  insufficient evidence of learned inspect→guarded-edit→validate behavior. The checkpoint is not
+  publishable; the next controlled experiment should increase optimization exposure on the same
+  immutable SFT data before collecting more examples or changing model size.
+- That controlled experiment is complete. `stage1-codex-qwen35-2b-005-contract-32step` held the
+  dataset digest, SFT export, base revision, seed, learning rate, batch sizes, LoRA rank/alpha/dropout,
+  and target modules fixed while increasing exposure to 4 epochs / 32 steps. Training loss fell to
+  `0.46649494068697095`; the hash-verified step-32 adapter independently reloaded. The unchanged v2
+  suite still scored `0/3`, but all three cases now terminated immediately with the identical text
+  `Inspect the current file before editing.`, zero tool calls, and zero invalid calls.
+- Decoding the actual SFT labels explains the result. `<tool_call>` tokens are trainable, but each
+  narration message and its following tool call are encoded as two consecutive assistant turns, each
+  closed by `<|im_end|>`. At higher exposure the model learned the first narration-only turn exactly;
+  the evaluator correctly treated it as a final response and never reached the following tool-call
+  turn. The next blocking change is therefore an SFT turn-normalization revision that coalesces
+  adjacent assistant narration and tool calls into one assistant turn before applying the Qwen chat
+  template. Re-export and re-train after proving the first generated turn includes the tool call.
 
 ## MVP completion definition
 

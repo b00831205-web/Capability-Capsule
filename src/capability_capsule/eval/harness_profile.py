@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from hashlib import sha256
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -160,7 +160,13 @@ def _resolve_artifact(path: Path, artifact_root: Path | None) -> Path:
     if path.is_absolute():
         return path
 
-    return (artifact_root or Path.cwd()) /path
+    relative_path = path
+    raw_path = str(path)
+    windows_path = PureWindowsPath(raw_path)
+    if "\\" in raw_path and not windows_path.is_absolute():
+        relative_path = Path(*windows_path.parts)
+
+    return (artifact_root or Path.cwd()) / relative_path
 
 def verify_harness_profile(reference: HarnessProfileReference, *, artifact_root: Path | None = None) -> HarnessProfile:
     """Load and verify the exact harness profile referenced by a plan"""

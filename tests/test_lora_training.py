@@ -227,6 +227,48 @@ def test_training_run_persists_metrics_checkpoint_and_reload_identity(
     ]
 
 
+def test_training_run_accepts_declared_empty_validation_split(
+    tmp_path: Path,
+) -> None:
+    train_path = tmp_path / "sft" / "train.jsonl"
+    validation_path = tmp_path / "sft" / "validation.jsonl"
+    write_sft_split(train_path, "train-001")
+    validation_path.parent.mkdir(parents=True, exist_ok=True)
+    validation_path.touch()
+    original = make_training_run()
+    training_run = original.model_copy(
+        update={
+            "dataset_stats": original.dataset_stats.model_copy(
+                update={
+                    "validation": original.dataset_stats.validation.model_copy(
+                        update={
+                            "trajectory_count": 0,
+                            "message_count": 0,
+                            "serialized_byte_count": 0,
+                            "observable_text_character_count": 0,
+                            "tool_call_count": 0,
+                            "exact_token_count": 0,
+                        }
+                    )
+                }
+            )
+        }
+    )
+    backend = SuccessfulBackend()
+
+    result = run_lora_training(
+        make_config(),
+        training_run=training_run,
+        train_path=train_path,
+        validation_path=validation_path,
+        output_root=tmp_path / "runs",
+        backend=backend,
+    )
+
+    assert result.checkpoint.step == 2
+    assert backend.calls[0]["validation_examples"] == ()
+
+
 def test_training_refuses_to_overwrite_existing_run(tmp_path: Path) -> None:
     output_root = tmp_path / "runs"
     (output_root / "smoke-lora-001").mkdir(parents=True)
@@ -397,3 +439,109 @@ def test_stage1_powershell_recovery_checkpoint_is_saved_and_reloaded() -> None:
     assert training_metrics["training_loss"] == pytest.approx(1.2680502831935883)
     assert validation_metrics["validation_loss"] == pytest.approx(1.022344172000885)
     assert validation_metrics["model_class"] == "PeftModelForCausalLM"
+
+
+def test_contract_004_training_run_is_save_first_and_reload_verified() -> None:
+    root = Path(__file__).resolve().parents[1]
+    run_dir = root / "runs/training/stage1-codex-qwen35-2b-004-contract"
+    training_run = TrainingRunManifest.model_validate_json(
+        (run_dir / "training-run.json").read_bytes()
+    )
+    checkpoint = SavedAdapterCheckpoint.model_validate_json(
+        (run_dir / "checkpoint.json").read_bytes()
+    )
+    events = load_jsonl(run_dir / "trainer-process.jsonl", TrainerProcessEvent)
+    metrics = json.loads((run_dir / "training-phase-metrics.json").read_text("utf-8"))
+    reload_validation = json.loads(
+        (run_dir / "adapter-reload-validation.json").read_text("utf-8")
+    )
+
+    assert training_run.dataset_id == "stage1-codex-powershell-contract-004"
+    assert training_run.dataset_stats.train.trajectory_count == 8
+    assert training_run.dataset_stats.validation.trajectory_count == 0
+    assert training_run.hyperparameters["sft_export_id"] == (
+        "stage1-codex-powershell-contract-004-qwen35-2b-v1"
+    )
+    assert training_run.hyperparameters["evaluation_strategy"] == (
+        "none; independent checkpoint evaluation"
+    )
+    assert checkpoint.step == 8
+    assert checkpoint.adapter_config_sha256 == (
+        "04a7470914b5d504d3e281d4ed1f4f92d45866001a878d59e87fa702996f0821"
+    )
+    assert checkpoint.adapter_model_sha256 == (
+        "ba352f9526f104dc5d4c5c7330eb7c209fbaf365f4bc4ed454991a2d677818b6"
+    )
+    adapter_dir = run_dir / checkpoint.adapter_directory
+    assert sha256((adapter_dir / "adapter_config.json").read_bytes()).hexdigest() == (
+        checkpoint.adapter_config_sha256
+    )
+    assert sha256(
+        (adapter_dir / "adapter_model.safetensors").read_bytes()
+    ).hexdigest() == checkpoint.adapter_model_sha256
+    assert [event.event for event in events] == [
+        "started",
+        "checkpoint_saved",
+        "completed",
+    ]
+    assert metrics["step"] == 8
+    assert metrics["training_loss"] == pytest.approx(0.7776523232460022)
+    assert metrics["evaluation_strategy"] == (
+        "none; independent checkpoint evaluation"
+    )
+    assert reload_validation["base_model_revision_verified"] is True
+    assert reload_validation["adapter_hashes_verified"] is True
+    assert reload_validation["loader_class"] == "PeftModelForCausalLM"
+    assert reload_validation["active_adapters"] == ["default"]
+
+
+def test_contract_004_higher_exposure_run_is_saved_and_reload_verified() -> None:
+    root = Path(__file__).resolve().parents[1]
+    run_dir = root / "runs/training/stage1-codex-qwen35-2b-005-contract-32step"
+    training_run = TrainingRunManifest.model_validate_json(
+        (run_dir / "training-run.json").read_bytes()
+    )
+    checkpoint = SavedAdapterCheckpoint.model_validate_json(
+        (run_dir / "checkpoint.json").read_bytes()
+    )
+    events = load_jsonl(run_dir / "trainer-process.jsonl", TrainerProcessEvent)
+    metrics = json.loads((run_dir / "training-phase-metrics.json").read_text("utf-8"))
+    reload_validation = json.loads(
+        (run_dir / "adapter-reload-validation.json").read_text("utf-8")
+    )
+
+    assert training_run.dataset_id == "stage1-codex-powershell-contract-004"
+    assert training_run.dataset_digest == (
+        "41a7cc5b06db0c77a42415769ffa470f0505f105894f6f31da84b03dc49c7831"
+    )
+    assert training_run.random_seed == 42
+    assert training_run.hyperparameters["epochs"] == 4
+    assert training_run.hyperparameters["max_steps"] == 32
+    assert training_run.hyperparameters["learning_rate"] == 0.0002
+    assert training_run.hyperparameters["lora_rank"] == 8
+    assert training_run.hyperparameters["lora_alpha"] == 16
+    assert training_run.hyperparameters["target_modules"] == ["q_proj", "v_proj"]
+    assert training_run.hyperparameters["sft_export_id"] == (
+        "stage1-codex-powershell-contract-004-qwen35-2b-v1"
+    )
+
+    assert checkpoint.step == 32
+    assert checkpoint.adapter_model_sha256 == (
+        "5d22adf2638b604c18d800bd5efa4afef4b30095f3d1197d847feb98672fe2a2"
+    )
+    adapter_dir = run_dir / checkpoint.adapter_directory
+    assert sha256(
+        (adapter_dir / "adapter_model.safetensors").read_bytes()
+    ).hexdigest() == checkpoint.adapter_model_sha256
+    assert [event.event for event in events] == [
+        "started",
+        "checkpoint_saved",
+        "completed",
+    ]
+    assert metrics["step"] == 32
+    assert metrics["epoch"] == 4.0
+    assert metrics["training_loss"] == pytest.approx(0.46649494068697095)
+    assert reload_validation["base_model_revision_verified"] is True
+    assert reload_validation["adapter_hashes_verified"] is True
+    assert reload_validation["loader_class"] == "PeftModelForCausalLM"
+    assert reload_validation["active_adapters"] == ["default"]
