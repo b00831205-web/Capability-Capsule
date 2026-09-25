@@ -510,6 +510,43 @@ Exit condition:
   turn. The next blocking change is therefore an SFT turn-normalization revision that coalesces
   adjacent assistant narration and tool calls into one assistant turn before applying the Qwen chat
   template. Re-export and re-train after proving the first generated turn includes the tool call.
+- SFT schema `0.3` now defines that blocking normalization explicitly: consecutive assistant
+  narration and tool-call records are coalesced before the Qwen chat template is applied, so one
+  logical action has only one terminal `<|im_end|>`. User and tool-result boundaries remain intact.
+  A new immutable export must pass decoded-token inspection across all 8 contract trajectories
+  before another LoRA run starts; the existing schema `0.2` export remains unchanged evidence.
+- `stage1-codex-powershell-contract-004-qwen35-2b-v2` is the immutable schema `0.3` export from the
+  same published dataset and pinned Qwen tokenizer. All 8 train examples passed decoded-token audit:
+  every source tool call is present in an assistant training span, adjacent narration/tool-call records
+  share one assistant turn, and user/tool-result boundaries stay separate. The export has 5,705 total
+  tokens, 1,744 trainable tokens, an 806-token maximum sequence, and no validation examples. The
+  train artifact SHA-256 is `c2fe8b3a659c5378b0f880f50a2e272d44a48f4cb2110f927b0283f6ceb13da8`.
+  This clears the serialization gate for a new LoRA run; it does not establish executable task success.
+- `stage1-codex-qwen35-2b-006-turns-v2` trained that export for 4 epochs / 32 steps with the same
+  pinned base model, seed, learning rate, and LoRA settings as the schema `0.2` 32-step control. Its
+  average training loss was `0.44757193280383945`; the step-32 adapter passed hash verification and
+  independent reload. On the unchanged v2 suite digest
+  `3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb`, it scored `0/3`.
+  All three cases now made an accepted `Get-Content` call before editing, confirming the premature
+  narration-only stop was removed. Editing still failed: the two fixed cases repeatedly proposed
+  here-string `Set-Content` commands outside the constrained executor; the truly unseen case modified
+  the file but wrote `Ada!, Ada!` instead of `PowerShell ready, Ada!`. All cases exhausted four tool
+  rounds and failed independent validators. This checkpoint remains unpublishable; the next decision
+  should be based on a focused command-policy and target-text failure analysis, not training loss.
+- The v3 command-policy comparison kept the same three tasks, validators, step-32 adapter, generation
+  settings, and four-tool-call limit, while adding only a generic description of the constrained
+  PowerShell subset. The cases-only suite digest remains the v2 digest, so the new suite ID and
+  recorded prompt SHA-256 distinguish the intervention. The first run scored `0/3`: the model chose
+  valid PowerShell `Get-Content -Raw greeting.py`, which the simulator incorrectly rejected. The
+  executor now accepts either ordering of `-Raw` and the path and rejects unrelated pipelines that
+  merely contain `.Replace` and `Set-Content`. A separate rerun still scored `0/3` with invalid-call
+  counts `1, 2, 2`. All three reads succeeded, but the model attempted unsupported
+  `Get-Content | Get-Content -Append | Set-Content` edits; two attempts also copied the tool-result
+  JSON envelope into proposed file content. The unseen target text was recognized in the final
+  attempt, yet no case achieved a valid edit. The first fixture's current source differs by a final
+  newline, so both v3 runs used a revision-verified old evaluation copy without changing the source.
+  No checkpoint is publishable. Next isolate the editing skill with more varied, authorized train
+  trajectories and test on new held-out tasks; do not inject fixed validation answers into prompts.
 
 ## MVP completion definition
 

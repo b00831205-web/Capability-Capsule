@@ -545,3 +545,55 @@ def test_contract_004_higher_exposure_run_is_saved_and_reload_verified() -> None
     assert reload_validation["adapter_hashes_verified"] is True
     assert reload_validation["loader_class"] == "PeftModelForCausalLM"
     assert reload_validation["active_adapters"] == ["default"]
+
+
+def test_contract_004_normalized_turn_run_is_saved_and_reload_verified() -> None:
+    root = Path(__file__).resolve().parents[1]
+    run_dir = root / "runs/training/stage1-codex-qwen35-2b-006-turns-v2"
+    training_run = TrainingRunManifest.model_validate_json(
+        (run_dir / "training-run.json").read_bytes()
+    )
+    checkpoint = SavedAdapterCheckpoint.model_validate_json(
+        (run_dir / "checkpoint.json").read_bytes()
+    )
+    events = load_jsonl(run_dir / "trainer-process.jsonl", TrainerProcessEvent)
+    metrics = json.loads((run_dir / "training-phase-metrics.json").read_text("utf-8"))
+    reload_validation = json.loads(
+        (run_dir / "adapter-reload-validation.json").read_text("utf-8")
+    )
+
+    assert training_run.dataset_digest == (
+        "41a7cc5b06db0c77a42415769ffa470f0505f105894f6f31da84b03dc49c7831"
+    )
+    assert training_run.dataset_stats.train.exact_token_count == 5705
+    assert training_run.dataset_stats.validation.trajectory_count == 0
+    assert training_run.hyperparameters["sft_export_id"] == (
+        "stage1-codex-powershell-contract-004-qwen35-2b-v2"
+    )
+    assert training_run.hyperparameters["epochs"] == 4
+    assert training_run.hyperparameters["max_steps"] == 32
+    assert training_run.hyperparameters["learning_rate"] == 0.0002
+    assert training_run.random_seed == 42
+    assert checkpoint.step == 32
+    assert checkpoint.adapter_model_sha256 == (
+        "0c6c8cc9695ee59d766bd184d32ddb1b6f66b08b3211637921728c78e676e81d"
+    )
+    adapter_dir = run_dir / checkpoint.adapter_directory
+    assert sha256(
+        (adapter_dir / "adapter_config.json").read_bytes()
+    ).hexdigest() == checkpoint.adapter_config_sha256
+    assert sha256(
+        (adapter_dir / "adapter_model.safetensors").read_bytes()
+    ).hexdigest() == checkpoint.adapter_model_sha256
+    assert [event.event for event in events] == [
+        "started",
+        "checkpoint_saved",
+        "completed",
+    ]
+    assert metrics["training_loss"] == pytest.approx(0.44757193280383945)
+    assert metrics["evaluation_strategy"] == (
+        "none; independent checkpoint evaluation"
+    )
+    assert reload_validation["adapter_hashes_verified"] is True
+    assert reload_validation["loader_class"] == "PeftModelForCausalLM"
+    assert reload_validation["active_adapters"] == ["default"]

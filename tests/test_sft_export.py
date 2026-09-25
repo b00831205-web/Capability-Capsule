@@ -5,10 +5,14 @@ from __future__ import annotations
 from collections import UserDict
 from hashlib import sha256
 from pathlib import Path
+import re
 from typing import Any, ClassVar
 
 import pytest
 
+from capability_capsule.eval.dataset_integrity import (
+    load_teacher_dataset_publication,
+)
 from capability_capsule.eval.dataset_pipeline import CuratedTeacherDataset
 from capability_capsule.eval.dataset_publication import publish_teacher_dataset
 from capability_capsule.eval.records import (
@@ -214,6 +218,60 @@ def test_encode_trajectory_uses_chat_template_and_masks_non_assistant_tokens() -
     }
 
 
+def test_encode_trajectory_coalesces_adjacent_assistant_narration_and_tool_call() -> None:
+    trajectory = make_trajectory("train-split-turn", DatasetSplit.TRAIN)
+    original_assistant = trajectory.messages[1]
+    trajectory = trajectory.model_copy(
+        update={
+            "messages": (
+                trajectory.messages[0],
+                original_assistant.model_copy(update={"tool_calls": ()}),
+                original_assistant.model_copy(update={"content": ""}),
+                trajectory.messages[2],
+                trajectory.messages[3],
+            )
+        }
+    )
+
+    tokenizer = RecordingTokenizer()
+    encode_sft_trajectory(
+        trajectory,
+        tokenizer=tokenizer,
+        chat_contract=make_chat_contract(),
+        max_length=2048,
+    )
+
+    rendered = tokenizer.conversations[0]
+    assert len(rendered) == 5
+    assert rendered[2] == {
+        "role": "assistant",
+        "content": "I will inspect the file.",
+        "tool_calls": [
+            {
+                "type": "function",
+                "function": {
+                    "name": "exec_command",
+                    "arguments": {
+                        "cmd": "sed -n '1,80p' greeting.py",
+                    },
+                },
+            }
+        ],
+    }
+    assert rendered[3]["role"] == "tool"
+    assert rendered[4] == {
+        "role": "assistant",
+        "content": "The greeting was updated and validation passed.",
+    }
+    assert all(
+        not (
+            previous["role"] == "assistant"
+            and current["role"] == "assistant"
+        )
+        for previous, current in zip(rendered, rendered[1:], strict=False)
+    )
+
+
 def test_encode_trajectory_rejects_template_without_trainable_assistant_tokens() -> None:
     tokenizer = RecordingTokenizer(assistant_masks=[0, 0, 0, 0, 0, 0])
 
@@ -321,7 +379,10 @@ def test_export_sft_dataset_is_immutable_and_traceable(tmp_path: Path) -> None:
     assert len(manifest.source_dataset_digest) == 64
     assert manifest.tokenizer_id == "Qwen/Qwen3.5-0.8B@revision-001"
     assert manifest.max_length == 2048
-    assert manifest.schema_version == "0.2"
+    assert manifest.schema_version == "0.3"
+    assert manifest.assistant_turn_policy == (
+        "coalesce_adjacent_assistant_messages"
+    )
     assert manifest.chat_contract == make_chat_contract()
     assert manifest.chat_contract_sha256 == make_chat_contract().sha256()
     assert [artifact.filename for artifact in manifest.artifacts] == [
@@ -464,6 +525,7 @@ def test_checked_in_contract_004_qwen_export_pins_the_eval_contract() -> None:
     validation = load_sft_examples(export_dir / "validation.jsonl")
 
     assert manifest.schema_version == "0.2"
+    assert manifest.assistant_turn_policy is None
     assert manifest.source_dataset_id == "stage1-codex-powershell-contract-004"
     assert manifest.source_dataset_digest == sha256(
         (
@@ -492,3 +554,104 @@ def test_checked_in_contract_004_qwen_export_pins_the_eval_contract() -> None:
         payload = (export_dir / artifact.filename).read_bytes()
         assert artifact.byte_count == len(payload)
         assert artifact.sha256 == sha256(payload).hexdigest()
+
+
+def test_manifest_schema_03_requires_assistant_turn_policy() -> None:
+    contract = make_chat_contract()
+
+    with pytest.raises(
+        ValueError,
+        match="requires an assistant-turn policy",
+    ):
+        SFTExportManifest(
+            schema_version="0.3",
+            export_id="missing-policy",
+            source_dataset_id="teacher-smoke-001",
+            source_dataset_digest="a" * 64,
+            tokenizer_id="Qwen/Qwen3.5-2B@revision-001",
+            max_length=2048,
+            chat_contract=contract,
+            chat_contract_sha256=contract.sha256(),
+            artifacts=(
+                {
+                    "filename": "train.jsonl",
+                    "record_count": 1,
+                    "byte_count": 1,
+                    "sha256": "b" * 64,
+                },
+                {
+                    "filename": "validation.jsonl",
+                    "record_count": 0,
+                    "byte_count": 0,
+                    "sha256": "c" * 64,
+                },
+            ),
+        )
+
+
+def test_checked_in_contract_004_v2_preserves_all_tool_turns() -> None:
+    transformers = pytest.importorskip("transformers")
+    root = Path(__file__).resolve().parents[1]
+    old_dir = root / "artifacts/sft/stage1-codex-powershell-contract-004-qwen35-2b-v1"
+    export_dir = root / "artifacts/sft/stage1-codex-powershell-contract-004-qwen35-2b-v2"
+    publication_dir = root / "datasets/teacher/published/stage1-codex-powershell-contract-004"
+    old_manifest = SFTExportManifest.model_validate_json(
+        (old_dir / "manifest.json").read_bytes()
+    )
+    manifest = SFTExportManifest.model_validate_json(
+        (export_dir / "manifest.json").read_bytes()
+    )
+    dataset = load_teacher_dataset_publication(publication_dir).dataset
+    examples = load_sft_examples(export_dir / "train.jsonl")
+
+    assert manifest.schema_version == "0.3"
+    assert manifest.assistant_turn_policy == "coalesce_adjacent_assistant_messages"
+    assert manifest.source_dataset_digest == old_manifest.source_dataset_digest
+    assert manifest.tokenizer_id == old_manifest.tokenizer_id
+    assert manifest.chat_contract_sha256 == old_manifest.chat_contract_sha256
+    assert len(dataset.train) == len(examples) == 8
+    assert load_sft_examples(export_dir / "validation.jsonl") == ()
+    for artifact in manifest.artifacts:
+        payload = (export_dir / artifact.filename).read_bytes()
+        assert len(payload) == artifact.byte_count
+        assert sha256(payload).hexdigest() == artifact.sha256
+
+    model_id, revision = manifest.tokenizer_id.split("@", 1)
+    try:
+        tokenizer = transformers.AutoTokenizer.from_pretrained(
+            model_id, revision=revision, local_files_only=True
+        )
+    except OSError:
+        pytest.skip("Pinned Qwen tokenizer is not cached locally")
+
+    for trajectory, example in zip(dataset.train, examples, strict=True):
+        assert example.source_trajectory_id == trajectory.trajectory_id
+        assert len(example.input_ids) < manifest.max_length
+        decoded = tokenizer.decode(example.input_ids, skip_special_tokens=False)
+        trainable = tokenizer.decode(
+            [token for token, label in zip(example.input_ids, example.labels, strict=True)
+             if label != -100],
+            skip_special_tokens=False,
+        )
+        turns = re.findall(
+            r"<\|im_start\|>(system|user|assistant)\n(.*?)<\|im_end\|>",
+            decoded,
+            flags=re.DOTALL,
+        )
+        assistant_turns = [body for role, body in turns if role == "assistant"]
+        expected_calls = sum(len(message.tool_calls) for message in trajectory.messages)
+        assert sum(body.count("<tool_call>") for body in assistant_turns) == expected_calls
+        assert trainable.count("<tool_call>") == expected_calls
+        assert trajectory.task not in trainable
+        assert decoded.rstrip().endswith("<|im_end|>")
+
+        for previous, current in zip(
+            trajectory.messages, trajectory.messages[1:], strict=False
+        ):
+            if previous.role is MessageRole.ASSISTANT and current.role is MessageRole.ASSISTANT and current.tool_calls:
+                assert any(
+                    previous.content in body
+                    and body.index(previous.content) < body.index("<tool_call>")
+                    for body in assistant_turns
+                    if "<tool_call>" in body
+                )

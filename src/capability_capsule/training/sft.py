@@ -176,7 +176,7 @@ class SFTExportManifest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    schema_version: Literal["0.1", "0.2"] = "0.1"
+    schema_version: Literal["0.1", "0.2", "0.3"] = "0.1"
     export_id: str = Field(min_length=1)
     source_dataset_id: str = Field(min_length=1)
     source_dataset_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -184,6 +184,7 @@ class SFTExportManifest(BaseModel):
     max_length: int = Field(gt=0)
     chat_contract: SFTChatContract | None = None
     chat_contract_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    assistant_turn_policy: Literal["coalesce_adjacent_assistant_messages"] | None = None
     artifacts: tuple[SFTArtifact, ...] = Field(
         min_length=2,
         max_length=2,
@@ -217,21 +218,31 @@ class SFTExportManifest(BaseModel):
     @model_validator(mode="after")
     def validate_chat_contract(self) -> Self:
         if self.schema_version == "0.1":
-            if self.chat_contract is not None or self.chat_contract_sha256 is not None:
-                raise ValueError("SFT manifest schema 0.1 cannot contain a chat contract")
+            if self.chat_contract is not None or self.chat_contract_sha256 is not None or self.assistant_turn_policy is not None:
+                raise ValueError("SFT manifest schema 0.1 cannot contain a chat contract or assistant-turn policy")
 
             return self
 
         if self.chat_contract is None:
-            raise ValueError("SFT manifest schema 0.2 requires a chat contract")
+            raise ValueError(f"SFT manifest schema {self.schema_version} requires a chat contract")
 
         if self.chat_contract_sha256 is None:
-            raise ValueError("SFT manifest schema 0.2 requires a chat-contract digest")
+            raise ValueError(f"SFT manifest schema {self.schema_version} requires a chat-contract digest")
 
         actual_digest = self.chat_contract.sha256()
         if self.chat_contract_sha256 != actual_digest:
             raise ValueError("SFT chat-contract SHA-256 mismatch")
 
+        if self.schema_version == "0.2":
+            if self.assistant_turn_policy is not None:
+                raise ValueError("SFT manifest schema 0.2 cannot contain an assistant-turn policy")
+
+            return self
+
+        if self.assistant_turn_policy is None:
+            raise ValueError(
+                "SFT manifest schema 0.3 requires an assistant-turn policy"
+            )
         return self
 
 
@@ -248,6 +259,34 @@ def _validate_export_id(export_id: str) -> str:
             "export_id must be a safe, non-blank directory name"
         )
     return export_id
+
+def _merge_assistant_content(previous: str, current: str) -> str:
+    """Combine observable text belonging to one logical assistant turn."""
+
+    if previous and current:
+        return f"{previous}\n\n{current}"
+
+    return previous or current
+
+def _append_normalized_chat_message(
+        rendered: list[dict[str, Any]],
+        item: dict[str, Any]
+) -> None:
+    """Coalesce adjacent assistant records into one chat-template turn."""
+
+    if item["role"] != "assistant" or not rendered or rendered[-1]["role"] != "assistant":
+        rendered.append(item)
+
+        return
+
+    previous = rendered[-1]
+    previous["content"] = _merge_assistant_content(
+        previous.get("content", ""),
+        item.get("content", "")
+    )
+    current_tool_calls = item.get("tool_calls", [])
+    if current_tool_calls:
+        previous.setdefault("tool_calls", []).extend(current_tool_calls)
 
 
 def _chat_messages(
@@ -285,7 +324,7 @@ def _chat_messages(
         if message.tool_name is not None:
             item["name"] = message.tool_name
 
-        rendered.append(item)
+        _append_normalized_chat_message(rendered, item)
 
     return rendered
 
@@ -670,7 +709,7 @@ def export_sft_dataset(
             ),
         )
         manifest = SFTExportManifest(
-            schema_version= "0.2",
+            schema_version= "0.3",
             export_id=validated_export_id,
             source_dataset_id=verified.manifest.dataset_id,
             source_dataset_digest=source_dataset_digest,
@@ -678,6 +717,7 @@ def export_sft_dataset(
             max_length=max_length,
             chat_contract= chat_contract,
             chat_contract_sha256= chat_contract.sha256(),
+            assistant_turn_policy=("coalesce_adjacent_assistant_messages"),
             artifacts=artifacts,
         )
         manifest_bytes = (

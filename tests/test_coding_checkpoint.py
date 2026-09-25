@@ -152,6 +152,71 @@ def test_executor_rejects_paths_outside_fixture(tmp_path: Path) -> None:
     assert result.exit_code == 126
 
 
+def test_executor_accepts_guarded_training_edit(tmp_path: Path) -> None:
+    fixture = tmp_path / "fixture"
+    write_fixture(fixture)
+
+    result = ConstrainedPowerShellExecutor().execute(
+        "$text = Get-Content -LiteralPath greeting.py -Raw; "
+        "$updated = $text.Replace('Hello, ', 'Welcome, '); "
+        "Set-Content -LiteralPath greeting.py -Value $updated",
+        fixture,
+    )
+
+    assert result.authorized is True
+    assert result.exit_code == 0
+    assert 'return f"Welcome, {name}"' in (fixture / "greeting.py").read_text("utf-8")
+
+
+def test_executor_accepts_raw_before_path(tmp_path: Path) -> None:
+    fixture = tmp_path / "fixture"
+    write_fixture(fixture)
+    executor = ConstrainedPowerShellExecutor()
+
+    read = executor.execute("Get-Content -Raw greeting.py", fixture)
+    edit = executor.execute(
+        "$text = Get-Content -Raw greeting.py; "
+        "$updated = $text.Replace('Hello, ', 'Welcome, '); "
+        "Set-Content -Path greeting.py -Value $updated",
+        fixture,
+    )
+
+    assert read.authorized is True
+    assert read.exit_code == 0
+    assert 'return f"Hello, {name}"' in read.output
+    assert edit.authorized is True
+    assert edit.exit_code == 0
+    assert 'return f"Welcome, {name}"' in (fixture / "greeting.py").read_text("utf-8")
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "Get-Content -Path greeting.py -Raw | Select-String Hello | "
+        "ForEach-Object { $_.Replace('Hello', 'Welcome') } | "
+        "Set-Content -Path greeting.py",
+        "$text = Get-Content -Path greeting.py -Raw; "
+        "$updated = $text.Replace('Hello', 'Welcome'); "
+        "Set-Content -Path greeting.py -Value $text",
+        "$text = Get-Content -Path greeting.py -Raw; "
+        "$updated = $text.Replace('Hello', 'Welcome'); "
+        "Set-Content -Path greeting.py -Value $updated; Get-Content greeting.py",
+    ],
+)
+def test_executor_rejects_ambiguous_replace_commands(
+    tmp_path: Path, command: str
+) -> None:
+    fixture = tmp_path / "fixture"
+    write_fixture(fixture)
+    original = (fixture / "greeting.py").read_bytes()
+
+    result = ConstrainedPowerShellExecutor().execute(command, fixture)
+
+    assert result.authorized is False
+    assert result.exit_code == 126
+    assert (fixture / "greeting.py").read_bytes() == original
+
+
 @pytest.mark.parametrize("fixture_root", ["../fixture", "/fixture", "C:/fixture", "a\\b"])
 def test_case_rejects_unsafe_fixture_root(tmp_path: Path, fixture_root: str) -> None:
     fixture = tmp_path / "fixture"
@@ -217,6 +282,27 @@ def test_stage1_validation_v2_preserves_fixed_cases_and_adds_unseen_fixture() ->
     assert current.identity().evaluation_suite_digest == (
         "3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb"
     )
+
+
+def test_stage1_validation_v3_changes_only_generic_command_policy() -> None:
+    root = Path(__file__).resolve().parents[1]
+    v2 = load_coding_evaluation_suite(
+        root / "plans/evaluation/stage1-codex-validation-v2/evaluation-suite.json"
+    )
+    v3 = load_coding_evaluation_suite(
+        root
+        / "plans/evaluation/stage1-codex-validation-v3-command-policy/evaluation-suite.json"
+    )
+
+    assert v3.cases == v2.cases
+    assert v3.identity().evaluation_suite_digest == v2.identity().evaluation_suite_digest
+    assert v3.evaluation_suite_id != v2.evaluation_suite_id
+    assert v3.system_prompt.startswith(v2.system_prompt)
+    added_policy = v3.system_prompt[len(v2.system_prompt):]
+    assert ".Replace" in added_policy
+    assert "Set-Content" in added_policy
+    assert "Welcome" not in added_policy
+    assert "PowerShell ready" not in added_policy
 
 
 def test_stage1_powershell_checkpoint_evaluation_records_fixed_and_unseen_failure() -> None:
@@ -338,4 +424,73 @@ def test_contract_004_higher_exposure_checkpoint_stops_before_tool_use() -> None
     assert point.success_rate == 0.0
     assert point.evaluation_suite_digest == (
         "3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb"
+    )
+
+
+def test_normalized_turn_checkpoint_uses_tools_but_fails_edit_validation() -> None:
+    root = Path(__file__).resolve().parents[1]
+    run = root / "runs/evaluation/stage1-codex-qwen35-2b-006-turns-v2-v2"
+    suite = load_coding_evaluation_suite(run / "evaluation-suite.json")
+    results = load_jsonl(run / "case-results.jsonl", CaseResult)
+    points = load_jsonl(run / "learning-curve.jsonl", LearningCurvePoint)
+    reports = [
+        json.loads((run / "case-reports" / f"{result.case_id}.json").read_text("utf-8"))
+        for result in results
+    ]
+
+    assert suite.identity().evaluation_suite_digest == (
+        "3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb"
+    )
+    assert [result.success for result in results] == [False, False, False]
+    assert [result.tool_call_count for result in results] == [4, 4, 4]
+    assert [result.invalid_tool_call_count for result in results] == [3, 3, 2]
+    assert all(result.error_type == "ToolRoundLimitExceeded" for result in results)
+    assert all("Get-Content -Path greeting.py -Raw" in report["completions"][0]
+               for report in reports)
+    assert all(report["tool_results"][0]["authorized"] is True
+               for report in reports)
+    assert all(not outcome["passed"] for report in reports
+               for outcome in report["validators"])
+    assert 'return f"Ada!, {name}!"' in (
+        run / "workspaces/validation-powershell-salutation-unseen-001/greeting.py"
+    ).read_text("utf-8")
+
+    point = points[0]
+    assert point.checkpoint_id == "stage1-codex-qwen35-2b-006-turns-v2-step-32"
+    assert point.cumulative_trajectory_count == 8
+    assert point.cumulative_token_count == 5705
+    assert point.success_rate == 0.0
+    assert point.evaluation_suite_digest == (
+        "3e756195c1585c57c4dcc8a3fef40cb2653a67bc57820c6156602f357301b9bb"
+    )
+
+
+def test_command_policy_comparison_keeps_cases_fixed_and_records_failed_edit() -> None:
+    root = Path(__file__).resolve().parents[1]
+    run = root / "runs/evaluation/stage1-codex-qwen35-2b-006-turns-v2-v3-command-policy-raw-order"
+    suite = load_coding_evaluation_suite(run / "evaluation-suite.json")
+    results = load_jsonl(run / "case-results.jsonl", CaseResult)
+    points = load_jsonl(run / "learning-curve.jsonl", LearningCurvePoint)
+    manifest = json.loads((run / "run-manifest.json").read_text("utf-8"))
+    reports = [
+        json.loads((run / "case-reports" / f"{result.case_id}.json").read_text("utf-8"))
+        for result in results
+    ]
+
+    assert suite.cases == load_coding_evaluation_suite(
+        root / "plans/evaluation/stage1-codex-validation-v2/evaluation-suite.json"
+    ).cases
+    assert manifest["case_digest"] == suite.identity().evaluation_suite_digest
+    assert manifest["success_count"] == 0
+    assert manifest["max_tool_rounds"] == 4
+    assert [result.success for result in results] == [False, False, False]
+    assert [result.invalid_tool_call_count for result in results] == [1, 2, 2]
+    assert all(report["tool_results"][0]["authorized"] for report in reports)
+    assert all("Get-Content -Raw greeting.py" in report["completions"][0] for report in reports)
+    assert all(not validator["passed"] for report in reports for validator in report["validators"])
+    assert points[0].success_rate == 0.0
+    assert points[0].evaluation_suite_id == suite.evaluation_suite_id
+    fallback = root / manifest["fixture_sources"][results[0].case_id]
+    assert inspect_fixture(suite.cases[0].task.fixture_id, fallback).revision == (
+        suite.cases[0].task.fixture_revision
     )

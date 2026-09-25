@@ -137,6 +137,36 @@ correctness:
   tool call before one `<|im_end|>`, export a new immutable SFT version, and only then retrain. Do not
   collect more data, increase steps again, expose v2 fixtures, or change model size before this
   serialization defect is tested.
+- Validate schema `0.3` assistant-turn normalization across all 8 `contract-004` trajectories.
+  Every narration immediately followed by a tool call must decode as one assistant turn containing
+  both narration and `<tool_call>` before a single `<|im_end|>`. Preserve user/tool-result boundaries,
+  export to a new immutable SFT directory, and do not start another LoRA run until this invariant
+  passes for the complete export.
+- The schema `0.3` gate now passes for `stage1-codex-powershell-contract-004-qwen35-2b-v2`: all 8
+  trajectories retain their 25 trainable tool calls, the decoded narration/tool-call boundaries are
+  coalesced, and no example reaches the 4K limit. Next train a fresh adapter from this exact export
+  and evaluate it on the unchanged v2 fixed-plus-unseen suite. Keep the old schema `0.2` checkpoints
+  as comparison evidence rather than promoting them based on training loss.
+- The schema `0.3` checkpoint `stage1-codex-qwen35-2b-006-turns-v2` completed 32 steps, reloaded
+  independently, and scored `0/3` on unchanged v2. It now reads files through the tool on every case,
+  so the assistant-turn boundary defect is resolved in generated behavior. The remaining blocker is
+  edit-command policy and correct target text: two cases repeatedly used rejected here-string edits;
+  the unseen case made a permitted but wrong edit. Before any further training, compare emitted edit
+  commands with the accepted `.Replace` + `Set-Content` trajectory pattern and check whether the
+  current constrained evaluator and training examples agree on executable command forms. Preserve
+  the fixed suite and genuinely unseen case as evaluation-only evidence.
+- The generic v3 command-policy intervention did not clear the gate. Its initial `0/3` run exposed a
+  simulator mismatch: valid `Get-Content -Raw greeting.py` was rejected solely because `-Raw` preceded
+  the path. After accepting both parameter orders and adding strict tests that reject semantically
+  different `.Replace`/`Set-Content` pipelines, the new-directory rerun remained `0/3` (`1, 2, 2`
+  invalid calls). The model now reads all three files but produces an unsupported
+  `Get-Content | Get-Content -Append | Set-Content` edit; two examples leak the tool-result envelope
+  into the proposed file content. Do not add case-specific hints or increase epochs on this evidence.
+  Prioritize varied, authorized inspect-to-guarded-edit-to-validate train trajectories with neutral
+  target strings, plus separate held-out validation. Keep v2 and both v3 runs immutable. Because the
+  suite digest covers cases but not the prompt, track the suite ID and prompt SHA-256 together when
+  comparing these runs. The first fixture currently has one extra final newline; use only a pinned,
+  revision-verified disposable source copy until that provenance discrepancy is resolved explicitly.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
   prefill throughput separate from decode throughput and include tool, validation, retry, memory, and
   sustained-performance costs.

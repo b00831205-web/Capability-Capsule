@@ -300,17 +300,31 @@ class TransformersPeftTurnGenerator:
 
 _READ = re.compile(
     r"^(?:cat|type)\s+['\"]?(greeting\.py|test_greeting\.py)['\"]?$|"
-    r"^Get-Content\s+(?:(?:-LiteralPath|-Path)\s+)?['\"]?"
+    r"^Get-Content\s+(?:-Raw\s+)?(?:(?:-LiteralPath|-Path)\s+)?['\"]?"
     r"(greeting\.py|test_greeting\.py)['\"]?(?:\s+-Raw)?$",
     re.IGNORECASE,
 )
-_REPLACE = re.compile(
-    r"\.Replace\(\s*(['\"])(.*?)\1\s*,\s*(['\"])(.*?)\3\s*\)",
-    re.DOTALL,
+_REPLACE_ARGS = (
+    r"\.Replace\(\s*(?P<old_quote>['\"])(?P<old>.*?)"
+    r"(?P=old_quote)\s*,\s*(?P<new_quote>['\"])(?P<new>.*?)"
+    r"(?P=new_quote)\s*\)"
 )
-_SET_CONTENT = re.compile(
-    r"Set-Content\s+(?:(?:-LiteralPath|-Path)\s+)?['\"]?greeting\.py['\"]?",
-    re.IGNORECASE,
+_GUARDED_REPLACE = re.compile(
+    r"^\$(?P<source>[A-Za-z][A-Za-z0-9_]*)\s*=\s*"
+    r"Get-Content\s+(?:-Raw\s+)?(?:(?:-LiteralPath|-Path)\s+)?"
+    r"greeting\.py(?:\s+-Raw)?\s*;\s*"
+    r"\$(?P<target>[A-Za-z][A-Za-z0-9_]*)\s*=\s*\$(?P=source)"
+    + _REPLACE_ARGS
+    + r"\s*;\s*Set-Content\s+(?:(?:-LiteralPath|-Path)\s+)?"
+    r"greeting\.py\s+-Value\s+\$(?P=target)$",
+    re.IGNORECASE | re.DOTALL,
+)
+_PIPE_REPLACE = re.compile(
+    r"^\(Get-Content\s+(?:-Raw\s+)?(?:(?:-LiteralPath|-Path)\s+)?"
+    r"greeting\.py(?:\s+-Raw)?\)"
+    + _REPLACE_ARGS
+    + r"\s*\|\s*Set-Content\s+(?:(?:-LiteralPath|-Path)\s+)?greeting\.py$",
+    re.IGNORECASE | re.DOTALL,
 )
 _PYTEST = re.compile(
     r"^(?:python(?:\.exe)?\s+-m\s+pytest|pytest)\s+-q(?:\s+test_greeting\.py)?$",
@@ -341,11 +355,11 @@ class ConstrainedPowerShellExecutor:
                 duration_ms=(monotonic() - started) * 1000,
             )
 
-        replacement = _REPLACE.search(command)
-        if replacement and _SET_CONTENT.search(command):
+        replacement = _GUARDED_REPLACE.fullmatch(command) or _PIPE_REPLACE.fullmatch(command)
+        if replacement:
             if any(token in command for token in ("..", ":", "/", "\\")):
                 return self._denied(started, "Path escape syntax is not authorized")
-            old, new = replacement.group(2), replacement.group(4)
+            old, new = replacement.group("old"), replacement.group("new")
             path = workspace / "greeting.py"
             content = path.read_text(encoding="utf-8")
             if old not in content:
