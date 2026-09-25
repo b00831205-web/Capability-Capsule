@@ -9,11 +9,16 @@ from capability_capsule.eval.dataset_integrity import (
 )
 from capability_capsule.eval.dataset_pipeline import CuratedTeacherDataset
 from capability_capsule.eval.dataset_publication import publish_teacher_dataset
+from capability_capsule.eval.dataset_validation import validate_teacher_dataset
+from capability_capsule.eval.harness_profile import verify_harness_profile
 from capability_capsule.eval.records import (
     DatasetSplit,
     MessageRole,
     TeacherTrajectory,
     TrajectoryMessage,
+)
+from capability_capsule.eval.teacher_collection_plan_publication import (
+    load_teacher_collection_plan,
 )
 
 
@@ -144,3 +149,149 @@ def test_load_teacher_dataset_publication_rejects_wrong_directory_name(
 
     with pytest.raises(ValueError, match="dataset_id"):
         load_teacher_dataset_publication(renamed_dir)
+
+
+def test_checked_in_stage1_publication_is_complete_and_harness_aligned() -> None:
+    repository_root = Path(__file__).resolve().parents[1]
+    verified = load_teacher_dataset_publication(
+        repository_root
+        / "datasets"
+        / "teacher"
+        / "published"
+        / "stage1-codex-001"
+    )
+    plan = load_teacher_collection_plan(
+        repository_root / "plans" / "teacher" / "stage1-codex-001"
+    ).plan
+    profile = verify_harness_profile(
+        plan.harness_profile,
+        artifact_root=repository_root,
+    )
+    trajectories = verified.dataset.train + verified.dataset.validation
+
+    validate_teacher_dataset(
+        trajectories,
+        tasks=tuple(assignment.task for assignment in plan.assignments),
+        harness_profile=profile,
+    )
+
+    assert verified.manifest.dataset_id == "stage1-codex-001"
+    assert len(verified.dataset.train) == 8
+    assert len(verified.dataset.validation) == 2
+    assert verified.dataset.duplicates == ()
+    assert len({record.trajectory_id for record in trajectories}) == 10
+
+
+def test_checked_in_stage1_powershell_publication_combines_increment() -> None:
+    root = Path(__file__).resolve().parents[1]
+    verified = load_teacher_dataset_publication(
+        root
+        / "datasets"
+        / "teacher"
+        / "published"
+        / "stage1-codex-powershell-002"
+    )
+    original_plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-001"
+    ).plan
+    increment_plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-powershell-002"
+    ).plan
+    profile = verify_harness_profile(
+        increment_plan.harness_profile,
+        artifact_root=root,
+    )
+    trajectories = verified.dataset.train + verified.dataset.validation
+
+    validate_teacher_dataset(
+        trajectories,
+        tasks=tuple(
+            assignment.task
+            for assignment in original_plan.assignments
+            + increment_plan.assignments
+        ),
+        harness_profile=profile,
+    )
+
+    assert len(verified.dataset.train) == 16
+    assert len(verified.dataset.validation) == 2
+    assert verified.dataset.duplicates == ()
+    assert len({record.trajectory_id for record in trajectories}) == 18
+
+
+def test_checked_in_powershell_edit_publication_combines_increment() -> None:
+    root = Path(__file__).resolve().parents[1]
+    verified = load_teacher_dataset_publication(
+        root
+        / "datasets"
+        / "teacher"
+        / "published"
+        / "stage1-codex-powershell-edit-003"
+    )
+    base_plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-001"
+    ).plan
+    powershell_plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-powershell-002"
+    ).plan
+    edit_plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-powershell-edit-003"
+    ).plan
+    profile = verify_harness_profile(
+        edit_plan.harness_profile,
+        artifact_root=root,
+    )
+    trajectories = verified.dataset.train + verified.dataset.validation
+
+    validate_teacher_dataset(
+        trajectories,
+        tasks=tuple(
+            assignment.task
+            for assignment in (
+                base_plan.assignments
+                + powershell_plan.assignments
+                + edit_plan.assignments
+            )
+        ),
+        harness_profile=profile,
+    )
+
+    assert verified.manifest.dataset_id == "stage1-codex-powershell-edit-003"
+    assert len(verified.dataset.train) == 24
+    assert len(verified.dataset.validation) == 2
+    assert verified.dataset.duplicates == ()
+    assert len({record.trajectory_id for record in trajectories}) == 26
+
+
+def test_checked_in_contract_004_publication_is_cmd_only_and_complete() -> None:
+    root = Path(__file__).resolve().parents[1]
+    verified = load_teacher_dataset_publication(
+        root
+        / "datasets"
+        / "teacher"
+        / "published"
+        / "stage1-codex-powershell-contract-004"
+    )
+    plan = load_teacher_collection_plan(
+        root / "plans" / "teacher" / "stage1-codex-powershell-contract-004"
+    ).plan
+    profile = verify_harness_profile(plan.harness_profile, artifact_root=root)
+
+    validate_teacher_dataset(
+        verified.dataset.train,
+        tasks=tuple(assignment.task for assignment in plan.assignments),
+        harness_profile=profile,
+    )
+
+    assert verified.manifest.dataset_id == "stage1-codex-powershell-contract-004"
+    assert len(verified.dataset.train) == 8
+    assert verified.dataset.validation == ()
+    assert verified.dataset.duplicates == ()
+    tool_calls = [
+        tool_call
+        for trajectory in verified.dataset.train
+        for message in trajectory.messages
+        for tool_call in message.tool_calls
+    ]
+    assert len(tool_calls) == 25
+    assert all(set(tool_call.arguments) == {"cmd"} for tool_call in tool_calls)
