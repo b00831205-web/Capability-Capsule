@@ -167,6 +167,21 @@ correctness:
   suite digest covers cases but not the prompt, track the suite ID and prompt SHA-256 together when
   comparing these runs. The first fixture currently has one extra final newline; use only a pinned,
   revision-verified disposable source copy until that provenance discrepancy is resolved explicitly.
+- The authorized `stage1-codex-powershell-edit-005` train increment now has 12 unique, revision-pinned
+  assignments and 12 appended raw trajectories. Each contains an observed `Get-Content` read, a
+  guarded `.Replace` plus `Set-Content` edit, and a passing `pytest -q` result; independent pytest
+  also passed for every disposable workspace. The existing train source hash stayed unchanged, and
+  the new plan normalizes Student artifact references to portable relative paths while preserving
+  their pinned hashes and the existing HarnessProfile. Before publication, perform an independent
+  duplicate/leakage and fixture-provenance review; do not mix this raw increment into the existing
+  published dataset or train another checkpoint until that gate is explicitly authorized and passed.
+- `stage1-codex-powershell-edit-005` is now independently published with 12 train, 0 validation, and
+  0 duplicate records. Automated review found no exact fingerprint overlap with earlier published
+  train records and no fixed-validation task, fixture-revision, or split-group overlap. Publication
+  integrity verification passed, and the train artifact retains the reviewed raw SHA-256
+  `86e537f9ec6d1f0459c98f6efa82f92f0a7ea43fc4e13423d702e6afb2abcda2`. Preserve this version and raw;
+  define the next SFT training composition explicitly before exporting to a fresh schema `0.3`
+  directory. These checks do not measure semantic generalization or checkpoint task success.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
   prefill throughput separate from decode throughput and include tool, validation, retry, memory, and
   sustained-performance costs.

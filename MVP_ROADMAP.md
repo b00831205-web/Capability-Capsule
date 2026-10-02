@@ -547,6 +547,26 @@ Exit condition:
   newline, so both v3 runs used a revision-verified old evaluation copy without changing the source.
   No checkpoint is publishable. Next isolate the editing skill with more varied, authorized train
   trajectories and test on new held-out tasks; do not inject fixed validation answers into prompts.
+- `stage1-codex-powershell-edit-005` is a new train-only collection plan with 12 source-revision-pinned
+  disposable fixture variants derived from the verified existing train fixture. The source and
+  working copies stay separate; no original fixture, old raw, publication, SFT, training, or evaluation
+  directory was changed. All 12 Teacher trajectories were appended to a new raw JSONL after 36 real
+  constrained-tool calls (read, guarded `.Replace` edit, pytest), and each independent pytest passed.
+  Variants cover comments, whitespace, quote styles, intermediate variables, branches, concatenation,
+  formatting, uppercase behavior, and varied non-validation target wording. The plan and raw records
+  pass the current schema, HarnessProfile, split, provenance, and tool-envelope checks; related tests
+  passed `31/31`. This is raw collection evidence only, not deduplication/leakage acceptance,
+  publication, SFT export, retraining, or checkpoint success. Review and publish this increment as a
+  separate decision before any new training experiment.
+- `stage1-codex-powershell-edit-005` passed the automated pre-publication review against all earlier
+  published train fingerprints and the fixed validation task identities, fixture revisions, and
+  split groups. Its separately authorized publication contains 12 train records, 0 validation records,
+  and 0 duplicates. The integrity loader verified every artifact's byte count, SHA-256, record count,
+  and partition; `train.jsonl` is byte-identical to the reviewed raw (27,415 bytes, SHA-256
+  `86e537f9ec6d1f0459c98f6efa82f92f0a7ea43fc4e13423d702e6afb2abcda2`). Publication establishes an
+  immutable training increment, not improved Student behavior. The next experiment requires a new
+  schema `0.3` Qwen SFT export with a declared choice of increment-only versus combined train data,
+  followed by a separately scoped training and evaluation run.
 
 ## MVP completion definition
 
