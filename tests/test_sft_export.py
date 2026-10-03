@@ -655,3 +655,39 @@ def test_checked_in_contract_004_v2_preserves_all_tool_turns() -> None:
                     for body in assistant_turns
                     if "<tool_call>" in body
                 )
+
+
+def test_edit005_export_retains_source_and_assistant_only_tool_labels() -> None:
+    transformers = pytest.importorskip("transformers")
+    root = Path(__file__).resolve().parents[1]
+    export_dir = root / "artifacts/sft/stage1-codex-powershell-edit-005-qwen35-2b-v1"
+    publication = root / "datasets/teacher/published/stage1-codex-powershell-edit-005"
+    manifest = SFTExportManifest.model_validate_json((export_dir / "manifest.json").read_bytes())
+    dataset = load_teacher_dataset_publication(publication).dataset
+    examples = load_sft_examples(export_dir / "train.jsonl")
+    assert manifest.schema_version == "0.3"
+    assert manifest.source_dataset_id == "stage1-codex-powershell-edit-005"
+    assert manifest.source_dataset_digest == sha256((publication / "manifest.json").read_bytes()).hexdigest()
+    assert manifest.assistant_turn_policy == "coalesce_adjacent_assistant_messages"
+    assert len(examples) == len(dataset.train) == 12
+    assert load_sft_examples(export_dir / "validation.jsonl") == ()
+    assert sum(len(example.input_ids) for example in examples) == 8169
+    assert sum(sum(label != -100 for label in example.labels) for example in examples) == 2496
+    assert max(len(example.input_ids) for example in examples) == 691
+    for artifact in manifest.artifacts:
+        payload = (export_dir / artifact.filename).read_bytes()
+        assert len(payload) == artifact.byte_count
+        assert sha256(payload).hexdigest() == artifact.sha256
+
+    model_id, revision = manifest.tokenizer_id.split("@", 1)
+    tokenizer = transformers.AutoTokenizer.from_pretrained(model_id, revision=revision, local_files_only=True)
+    for trajectory, example in zip(dataset.train, examples, strict=True):
+        assert example.source_trajectory_id == trajectory.trajectory_id
+        assert example.source_revision == trajectory.source_revision
+        trainable = tokenizer.decode([label for label in example.labels if label != -100], skip_special_tokens=False)
+        assert trainable.count("<tool_call>") == 3
+        assert '"envelope"' not in trainable
+        assert trajectory.task not in trainable
+        for message in trajectory.messages:
+            for call in message.tool_calls:
+                assert call.arguments["cmd"] in trainable

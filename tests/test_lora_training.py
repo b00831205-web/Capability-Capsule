@@ -400,6 +400,39 @@ def test_stage1_codex_training_run_has_verified_checkpoint_and_reload() -> None:
     assert reload_validation["active_adapters"] == ["default"]
 
 
+def test_edit005_run_holds_optimizer_steps_fixed_and_reloads_adapter() -> None:
+    root = Path(__file__).resolve().parents[1]
+    run = root / "runs/training/stage1-codex-qwen35-2b-007-edit005-32step"
+    manifest = TrainingRunManifest.model_validate_json((run / "training-run.json").read_bytes())
+    prior = TrainingRunManifest.model_validate_json(
+        (root / "runs/training/stage1-codex-qwen35-2b-006-turns-v2/training-run.json").read_bytes()
+    )
+    checkpoint = SavedAdapterCheckpoint.model_validate_json((run / "checkpoint.json").read_bytes())
+    state = json.loads((run / "trainer-state.json").read_text("utf-8"))
+    phase = json.loads((run / "training-phase-metrics.json").read_text("utf-8"))
+    reloaded = json.loads((run / "adapter-reload-validation.json").read_text("utf-8"))
+    assert manifest.dataset_stats.train.trajectory_count == 12
+    assert manifest.dataset_stats.train.exact_token_count == 8169
+    assert manifest.dataset_stats.validation.trajectory_count == 0
+    assert manifest.random_seed == prior.random_seed == 42
+    for key in ("learning_rate", "train_batch_size", "gradient_accumulation_steps", "lora_rank",
+                "lora_alpha", "lora_dropout", "target_modules", "max_steps"):
+        assert manifest.hyperparameters[key] == prior.hyperparameters[key]
+    assert manifest.hyperparameters["sft_export_id"] == "stage1-codex-powershell-edit-005-qwen35-2b-v1"
+    assert checkpoint.step == state["global_step"] == phase["step"] == 32
+    assert phase["epoch"] == pytest.approx(32 / 12)
+    assert phase["epoch"] == state["epoch"]
+    assert not any("eval_loss" in record for record in state["log_history"])
+    for filename, expected in (
+        ("adapter_config.json", checkpoint.adapter_config_sha256),
+        ("adapter_model.safetensors", checkpoint.adapter_model_sha256),
+    ):
+        assert sha256((run / checkpoint.adapter_directory / filename).read_bytes()).hexdigest() == expected
+    assert reloaded["adapter_hashes_verified"] is True
+    assert reloaded["independent_process"] is True
+    assert reloaded["active_adapters"] == ["default"]
+
+
 def test_stage1_powershell_recovery_checkpoint_is_saved_and_reloaded() -> None:
     root = Path(__file__).resolve().parents[1]
     run_dir = root / "runs/training/stage1-codex-qwen35-2b-002-recovery-004"

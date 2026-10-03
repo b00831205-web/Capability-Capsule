@@ -182,6 +182,39 @@ correctness:
   `86e537f9ec6d1f0459c98f6efa82f92f0a7ea43fc4e13423d702e6afb2abcda2`. Preserve this version and raw;
   define the next SFT training composition explicitly before exporting to a fresh schema `0.3`
   directory. These checks do not measure semantic generalization or checkpoint task success.
+- The composition is now fixed as edit-005-only in schema `0.3` export
+  `stage1-codex-powershell-edit-005-qwen35-2b-v1`: 12 train / 0 validation examples, 8,169 total tokens,
+  2,496 assistant-label tokens, and a 691-token longest sequence. Decoded audit verified all 36
+  trainable tool calls and excluded result envelopes; persisted samples and artifact hashes match
+  the audit. Use this immutable export for the next fresh-base LoRA experiment. Declare whether
+  the control holds optimizer steps or epochs fixed, since changing from 8 to 12 trajectories makes
+  equal epochs unequal update counts. Record that choice before training and assess executable
+  edits and target text with independently scoped validation.
+- Run `stage1-codex-qwen35-2b-007-edit005-32step` now fixes optimizer updates at 32 against run 006
+  while consuming the 12-trajectory edit-005-only export from a fresh pinned base. Actual exposure
+  is 2.6667 epochs; per-step logs and Trainer state are retained so the configured 4-epoch value
+  cannot be mistaken for measured exposure. Training loss was `0.5857911370694637`, adapter hashes
+  verified, and independent-process reload passed. The dataset differs from run 006, so their
+  training losses are not a task-quality comparison. Next evaluate the new adapter independently
+  with fixed task identities and validators, record the exact executor and prompt conditions, and
+  include fresh held-out validation before changing training exposure or claiming improvement.
+- The authorized run-007 evaluation now freezes fixed-v3 and a separate two-case heldout-v1 suite
+  before inference. Hold the simulator, generic command-policy prompt, deterministic generation,
+  256-token limit and four-call budget fixed; record prompt/tool/executor hashes alongside case
+  digests because the existing suite digest covers cases only. Keep heldout scores and ledgers
+  separate, and describe their same-domain limitation. Run 007 starts from a fresh base on edit-005
+  only: ledger counts are 12 trajectories / 8,169 tokens, not accumulated run-006 plus run-007 data.
+  Do not infer a causal data-volume learning rate from this dataset-replacement comparison.
+- Run 007 completed fixed-v3 `0/3` and fresh heldout-v1 `0/2` with no protected-input changes
+  (97 files checked). Every read was authorized; no generated edit executed. All five cases
+  repeated unsupported `Get-Content -Append` pipelines and hit the fixed tool budget. Invalid
+  calls were `[3, 2, 3]` on fixed cases and `[3, 3]` on heldout cases. The keyed-template and
+  tuple-join preflight edits passed, so the new fixtures are solvable by the unchanged simulator.
+  Prioritize a read-only comparison of full decoded SFT contexts versus inference contexts,
+  including the tool-result envelope, assistant-turn boundary and guarded-edit label exposure.
+  If needed, separately authorize a training-task diagnostic replay to distinguish failure to
+  reproduce a learned edit from heldout transfer failure. Neither this result nor train loss
+  identifies insufficient volume, exposure, adapter capacity or model incapability as the cause.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
   prefill throughput separate from decode throughput and include tool, validation, retry, memory, and
   sustained-performance costs.

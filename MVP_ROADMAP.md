@@ -567,6 +567,46 @@ Exit condition:
   immutable training increment, not improved Student behavior. The next experiment requires a new
   schema `0.3` Qwen SFT export with a declared choice of increment-only versus combined train data,
   followed by a separately scoped training and evaluation run.
+- `stage1-codex-powershell-edit-005-qwen35-2b-v1` is the new schema `0.3` SFT export containing only
+  the 12 published edit-005 train trajectories, with no validation examples. It uses the same pinned
+  Qwen3.5-2B tokenizer, chat contract, 4096-token limit, and assistant-turn normalization as the
+  contract-004 v2 export. Full decoded-label audit retained all 36 tool calls, preserved combined
+  narration/tool turns, and excluded tool-result envelopes from training labels. The export has
+  8,169 total tokens, 2,496 trainable tokens, and a 691-token maximum sequence; persisted examples
+  equal the audited in-memory examples. The train artifact is 96,582 bytes with SHA-256
+  `db0b265bb466f837242e491f97f252d2e8ab90afc06c209440bf13f85b35e847`. This clears the SFT gate for
+  a fresh, separately authorized LoRA experiment; it does not establish checkpoint task success.
+- `stage1-codex-qwen35-2b-007-edit005-32step` completed the authorized fresh-base LoRA run on the
+  edit-005-only SFT. Model revision, seed 42, learning rate `2e-4`, batch size, accumulation, and
+  LoRA rank/alpha/dropout/target modules match run 006; optimizer updates remain fixed at 32. With
+  12 trajectories this is 2.6667 actual epochs rather than run 006's 4 epochs. Per-step logs and
+  Trainer state preserve the measured exposure; the new run's phase metrics use that measured
+  epoch while recording the configured epoch value separately. Average train loss was
+  `0.5857911370694637`, and the saved step-32 adapter passed hash verification and independent-process
+  reload against the pinned base. Adapter SHA-256 is
+  `69dfffd0b11d71f1cd6b3899617ef69807d34e736d991301f0c00a8d825144a8`. There was no training-period
+  validation. Independent checkpoint evaluation remains the next gate; this training result alone
+  does not establish improved editing behavior or make the checkpoint publishable.
+
+- Independent run-007 evaluation is now scoped to a new
+  `runs/evaluation/stage1-codex-qwen35-2b-007-edit005-32step/` directory. The fixed-v3 group
+  retains the matched run-006 cases, validators, prompt, 256-token generation limit, deterministic
+  decoding and four-tool-call budget. A separate heldout-v1 group pins two validation-only keyed-template
+  and tuple-join fixtures before inference, with pytest, exact-content and unchanged-test validators.
+  Both heldout preflights reject the original behavior and accept an authorized constrained edit.
+  Published-training provenance review found no exact task/revision/read-source overlap across
+  53 task IDs and 37 source revisions. These are new exact examples in the same greeting domain,
+  not evidence of cross-project or semantic independence. Separate suite identities and local
+  learning-curve ledgers prevent mixing their scores. Evaluation completed at fixed-v3 `0/3` and
+  heldout-v1 `0/2`; fixed-case invalid-call counts were `[3, 2, 3]`, heldout counts `[3, 3]`.
+  Every first read succeeded, but all cases repeatedly proposed unsupported `Get-Content -Append`
+  pipelines rather than an executable guarded `.Replace` edit, exhausted the four-call budget,
+  and left greeting.py unchanged. Behavioral validators failed; heldout test-file preservation
+  validators passed. All 97 protected existing input files retained their hashes. The matched
+  run-006 fixed-v3 result was also `0/3`, so run 007 has no measured task-success improvement and
+  is not ready for promotion. Next diagnose the exact training-versus-inference contexts and
+  guarded-edit token learning before another dataset expansion or exposure change; these results
+  localize an execution failure but do not prove its training root cause.
 
 ## MVP completion definition
 
