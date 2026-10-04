@@ -608,6 +608,32 @@ Exit condition:
   guarded-edit token learning before another dataset expansion or exposure change; these results
   localize an execution failure but do not prove its training root cause.
 
+- The next authorized control is `stage1-codex-qwen35-2b-008-edit005-64step`, a fresh-base run
+  using exactly the run-007 edit005 SFT, model revision, seed, initial learning rate and LoRA
+  settings. Only `max_steps` changes from 32 to 64; the configured epoch setting remains 4,
+  but Trainer's step override implies about 5.3333 measured epochs. The default linear schedule
+  retains its policy while extending its horizon, so this is not run 007 continued on its old
+  learning-rate curve. No training-period validation is enabled. Before inference, pin the
+  identical fixed-v3 and repeated heldout-v1 cases in a new evaluation directory; retain the
+  unchanged prompt, executor, generation settings, validators and separate ledgers. Report the
+  two training-example v2/v3 teacher-forced edit probes separately, never as heldout success.
+  No existing experiment artifacts or fixtures may be changed. Training completed 64 updates
+  and 5.3333 measured epochs, with mean train loss `0.27337406313745305`; no training validation
+  was used. The adapter passed independent-process hash/revision-verified reload; SHA-256 is
+  `1fa729f935000498e87961e964e081d7e4304ca4520664dafbbc321e2cfef261`.
+  Unchanged v3 evaluation completed fixed `0/3` and repeated heldout regression `0/2`, matching
+  run 007's task-success counts. Every read succeeded, but no edit executed. Generated edits now
+  include `.Replace` inside unsupported selection/object pipelines; the first fixed case then
+  repeated `-LiteralPath` until token truncation caused a parse error. Fixed invalid-call counts
+  were `[1, 3, 3]`, heldout `[3, 3]`; lower counts in the first case reflect early parse termination,
+  not success. The separate two-example edit probes scored exact targets v2 `1/2`, v3 `0/2`;
+  the v2 format-call case misplaced `.format(name)` outside the replacement string quotes.
+  This shows partial seen-context improvement, not complete task reproduction or readiness.
+  Training protected 160 existing files and evaluation protected 176 files, all byte-unchanged.
+  Next run a separately identified, training-contract-matched v2 closed-loop diagnostic before
+  adding data, increasing steps again, or attributing the entire failure to prompt mismatch.
+  Preserve these v3 suites/results and score identities; the checkpoint is not promotable.
+
 ## MVP completion definition
 
 The MVP is complete only when all of the following are true:

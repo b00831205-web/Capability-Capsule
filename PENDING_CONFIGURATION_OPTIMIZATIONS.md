@@ -215,6 +215,28 @@ correctness:
   If needed, separately authorize a training-task diagnostic replay to distinguish failure to
   reproduce a learned edit from heldout transfer failure. Neither this result nor train loss
   identifies insufficient volume, exposure, adapter capacity or model incapability as the cause.
+- Read-only post-007 audits reproduced all 12 saved SFT encodings, matched all 48 generation
+  prefixes against the actual input_ids, verified all 12 read outputs against their pinned sources,
+  and confirmed the guarded edits are labeled. Two teacher-forced training edit contexts yielded
+  v2: 1/2 supported edits and 0/2 exact targets; v3: 0/2 supported edits and 0/2 exact targets.
+  These memory-only probes localize incomplete seen-context reproduction as well as prompt
+  sensitivity, not just heldout transfer. They do not establish a closed-loop training-task score.
+  The authorized fresh-base run 008 doubles max_steps to 64 without adding data or changing the
+  initial learning rate, seed, model or LoRA settings. Its default linear scheduler gets a longer
+  horizon; record this limitation rather than calling it a pure continuation. Evaluate identical
+  v3 cases and repeated heldout regression fixtures before deciding whether exposure helped.
+- Run 008 completed 64 updates / 5.3333 actual epochs with mean train loss
+  `0.27337406313745305`, saved a reloadable adapter and preserved all protected inputs. Its
+  unchanged-v3 fixed and heldout-regression scores remain `0/3` and `0/2`. Do not select another
+  exposure increase based on loss alone. New generations put `.Replace` inside unsupported
+  selection/object pipelines; one rejection led to parameter repetition and a truncated malformed
+  tool call. The training-context v2 probes now yield 1/2 exact supported edits (versus 007's
+  memory-only 0/2); v3 remains 0/2. In the v2 format case the model emits
+  `'return "Hello, {}"'.format(name)` as an argument instead of keeping `.format(name)` inside
+  the quoted Python-source literal. Diagnose command argument serialization and prompt sensitivity
+  separately. Next use an independently recorded v2 closed-loop diagnostic with unchanged cases,
+  executor and budgets; it must not replace the failed v3 acceptance evidence. One seed and two
+  teacher-forced contexts do not establish broad capability, prompt-only causality or overfitting.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
   prefill throughput separate from decode throughput and include tool, validation, retry, memory, and
   sustained-performance costs.
