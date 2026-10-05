@@ -237,6 +237,23 @@ correctness:
   separately. Next use an independently recorded v2 closed-loop diagnostic with unchanged cases,
   executor and budgets; it must not replace the failed v3 acceptance evidence. One seed and two
   teacher-forced contexts do not establish broad capability, prompt-only causality or overfitting.
+- Run-008 v2 closed-loop diagnosis is now separately authorized and pinned to the persisted
+  training contract, unchanged checkpoint and the same five v3 cases. Freeze the source snapshots,
+  validators, executor, tools and budgets; only the system prompt changes. Record distinct suite
+  IDs, prompt/suite hashes and isolated fixed/heldout ledgers. Reused heldout fixtures are regression
+  cases, not a new unseen set. Preserve all failed v3 evidence and avoid retraining or collecting
+  more data before assessing this prompt-only contrast. The completed result is fixed `3/3`
+  versus v3 `0/3`, with zero invalid calls and all three within budget; repeated heldout remains
+  `0/2`. Mapping-template edits still put `.format(...)` outside a quoted source literal and
+  target the return instead of the preserved template. Tuple output behavior passes pytest,
+  but the edit bypasses the join mechanism and fails the frozen exact-content structure gate.
+  Prompt alignment is therefore materially relevant, not a complete fix. Keep behavior-pass
+  evidence distinct from full task success. Prioritize minimal constant/template replacement
+  and implementation-preservation training on independent train fixtures and target wording,
+  with no per-validation hints. Any future move from exact-content to a semantic/AST structure
+  validator needs an independently reviewed, versioned suite; do not loosen the existing gate
+  retroactively. Preserve old failed v3 evidence and do not yet promote the checkpoint as ready
+  for unseen tasks. This diagnostic preserved 207 files and passed 68 related pipeline tests.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
   prefill throughput separate from decode throughput and include tool, validation, retry, memory, and
   sustained-performance costs.

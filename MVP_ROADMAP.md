@@ -634,6 +634,28 @@ Exit condition:
   adding data, increasing steps again, or attributing the entire failure to prompt mismatch.
   Preserve these v3 suites/results and score identities; the checkpoint is not promotable.
 
+- The separately authorized `stage1-codex-qwen35-2b-008-edit005-64step-v2-diagnostic` evaluates
+  the unchanged step-64 checkpoint on the exact five run-008 cases, validators and source revisions.
+  Only the system prompt switches from v3 to the persisted SFT v2 training contract; tools,
+  executor, deterministic generation, 256-token cap and four-call budget remain fixed. Independent
+  suite IDs and prompt hashes distinguish this diagnostic because case digests do not cover prompts.
+  The fixed and repeated-heldout groups receive separate ledgers and disposable workspaces; no old
+  result, original fixture, training run or dataset may change. This is a prompt-only diagnostic,
+  not fresh heldout validation or a replacement for failed v3 acceptance evidence. Results are
+  fixed-v2 `3/3` (all time-bounded, zero invalid calls) versus v3 `0/3`, and heldout-v2 `0/2`
+  versus v3 `0/2`. The mapping-template case generated `.format(...)` outside the quoted
+  replacement argument, attempted to bypass the required template mechanism, and failed with
+  two rejected edits. The tuple case executed a valid edit and passed behavioral pytest, but
+  replaced the join return with concatenation rather than updating the tuple's prefix, failing
+  the unchanged exact-content structure gate. Do not report it as full success or relax the
+  validator after seeing this result. This bounded prompt-only contrast demonstrates sensitivity
+  on the three fixed cases; it does not establish all failures as prompt-only or broad capability.
+  All 207 protected files remained byte-identical; 65 existing and 3 new tests passed.
+  Next prioritize independently sourced train examples that preserve implementation mechanisms
+  through minimal constant/template edits and keep Python source expressions inside PowerShell
+  replacement-string arguments. Do not train on these validation fixtures or targets, expand the
+  simulator, add answer-bearing hints, or retrain without a separately scoped authorization.
+
 ## MVP completion definition
 
 The MVP is complete only when all of the following are true:
