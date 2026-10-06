@@ -656,6 +656,106 @@ Exit condition:
   replacement-string arguments. Do not train on these validation fixtures or targets, expand the
   simulator, add answer-bearing hints, or retrain without a separately scoped authorization.
 
+- The authorized `stage1-codex-powershell-literal-edit-006` raw collection is complete: eight
+  train-only assignments, independently authored source snapshots and disposable workspaces,
+  with two cases each for direct format strings, dictionary templates, tuple joins and branches.
+  Teacher `gpt-5` used capsule-teacher `0.2.0`; the accepted provisional Qwen3.5-2B revision,
+  confirmed hardware reference and existing HarnessProfile remain pinned. Every trajectory records
+  an actually executed read, guarded literal-only replacement and pytest result (24 successful
+  tool calls). All eight starting fixtures fail their target tests; all eight corrected copies pass
+  independent pytest and preserve the exact implementation structure and untouched test bytes.
+  Execution uses the unchanged constrained PowerShell simulator, not native full PowerShell.
+  Plan publication permits only `collection-plan.json` and `manifest.json`, so new fixture copies
+  and audit sidecars reside under `artifacts/teacher-fixtures/stage1-codex-powershell-literal-edit-006/`;
+  the initial rejected preparation is retained there for auditability, with no raw records from it.
+  Raw SHA-256 is `7864fdc8366f5be433257790734b6cdcc094f7457172fc5a4bbc652ada4785ee`.
+  There are no known exact duplicate fingerprints/task IDs/source revisions against existing raw
+  and published train data, nor exact task/revision/split-group overlap with the fixed and repeated
+  heldout validation suites. These checks do not establish semantic independence or Student success.
+  All 581 protected existing source/data/fixture/training/evaluation files stayed byte-identical;
+  128 collection, provenance, harness, dataset, checkpoint and SFT regression tests passed.
+  That collection approval did not include publication, SFT, training or checkpoint evaluation.
+
+- Separately authorized curation/publication of `stage1-codex-powershell-literal-edit-006` is
+  complete under `datasets/teacher/published/stage1-codex-powershell-literal-edit-006/`: eight train,
+  zero validation and zero duplicate records. All eight corrected disposable fixtures again passed
+  independent pytest with cache and bytecode writes disabled; pinned source revisions, precise edits,
+  implementation structure, test-file bytes, harness envelopes and known exact overlap gates passed.
+  `train.jsonl` is byte-identical to the reviewed raw (18,985 bytes, same SHA-256 recorded above).
+  Manifest SHA-256 is `bb07ba632ecb914db4b1f65d93551b1e3c1b205a57fc4fb134a304f4ba38fd6b`.
+  Existing APIs publish the canonical four files without overwriting versions; audit evidence is
+  separate at `tests/literal006-publication-audit.json`. All 654 protected files, including the raw,
+  collection plan/copies/evidence and all existing experimental inputs, stayed byte-identical.
+  Historical collection reports remain unchanged: their `published: false` describes collection time.
+  All 152 publication/collection/provenance/dataset/harness/checkpoint/SFT regression tests passed.
+  That publication approval did not include SFT export, training or checkpoint evaluation.
+
+- Separately authorized Qwen SFT export of the literal-edit-006 publication is complete at
+  `artifacts/sft/stage1-codex-powershell-literal-edit-006-qwen35-2b-v1/`. It contains only this
+  increment: eight train examples, zero validation examples, 5,506 total tokens and 1,588 trainable
+  assistant tokens. The longest example is 705 tokens under the unchanged 4K limit; none is truncated.
+  Schema `0.3` coalesces adjacent assistant narration/tool requests. The exact v2 chat contract
+  (`c07de6d8212177e43aba96d819e4eb98b996a71e87ae056e6079ad39fd1c0cf0`) and pinned
+  `Qwen/Qwen3.5-2B@15852e8c16360a2fea060d615a32b45270f8a8fc` tokenizer remain unchanged.
+  All eight examples passed full decoded assistant-span audit: all 24 tool calls are trainable,
+  all 32 inference-generation prefixes match, user/system/tool-result tokens are masked, and
+  narration does not end before its tool request. Existing prefix-derived masking handles the
+  tokenizer template's lack of native generation blocks; no source implementation was changed.
+  Persisted examples match the in-memory audit and source trajectory IDs/revisions exactly.
+  Train JSONL SHA-256 is `bb63f8adfd020226921bd51cdef618b6800a6362b30412952826e584c291ecad`;
+  SFT manifest SHA-256 is `278e4991a0a3d22f79195890c543e21ea0218b7ee10e642a37cd61547ca2d8ea`.
+  All 658 protected files stayed byte-identical; decoded audit and input hashes are stored separately
+  in `tests/literal006-sft-audit.json`. Export is immutable and does not combine older train data.
+  All 155 related SFT/publication/collection/provenance/harness/checkpoint regression tests passed.
+  That export approval did not include training or checkpoint evaluation; SFT integrity is not
+  evidence of learned generalization.
+
+- A fresh, separately authorized `stage1-codex-qwen35-2b-009-literal006-32step` run completed
+  from the pinned Qwen3.5-2B base, using only literal-edit-006 SFT v1 (eight examples / 5,506 tokens).
+  The first-pass budget is 32 optimizer updates / four effective epochs: batch one, accumulation one,
+  seed 42, learning rate 2e-4, LoRA rank eight / alpha 16 / dropout 0.05 on q_proj and v_proj.
+  The existing linear scheduler and save-final-adapter pipeline remain unchanged. No old adapter is
+  resumed and no training-period validation was enabled. All 32 optimizer updates / four measured
+  epochs completed; mean train loss is `0.5821066312491894` (last logged loss `0.3311919867992401`).
+  The measured Trainer training phase took 289.3456 seconds, excluding model loading, saving and reload.
+  Optimizer logs, trainer state, provenance, checkpoint and final adapter are saved in the new run.
+  Adapter SHA-256 is `322fbdfeb64e876c413d9da695326a8294cd14f6ca24ee972aa9ceecc91b75fc`.
+  All 663 protected existing source/data/fixture/SFT/training/evaluation files stayed byte-identical.
+  Independent-process adapter reload passed pinned-model revision and adapter hash verification;
+  the default adapter is active. No task evaluation is included.
+  All 175 related training/SFT/publication/collection/provenance/harness/backend tests passed;
+  the single warning is the CPU-only DataLoader's unused `pin_memory` setting, not a failed check.
+  Data and per-example exposure differ from edit005, so this is not a single-variable control.
+  That training approval did not include checkpoint task evaluation.
+
+- Separately authorized checkpoint-009 evaluation completed at
+  `runs/evaluation/stage1-codex-qwen35-2b-009-literal006-32step/`: the exact three fixed-v2
+  cases and two newly authored, first-use validation cases. The unseen cases combine a dictionary
+  template with name trimming and tuple joining with uppercase names and an empty-name branch.
+  Initial source snapshots, tasks, targets, validators and suites were frozen before checkpoint
+  inference; both unseen preflights reject the original behavior and accept the minimal reference
+  edit in separate copies. No known exact source/task/revision or target overlap with published
+  train data, or exact source/case-ID overlap with previous checkpoint validation, was found.
+  These are new exact fixtures in the same greeting domain, not proof of semantic independence or
+  cross-project generalization. Use unchanged v2 system/tools, executor, deterministic generation,
+  256 new tokens and four tool rounds. Preserve exact-content implementation gates rather than
+  loosening them after inference. Store fixed and unseen results/ledgers independently, accounting
+  only for this fresh-base run's eight trajectories / 5,506 tokens. Do not modify existing evidence.
+  Results are fixed-v2 `0/3` and first-use unseen `0/2`, with zero behavioral-validator successes
+  in either group. Every read succeeded, but each model tried writing the tool-result JSON envelope
+  as source content using unsupported standalone Set-Content or a here-string rewrite. Recovery
+  repeated writes, selection/object pipelines or nested PowerShell. All five cases had three rejected
+  calls and ended with ToolRoundLimitExceeded; no edit occurred. This is not merely an exact-content
+  gate rejecting otherwise correct behavior. All 681 protected files and the four new source/test
+  snapshot files stayed byte-identical. All 180 related pipeline/integrity/backend regression tests
+  passed (one nonfatal CPU-only DataLoader warning); these are not Student task-success scores.
+  The checkpoint is not promotable. Run 008's v2 fixed `3/3`
+  used different data and 64 steps; the contrast cannot isolate data versus optimization exposure.
+  Next seek authorization for a fresh-base 64-step control using identical literal006 SFT, seed,
+  learning rate, LoRA and v2 contract before changing prompts, tool envelopes, executor or training
+  composition. Evaluation remains separately scoped; these new cases become repeated regression
+  cases after this first use, never fresh unseen evidence in later runs. Do not relax old validators.
+
 ## MVP completion definition
 
 The MVP is complete only when all of the following are true:

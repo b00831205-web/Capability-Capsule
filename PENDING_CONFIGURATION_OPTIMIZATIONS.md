@@ -254,6 +254,58 @@ correctness:
   validator needs an independently reviewed, versioned suite; do not loosen the existing gate
   retroactively. Preserve old failed v3 evidence and do not yet promote the checkpoint as ready
   for unseen tasks. This diagnostic preserved 207 files and passed 68 related pipeline tests.
+- The targeted `stage1-codex-powershell-literal-edit-006` data increment has now been collected
+  separately published and exported to SFT; a fresh training run has now completed:
+  eight independent train-only fixtures cover literal substitutions in
+  format strings, dictionaries, tuples and branches without replacing their implementation mechanisms.
+  All 24 recorded constrained-executor calls and eight independent validators passed; baseline target
+  tests failed on all eight initial snapshots. Exact local-patch checks and unchanged validator bytes
+  supplement behavior checks, while AST-normalized tests verify that nonliteral structure survives.
+  No known exact train/validation overlap or duplicate was found; semantic deduplication remains deferred.
+  All 581 protected existing files remain byte-identical; 128 related regression tests passed.
+  The plan folder retains its strict two-file
+  layout; source/workspace copies and review evidence are separate new artifacts. Keep the v2 contract,
+  tools and executor unchanged for any later SFT export. The immutable publication contains eight train,
+  zero validation and zero duplicate records; train bytes exactly match the reviewed raw. Publication
+  repeated all eight independent validators with cache/bytecode writes disabled and preserved 654
+  existing input files, including collection artifacts. Its audit is a separate test-sidecar, never
+  an extra file inside the strict four-file published version; 152 related regression tests passed.
+  The separately authorized schema-0.3 Qwen SFT v1 now contains eight train examples / zero validation,
+  5,506 total tokens and 1,588 trainable tokens (maximum 705, no clipping at the unchanged 4K cap).
+  All 24 tool requests and 32 inference-generation prefixes passed decoded audit; nonassistant tokens
+  remain masked and narration/tool requests share one assistant turn. The v2 contract, model revision,
+  executor and source bytes are unchanged. SFT export preserved 658 files and did not mix older data.
+  All 155 related regression tests passed.
+  The authorized `009-literal006-32step` training uses a conservative first-pass 32-step budget
+  (four epochs on eight examples), with unchanged seed 42, LR 2e-4, rank eight and v2 SFT contract.
+  Start from the base model, not run 008's adapter; retain separate logs, checkpoint hashes and an
+  independent reload check. The run completed all 32 steps / four measured epochs with mean train
+  loss `0.5821066312491894`, preserving 663 existing inputs. Independent-process adapter reload
+  passed model revision and adapter hash checks. No training validation or checkpoint task evaluation is included.
+  All 175 related tests passed with one nonfatal CPU-only DataLoader `pin_memory` warning.
+  Do not treat lower train loss as generalized capability or call this a one-variable control:
+  training composition and exposure per example differ from edit005. The separately authorized
+  checkpoint-009 evaluation is complete: identical fixed-v2 cases plus first-use trimmed-dictionary
+  and uppercase-tuple validation snapshots, frozen with behavior/structure/test-preservation validators
+  before inference. Keep v2 prompt/tools, executor and 256-token/four-round budgets fixed and retain
+  independent fixed/unseen ledgers. New exact fixtures remain within the greeting domain, not a new
+  repository or broad independence claim. Do not reuse training targets, change old suites, relax
+  validators after observing outputs, or merge fresh and repeated-case success rates. This data review is not evidence
+  that the Student learned the edits or generalized. Do not increase prompt hints, widen the executor,
+  use validation targets for training, or retroactively loosen the failed heldout structure gate.
+  Results are fixed `0/3` and new unseen `0/2`, both with zero behavior-validator passes. Every read
+  succeeded, but every first edit copied the tool-result JSON envelope into an unsupported whole-file
+  write; recovery used repeated writes, pipelines or nested PowerShell. All five cases had three
+  rejected calls and exhausted the tool budget without editing. All 681 protected files and the four
+  new source/test snapshots remain unchanged. All 180 related regression tests passed with one
+  nonfatal CPU-only DataLoader warning; pipeline tests do not convert model failures into success.
+  Keep this failed checkpoint unpromoted. Before changing
+  serialization, adding prompts or changing data again, prioritize a separately authorized 64-step
+  fresh-base optimization-exposure control on identical literal006 SFT and hyperparameters. A linear
+  scheduler horizon change is a recorded limitation, not continuation of the old run. Do not claim
+  that training duration alone is the proven cause; run 008 differed in data as well as update budget.
+  Future use of these exact unseen cases is regression; new unseen evidence needs independently
+  authored, separately frozen cases, never training on their targets.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
   prefill throughput separate from decode throughput and include tool, validation, retry, memory, and
   sustained-performance costs.
