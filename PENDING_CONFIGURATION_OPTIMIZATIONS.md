@@ -306,6 +306,118 @@ correctness:
   that training duration alone is the proven cause; run 008 differed in data as well as update budget.
   Future use of these exact unseen cases is regression; new unseen evidence needs independently
   authored, separately frozen cases, never training on their targets.
+  The user has now authorized `010-literal006-64step`, using the same immutable SFT, pinned base,
+  seed, learning rate and LoRA configuration as 009. Training completed with max_steps 64
+  (eight effective epochs; configured epochs four is overridden). Keep the existing linear scheduler
+  and record its changed horizon; do not describe this as resuming 009 or identical LR prefixes.
+  Save to a new run, verify independent adapter reload and preservation of existing artifacts.
+  Task evaluation remains a separate authorization; loss reduction alone cannot establish capability.
+  The first attempt was interrupted after two updates by a WSL environment restart (no checkpoint,
+  no Python traceback; restart cause unconfirmed). Preserve its evidence unchanged and use a new
+  `010-literal006-64step-retry1` directory for an identical fresh-base retry. Do not change training
+  configuration or claim a model/convergence failure from this interruption.
+  The retry completed 64 steps / eight measured epochs, mean train loss `0.26792120598838665`
+  and last loss `0.010339532978832722`. Independent-process reload verified pinned model revision
+  and adapter hashes/default activation; all 722 protected files stayed byte-identical. Persist
+  separate training logs/checkpoint evidence. No task evaluation or promotion is authorized here.
+  Next seek independent unchanged-v2 checkpoint evaluation, separating repeated fixed cases from
+  genuinely first-use frozen validation cases. Compare task behavior and rejection/recovery traces,
+  not training loss alone; do not infer duration is the proven sole cause or claim overfitting is ruled out.
+  All 184 related regression tests passed with one nonfatal CPU-only DataLoader warning. Keep
+  pipeline correctness separate from the not-yet-measured checkpoint-010 task-success rate.
+  Checkpoint-010 task evaluation is now separately authorized: exact fixed-v2 plus first-use
+  casefold-dictionary and trim-title-tuple cases frozen before inference, with unchanged contract,
+  executor and budgets. Preflight references separately; retain behavior/structure/test-preservation
+  gates and record fixed versus first-use scores in separate new ledgers. Preserve all prior
+  experiments and never train on validation targets. Same-domain exact novelty is not proof of
+  cross-project generalization. Results: strict fixed `2/3`, behavior `3/3`; first-use unseen strict
+  and behavior `2/2`, with zero rejected calls in all five cases. The remaining fixed case hardcodes
+  Ada, passing its Ada-only pytest but failing the unchanged parameter-preserving exact-content gate.
+  Do not loosen it retrospectively. All 740 protected files and four new snapshots stayed unchanged.
+  The paired fixed comparison improves from 009 `0/3` to `2/3`, with the earlier envelope-copy
+  failure absent. It supports optimization exposure as a factor, not a sole proven step-count cause:
+  schedule horizon changes too, only one seed was tested, and unseen fixture definitions differ.
+  Hold promotion. Prioritize parameter-preserving literal edits and multi-input behavioral checks
+  in separately authorized new experiments, not blind extra steps, prompt hints or executor changes.
+  Same-domain two-case success does not rule out overfitting or establish cross-project readiness.
+  All 189 related regression tests passed (one nonfatal CPU-only DataLoader warning); do not
+  conflate this pipeline result with checkpoint task success or promotion readiness.
+  Before adding parameter-preservation training, a separately authorized paired diagnostic will
+  reuse the original salutation source and Ada-only visible test with checkpoint 010. Compare
+  original task wording versus explicit arbitrary-name semantics, holding the executor/contract,
+  checkpoint/budget and frozen independent multi-name/exact-content/test-byte gates identical.
+  Reference and hardcoded preflights must prove those gates distinguish dynamic behavior.
+  Save separate new diagnostic evidence; do not modify fixed v2 or old results, claim fresh unseen
+  novelty, or append promotion learning-curve points. Results: both task wordings fail strict and
+  multi-name gates. Original wording hardcodes Ada while passing the visible test. Explicit wording
+  hardcodes Ada with the wrong Hello prefix, repeats failing pytest instead of repair, and exhausts
+  tool rounds. Clarification did not rescue this pair; ambiguous wording alone is not a sufficient
+  demonstrated explanation or fix. One pair does not rule out wording sensitivity or prove a sole cause.
+  All 779 protected old files and two snapshot files stay unchanged. Existing fixed `2/3` and unseen
+  `2/2` remain historical scores; no promotion ledger point is added. Keep this checkpoint unpromoted.
+  Literal006 includes one f-string via an external prefix constant, but no inline f-string literal
+  edit preserving its placeholder. Prioritize a separately authorized small independent train-only
+  increment for that pattern with multiple/empty-name behavior; record recovery only if real.
+  Do not reuse validation sources/targets, increase prompt hints, loosen gates, widen the executor,
+  or treat additional steps as the automatically appropriate remedy. Coverage is a hypothesis.
+  Related pipeline verification passed: 194 distinct tests / 205 executions (eleven repeated
+  integrity checks), with one nonfatal CPU-only DataLoader warning; diagnostic scores stay failed.
+  The user requested six train-only inline f-string coverage trajectories under a new
+  `stage1-codex-powershell-fstring-edit-007` plan/raw version. Preserve all old inputs, use the
+  pinned Student/harness and capsule-teacher 0.2.0, and check multiple names plus empty behavior.
+  Freeze independent source/target examples, require local literal-only changes and independent
+  validation, audit exact historical/validation overlap and save actual tool-result evidence.
+  Do not fabricate recovery traces, reuse validation answers, publish, export or train in this phase.
+  Collection completed with six train, zero validation, 21 actual recorded tools and six independent
+  final validator passes. Multiple/empty-name tests and f-string expression/structure/test-byte
+  preservation passed. Known exact duplicates/validation overlap are zero; 803 old files unchanged.
+  Save collector incidents separately: literal-suffix AST normalization was fixed and harmless
+  colon/slash text must be edited in smaller spans under the unchanged constrained executor.
+  Three examples use two edits; all fit the four-tool budget. Raw contains successful observed
+  traces, not reconstructed measurements or fabricated failure recovery. This coverage increment
+  is not proof the Student learned parameter preservation. Next independently authorize immutable
+  publication; SFT composition (increment only versus replay mix), training and evaluation remain
+  separate decisions, never automatic continuations.
+  All 200 related regression tests passed with one nonfatal CPU-only DataLoader warning. Keep
+  raw-review readiness separate from unmeasured Student task success after any future training.
+  Independent publication of the six fstring-edit-007 records is authorized: re-audit traces,
+  dynamic expressions, multi-input validators, plan/Student/harness digests and known exact overlap.
+  Publish only this increment under a fresh canonical four-file version; preserve raw/fixtures and
+  old evidence. No automatic replay mix, SFT export, training, evaluation or remote push follows.
+  Publication completed independently: six train, zero validation, zero duplicate records in the
+  four canonical files. Train is byte-identical to raw (16,429 bytes); all six independent multi-input
+  tests and digest/structure/envelope/known exact overlap reviews passed. All 846 protected files
+  stayed unchanged. Separate publication evidence is under tests; historical collection flags stay
+  untouched. Dataset reload verifies artifact digests; Student capability remains unmeasured here.
+  Before an SFT export choose its composition explicitly; retain immutable source manifests and do
+  not modify old data, treat publication as training evidence, or silently continue to training.
+  All 129 related publication/collection/data/provenance/diagnostic-preservation tests passed;
+  the Student's readiness remains unchanged by dataset publication alone.
+- The authorized literal006/fstring007 mix contains the original eight plus six train trajectories
+  exactly once, not oversampled recovery data. Create only a new canonical publication and schema
+  0.3 Qwen SFT, pin source manifests/model/v2 contract, independently validate all fourteen solved
+  copies without writing to fixtures, audit all assistant spans and three/four-call boundaries,
+  and hash-protect old experimental artifacts. Preserve same-ID origin references in derived
+  versions while rejecting changed-content ID collisions and distinct-ID duplicate collections.
+  This is input readiness only; training and Student evaluation are separately authorized.
+  Overfitting remains unresolved: all fourteen examples are still greeting edits, old-data inclusion
+  supports coverage retention rather than guaranteeing generalization, and low training loss is
+  not a promotion gate. Do not default to 64 steps or maximize repetitions. Predeclare any new
+  training budget and retain the unchanged fixed suite as development regression evidence only.
+  Future independent validation must exercise different business scenarios and code structures,
+  multiple/empty inputs and unchanged unrelated behavior, frozen before model inference and never
+  used in training. Do not repeatedly select checkpoints on a supposedly fresh holdout; report
+  selection use explicitly. Same-domain success alone cannot establish cross-project readiness.
+  Mix and export completed: 14 train / zero validation / zero duplicates, exact ordered source-record
+  bytes, fourteen independent multi-input validator passes. The unchanged schema 0.3/4096-token
+  contract yields 9,979 total / 3,093 trainable tokens, max 801, no truncation, 45 audited tool calls
+  and 59 matched generation prefixes. All 850 protected prior files stayed byte-identical.
+  The original eight exported examples remain unchanged; the new six include every actual edit.
+  Source and SFT manifest digests plus decoded-label evidence are persisted in the separate tests
+  audit. Dataset/SFT readiness does not update Student scores or establish absence of overfitting;
+  no training or model evaluation has started, and promotion remains blocked.
+  All 99 related mix/SFT/source/data/provenance regression tests passed without skips. Keep this
+  pipeline result separate from model quality and any future heldout-selection evidence.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
   prefill throughput separate from decode throughput and include tool, validation, retry, memory, and
   sustained-performance costs.

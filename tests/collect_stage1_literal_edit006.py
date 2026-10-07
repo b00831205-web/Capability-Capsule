@@ -124,6 +124,8 @@ def audit(plan):
     for path in (ROOT / "datasets/teacher/published").glob("*/train.jsonl"):
         if path.parent.name != PLAN_ID:
             previous.extend(load_jsonl(path, TeacherTrajectory))
+    from teacher_replay_history import distinct_history
+    previous = distinct_history(raw, previous)
     fingerprints = {trajectory_fingerprint(t) for t in raw}
     if len(raw) != 8 or len(fingerprints) != 8 or fingerprints.intersection(trajectory_fingerprint(t) for t in previous):
         raise ValueError("Count or exact duplicate gate failed")

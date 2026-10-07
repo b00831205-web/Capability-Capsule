@@ -756,6 +756,170 @@ Exit condition:
   composition. Evaluation remains separately scoped; these new cases become repeated regression
   cases after this first use, never fresh unseen evidence in later runs. Do not relax old validators.
 
+- The separately authorized same-SFT 64-step control completed as
+  `stage1-codex-qwen35-2b-010-literal006-64step-retry1`. Start fresh from the identical pinned base and
+  literal006-only SFT; preserve seed 42, LR 2e-4, batch/accumulation one and LoRA settings.
+  Only the optimizer-step ceiling changes from 32 to 64: eight effective epochs on eight examples.
+  Retain configured epochs four, which Trainer's explicit max_steps overrides. The existing linear
+  scheduler decays over 64 rather than 32 updates, so this is not continuation or an identical LR
+  prefix. Save separate logs/checkpoint/adapter, verify independent reload and old artifact hashes.
+  This authorization covers training only, not checkpoint task evaluation or promotion.
+  The first attempt (`010-literal006-64step`) stopped after two updates without a checkpoint or
+  Python traceback. WSL boot time was 2026-10-06 07:54:33 UTC, later than its recorded training
+  start at 07:51:35 UTC: an environment restart interrupted training, with restart cause unknown.
+  Preserve that incomplete run unchanged and retry from the same base, not from partial weights.
+  The retry completed all 64 optimizer updates / eight measured epochs; mean train loss is
+  `0.26792120598838665` (last logged loss `0.010339532978832722`). Trainer's measured training
+  phase took 626.5368 seconds, excluding loading/saving/reload. All 64 loss updates, final state,
+  provenance, checkpoint and adapter are saved in the new retry run. Adapter SHA-256 is
+  `931459dc6a1adbb6d6d6ae0cd4daaff11be72eefc7b9014b7d99817c77381b9b`.
+  Independent-process reload passed pinned model revision and adapter hash verification with the
+  default adapter active. All 722 protected existing files, including interrupted-run evidence and
+  checkpoint-009 training/evaluation evidence, stayed byte-identical. No task evaluation ran.
+  Lower training loss does not prove generalization, fix the observed tool-envelope copying, or
+  establish readiness for promotion. The next separately authorized experiment is unchanged-v2
+  task evaluation with fixed cases reported separately from independently frozen first-use cases.
+  All 184 related training/evaluation-pipeline/data/provenance/backend regression tests passed
+  (one nonfatal CPU-only DataLoader pin_memory warning). Pipeline tests are not task-success scores.
+
+- Checkpoint-010 task evaluation is now separately authorized at
+  `runs/evaluation/stage1-codex-qwen35-2b-010-literal006-64step-retry1/`. Preserve the exact fixed-v2
+  suite bytes, prompt/tools, constrained executor, deterministic generation and 256-token/four-round
+  budgets. Author two first-use validation fixtures (case-folded dictionary formatting and trimmed,
+  title-cased tuple joining with an unnamed branch), freeze task/source/validators before inference,
+  audit exact training/prior-validation overlap and preflight original/reference behavior in copies.
+  These remain same-domain greeting cases, not cross-project or semantic-independence evidence.
+  Report fixed/unseen scores and learning-curve ledgers separately; use only the eight trajectories /
+  5,506 tokens consumed by this fresh-base run. Do not modify old artifacts or relax validators.
+  Evaluation completed: strict fixed-v2 `2/3`, behavior gates `3/3`; first-use unseen strict and
+  behavior `2/2`. All five cases used three authorized tools plus final completion, with zero
+  invalid calls; durations were 39.41-45.43 seconds. The remaining fixed failure hardcodes Ada
+  instead of preserving `{name}`: the Ada-only pytest passes but the unchanged exact-content
+  gate rejects it. The task names only Ada, so do not generalize this single gate failure into a
+  broad incapability claim. The former envelope-copy/rejected-command workflow failure is absent.
+  Same-SFT fixed scores improve from checkpoint-009 `0/3` to `2/3`, supporting an optimization-
+  exposure explanation, not a proven step-count-only cause (linear schedule horizon also changes,
+  one seed/run). New unseen cases differ from 009's, so those success rates are not paired evidence.
+  All 740 protected existing files and four new source/test snapshots stayed byte-identical.
+  Store per-case reports, summary, separate ledgers and RESULTS.md in the new evaluation directory.
+  Do not promote yet: parameter preservation and broader evidence remain; two same-domain unseen
+  passes do not establish cross-project generalization or exclude overfitting. Any later reuse is
+  regression, not fresh unseen. Next consider separately scoped parameter-preserving edit coverage
+  and multi-input checks in new experiments; keep this suite, prompts and executor unchanged.
+  All 189 related evaluation/training/data/provenance/backend regression tests passed, with one
+  nonfatal CPU-only DataLoader warning. Pipeline tests are distinct from the strict model scores.
+
+- A separately authorized checkpoint-010 parameter-preservation diagnostic will write only to
+  `runs/evaluation/stage1-codex-qwen35-2b-010-literal006-64step-retry1-parameter-diagnostic-v1/`.
+  Copy the original fixed PowerShell-salutation fixture, preserving source and its visible Ada-only
+  test. Compare the original task against the same task plus an explicit arbitrary-name requirement.
+  Freeze identical original strict gates, four independent name-call checks and test-byte protection
+  before inference; original/reference/hardcoded preflights run only in disposable copies.
+  Keep checkpoint, system/tools, executor and 256-token/four-round budgets unchanged. Only task
+  clarification changes, apart from bookkeeping IDs. Report one paired diagnostic, not fresh unseen
+  or a fixed-v2 replacement; do not write it into the readiness learning-curve ledger or train on it.
+  Preserve all old data/training/evaluation artifacts. One pair cannot establish broad causality.
+  Diagnostic completed: both task wordings fail strict and multi-name gates. Original wording
+  reproduces `PowerShell ready, Ada!`: its visible Ada test passes, all three non-Ada calls fail.
+  Explicit arbitrary-name wording generates `Hello, Ada!`, then repeats failed pytest without
+  correcting the edit and exhausts four tool rounds. There are no unauthorized calls; test-file
+  bytes are preserved. Durations are 42.66 / 66.91 seconds. Clarification did not rescue this pair;
+  it cannot be treated as a sufficient fix, though one paraphrase cannot rule out wording sensitivity.
+  All 779 protected old files and two snapshot files stay byte-identical. No readiness ledger is
+  written; historical fixed `2/3` and unseen `2/2` remain unchanged, and promotion remains blocked.
+  Read-only coverage review finds literal006's f-string example edits an external prefix constant,
+  not an inline f-string literal preserving its placeholder. Next propose a small independently
+  authored train-only coverage increment for inline f-string edits and multiple/empty-name behavior;
+  capture recovery only when genuinely observed. This coverage gap is a hypothesis, not proven cause.
+  New collection/publication/export/training each require separate authorization; no validation
+  sources/answers/targets may enter that increment, and prompts/executor/fixed gates remain unchanged.
+  Related regression verification passed: 194 distinct tests / 205 executions (eleven integrity
+  tests listed twice), one nonfatal CPU-only DataLoader warning. This is not Student success.
+
+- The user requested a small train-only inline f-string coverage increment. Collect six independent
+  `stage1-codex-powershell-fstring-edit-007` assignments into a new plan, immutable source snapshots,
+  disposable workspaces and raw JSONL. Cover double/single quotes, a local message variable, upper
+  and trim expressions, and an empty-name branch. Each fixture tests two named callers plus empty
+  input; local literal replacements must preserve f-string placeholders/expressions and Python
+  structure. Use capsule-teacher 0.2.0, GPT-5 and the existing verified Student/harness references.
+  Record real bounded read/edit/pytest calls, independently validate, audit known exact duplicates
+  and validation overlap, and hash-protect all existing inputs. No validation source/answer enters
+  train. Do not invent failure-recovery traces; preflight failures are separate evidence.
+  This phase is collection/review only, not publication, export, training or capability evidence.
+  Collection completed: six train / zero validation trajectories, 21 actual recorded read/edit/pytest
+  calls, six failing original preflights and six independently passing final validators. Multiple
+  names, empty/whitespace inputs, all dynamic expressions, unrelated structure and test bytes are
+  preserved. No known exact historical duplicate or validation source/task/revision/meaningful
+  target-text overlap was found (nine validation revisions audited). Raw SHA-256 is
+  `fdfb8418c2372572574673a9a85ca5e69939d4751c236d6041c54da275e2a457`.
+  All 803 old protected files stayed byte-identical. Keep the verified hardware profile's actual
+  inference/evaluation/benchmark purposes; the accepted model recommendation remains provisional.
+  Two collector incidents are retained outside raw: an overstrict literal-suffix AST check and a
+  constrained-executor colon rejection. Preserve the already appended first record, retry only
+  unappended assignments, and use smaller prefix/suffix replacements without widening the executor.
+  Three cases need two actual edit calls; all trajectories fit four tool calls. Do not reconstruct
+  unrecorded measurements or claim simulated/model recovery evidence. This changes edit granularity
+  as well as data coverage and is not a single-variable model experiment. Next seek separate
+  authorization for immutable publication; do not automatically export, mix old data or train.
+  All 200 related collection/evaluation/training/data/provenance/backend tests passed, with one
+  nonfatal CPU-only DataLoader warning. Pipeline correctness is not Student learning evidence.
+
+- The user authorized independent curation/publication of the six fstring-edit-007 raw records to
+  `datasets/teacher/published/stage1-codex-powershell-fstring-edit-007/`. Audit pinned plan/Student/
+  harness, actual tool traces, dynamic placeholders, multi-input behavior and known exact overlap;
+  rerun independent validators before publishing canonical train/validation/duplicates/manifest
+  files with digests. Preserve raw, source/workspace/evidence bytes and all old experimental inputs.
+  Do not combine earlier data or rewrite the historical collection report. Publication is local
+  immutable dataset readiness, not SFT export, training, Student success or a remote Git push.
+  Publication completed: six train / zero validation / zero duplicates, canonical four files only.
+  `train.jsonl` is byte-identical to reviewed raw (16,429 bytes, SHA-256
+  `fdfb8418c2372572574673a9a85ca5e69939d4751c236d6041c54da275e2a457`). All six independent
+  multi-input validators passed again; source revisions, dynamic expressions, test bytes, real
+  envelopes and known exact historical/validation overlap passed review. All 846 protected files,
+  including raw/plan/snapshots/solved copies/collection reports and old experiments, stayed unchanged.
+  Publication integrity reload passed; separate evidence is `tests/fstring007-publication-audit.json`.
+  Published manifest SHA-256 is `609685d5b2fa0bb764d11eafde057fefca2e12d1ed9b83097e0ad8cf0fcf9117`.
+  Historical `published: false` collection evidence remains unchanged, describing that earlier phase.
+  Next decide SFT composition explicitly (increment only versus an immutable replay mix); this
+  publication does not authorize export, merging old versions, training, evaluation or remote push.
+  All 129 related publication/collection/dataset/provenance/diagnostic-preservation regression
+  tests passed. This publication step does not measure Student task quality.
+
+- The user authorized a new immutable literal006/fstring007 mixed publication and Qwen SFT export,
+  not training. Compose eight existing literal-edit-006 and six fstring-edit-007 train records once
+  each, in source order, preserving original IDs, revisions, messages and bytes. Verify both pinned
+  source manifests, matching Student/harness references, independent multi-input validators,
+  cross-record deduplication and known exact validation isolation. Audit every decoded assistant
+  target and generation prefix, including the three trajectories with two separate edit calls.
+  Reuse schema 0.3, the pinned Qwen3.5-2B tokenizer and unchanged v2 cmd-only chat contract at 4096
+  tokens; mask system/user/tool results and coalesce adjacent assistant narration/tool messages.
+  Publish under `stage1-codex-powershell-literal006-fstring007-mix-v1` and export under the same ID
+  plus `-qwen35-2b-v1`. Preserve all old data, fixture, training/evaluation and SFT artifacts.
+  Exact identical origin references in derived publications are reuse, not newly collected duplicates;
+  conflicting content under an existing ID and distinct-ID duplicates remain rejected.
+  Anti-overfitting boundary: fourteen same-domain greeting trajectories are a targeted coverage
+  experiment, not evidence of broad generalization. Mixing old data preserves coverage but cannot
+  guarantee against overfitting. Future training requires separate authorization and a preregistered
+  update budget, not an automatic 64-step continuation or pursuit of near-zero training loss.
+  Fixed v2 is a repeated development regression suite, not independent generalization evidence.
+  Separately authorize and freeze fresh validation scenarios/structures before inference, excluded
+  from training; repeated checkpoint selection consumes their independence. Report old-task retention,
+  dynamic-input preservation and new-task transfer separately. Do not relax gates or enrich prompts
+  after observing a failure. If only greeting improves, broaden task diversity rather than repeating
+  same-domain increments. No training, model evaluation or checkpoint promotion is authorized here.
+  Publication/export completed: 14 train / zero validation / zero duplicate records, with train bytes
+  exactly equal to the ordered concatenation of both source publications. All fourteen independent
+  multi-input validators passed. Mixed manifest SHA-256 is
+  `2739762194576d51c89900dc3f7aceade571e1b4ed4a7359f6134198432faa60`.
+  The schema 0.3 SFT contains 9,979 total / 3,093 trainable tokens, a maximum of 801 tokens and no
+  truncation. All 45 real tool requests and 59 generation prefixes passed full decoded-label audits;
+  the original eight SFT examples remain unchanged. SFT manifest SHA-256 is
+  `5d8747cbf4ea5d1f023ecfd12694ec7b839af49701b7b59b6c9c06e27ef823cc`.
+  All 850 old protected files stayed byte-identical. Separate composition, validator, decoded-label
+  and preservation evidence is `tests/literal006-fstring007-mix-sft-audit.json`. No training was started.
+  All 99 related mix/SFT/source-collection/publication/data-integrity/harness/Student regression tests
+  passed with no skips. This verifies the input pipeline, not Student task success or generalization.
+
 ## MVP completion definition
 
 The MVP is complete only when all of the following are true:

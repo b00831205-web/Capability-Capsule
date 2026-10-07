@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1",
+  "dataset_id": "stage1-codex-powershell-literal006-fstring007-mix-v1",
+  "artifacts": [
+    {
+      "filename": "train.jsonl",
+      "record_count": 14,
+      "byte_count": 35414,
+      "sha256": "5e3abdb954ec94684b498e902186d1f7908f008c26e6645668af1f7bfe034c9f"
+    },
+    {
+      "filename": "validation.jsonl",
+      "record_count": 0,
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "filename": "duplicates.jsonl",
+      "record_count": 0,
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
