@@ -418,6 +418,35 @@ correctness:
   no training or model evaluation has started, and promotion remains blocked.
   All 99 related mix/SFT/source/data/provenance regression tests passed without skips. Keep this
   pipeline result separate from model quality and any future heldout-selection evidence.
+- Freeze the separately authorized six-case `stage1-codex-mix011-validation-v1` fixture suite and
+  original/reference preflights without model inference. Groups: two new f-string structures, two
+  branch/composition greeting structures, two non-greeting two-parameter status/event functions.
+  Retain executor filenames and all prompts/tools/gates; snapshot sources and strict multi-input
+  expectations before the proposed training run. Source and test byte gates retain unrelated code.
+  The preregistered pilot is fresh-base mixed-SFT 28 updates / two epochs, seed42, batch/accumulation1,
+  LR2e-4 linear decay/no warmup, unchanged LoRA r8/alpha16/dropout0.05 q_proj/v_proj and 4096 length.
+  No training-time validation or heldout-based checkpoint selection; final checkpoint only and no
+  automatic training extension. Training itself is not authorized by fixture preparation.
+  Later separately authorize fixed-v2 new-checkpoint regression and a same-six-case new/old-010
+  comparison using separate untouched copies, greedy 256 tokens and four tools. Report subgroup,
+  multi-input/structure/test preservation, invalid-call and time-bounded metrics; target fixed3/3,
+  new6/6. All six passing still does not rule out overfitting or establish cross-project readiness.
+  Exposure and data both differ, so this is not a causal single-variable comparison. Never train on
+  validation sources/tasks/references/preflights; acknowledge that repeated selection consumes
+  validation independence. Keep all old files and historical scores unchanged.
+  Freeze completed: six original failures and six reference passes through 18 actual authorized
+  tool calls, with all 858 protected prior files unchanged. Exact isolation review covers 67 train
+  task IDs / 51 revisions, 11 previous validation IDs / 9 revisions. Suite and case digests, original
+  source hashes, copied-workspace results and the 28-step proposal are persisted in the new fixture
+  directory. Pure function gates test multiple/empty inputs independently of strict source equality.
+  Compatibility note: preserve the initial preparation failure and support the 88 historical
+  plaintext result occurrences alongside JSON envelopes (including raw/publication mirrors; read
+  occurrences, not new executions); no old record or prepared snapshot is rewritten.
+  No Student inference, training, model-evaluation run or ledger update occurred. Future authorizations
+  must reference this frozen suite rather than authoring validation after inspecting model outputs.
+  All 120 related regressions passed without skips (91 suite/data/provenance checks plus 29 fixture/
+  executor unit tests). Every case rejects synthetic first-input constant output through pure-function
+  gates alone. Validator sensitivity is not Student success or proof of no overfitting.
 - Benchmark the exact model, quantization, runtime, harness, and deployment device. Keep measured
   prefill throughput separate from decode throughput and include tool, validation, retry, memory, and
   sustained-performance costs.

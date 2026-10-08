@@ -920,6 +920,51 @@ Exit condition:
   All 99 related mix/SFT/source-collection/publication/data-integrity/harness/Student regression tests
   passed with no skips. This verifies the input pipeline, not Student task success or generalization.
 
+- The user authorized freezing six fresh validation fixtures and their deterministic original/reference
+  preflights only, under `artifacts/evaluation-fixtures/stage1-codex-mix011-validation-v1/`.
+  Do not create training or model-evaluation runs, invoke a model, publish validation trajectories,
+  append learning-curve ledgers or modify any old experimental input. Keep source snapshots separate
+  from original/reference disposable copies, freeze tasks and strict source/test/multi-input gates,
+  and verify old-file preservation plus known exact train/prior-validation isolation.
+  Preregister the proposed run `stage1-codex-qwen35-2b-011-mix006007-28step`: fresh pinned Qwen3.5-2B,
+  the existing fourteen-example mixed SFT, seed 42, batch/accumulation one, 28 updates / two epochs,
+  LR 2e-4 with linear decay/no warmup, LoRA r8/alpha16/dropout0.05 on q_proj/v_proj, length4096,
+  no training-time validation and final step-28 checkpoint only. No implicit extension or heldout
+  checkpoint selection is allowed; this is a conservative pilot, not proof two epochs are sufficient.
+  New cases are two f-string structures (conditional fallback and width formatting), two greeting
+  structures (local mapping/normalization/branch and list assembly/swapcase/branch/untouched helper),
+  and two non-greeting, two-parameter business functions (job status/count formatting and event
+  messages/actor/action normalization). The executor's greeting.py/test_greeting.py filenames stay
+  fixed; different business functions do not imply a general-purpose executor or broad coding skill.
+  Future separately authorized evaluation preserves fixed-v2 regression and evaluates the new final
+  checkpoint plus predeclared old 010 once each on the same six cases in separate fresh copies;
+  keep greedy/no-thinking/256-token/four-tool budgets and prompts/tools/executor unchanged.
+  Targets are fixed 3/3 and new 6/6 with no invalid calls, reporting behavior, structure, input
+  preservation, time-bounded success and each subgroup separately. Passing is limited transfer
+  evidence, not proof against overfitting or overall MVP completion. Data and exposure both change,
+  so checkpoint comparisons are exploratory, not a single-variable causal experiment.
+  Never feed these tasks, sources, references or preflight reports into training. Freeze independence
+  is consumed when checkpoints are evaluated; do not reuse scores to select a checkpoint and still
+  call the suite unseen. Future training and model evaluation both require separate authorization.
+  Freeze/preflights completed: all six originals fail pytest, strict-source and at least one pure
+  function behavior gate; all six reference copies pass every gate through 18 real authorized
+  read/replace/pytest calls. All 858 protected old files remain unchanged. Known exact isolation
+  review covers 67 historical train task IDs / 51 revisions and 11 prior validation IDs / 9 revisions;
+  these counts are provenance coverage, not semantic independence. The reader reviewed 88 legacy
+  plaintext tool-result occurrences (including raw/publication mirrors), as well as JSON envelopes;
+  this is a read count, not 88 new executions. No historical record was modified.
+  An initial JSON-only overlap reader stopped before preflights/freeze; keep its interruption note,
+  verify and reuse only the twelve untouched, unfrozen source files, and do not rewrite snapshots.
+  Six new source snapshots, original/reference copies and preflight evidence are hash-pinned with
+  suite SHA-256 `79e7ae54b006194b5f72d9f8f3754937da59b9289bd0109e5b41b6abf17d0ca2` and case digest
+  `6a7a9be2d6341ab5e36e7565c51f579681ad200cb2a67b647e5de0630fbdcdc3`.
+  `experiment-plan.json` explicitly records no training/model-evaluation authorization or execution.
+  No raw/published/SFT record, existing run, original fixture, checkpoint or ledger was changed.
+  All 120 related regressions passed without skips: 91 frozen-suite/source/mix/data/harness/Student
+  checks plus 29 fixture-provenance/executor unit tests. Synthetic constant-output mutations pass
+  the first input but fail other pure-function gates in all six cases, independently of exact-text
+  checks. This validates the gates, not a Student result or an empirical absence of overfitting.
+
 ## MVP completion definition
 
 The MVP is complete only when all of the following are true:
