@@ -1,0 +1,66 @@
+{
+  "schema_version": "0.1",
+  "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+  "harness_id": "codex",
+  "harness_version": "0.154.0-alpha.6.2",
+  "provider_protocol": "openai-compatible local provider through LM Studio",
+  "model_injection": "codex exec --oss --local-provider lmstudio -m <model>",
+  "prompt_template_sha256": "aeb0cbbba15c72c4ce7c7588a18394848f227bf16905c5427c3a532cd2d0990c",
+  "fixed_context_tokens": 9916,
+  "shell": "windows-powershell",
+  "filesystem": "workspace-write",
+  "approval_policy": "on-request",
+  "sandbox_policy": "workspace-write",
+  "supports_parallel_tools": false,
+  "supports_multi_turn_tools": true,
+  "tools": [
+    {
+      "name": "exec_command",
+      "arguments_schema": {
+        "type": "object",
+        "required": [
+          "cmd"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "cmd": {
+            "type": "string"
+          },
+          "justification": {
+            "type": "string"
+          },
+          "login": {
+            "type": "boolean"
+          },
+          "max_output_tokens": {
+            "type": "integer"
+          },
+          "prefix_rule": {
+            "type": "array"
+          },
+          "sandbox_permissions": {
+            "type": "string"
+          },
+          "shell": {
+            "type": "string"
+          },
+          "tty": {
+            "type": "boolean"
+          },
+          "workdir": {
+            "type": "string"
+          },
+          "yield_time_ms": {
+            "type": "integer"
+          }
+        }
+      },
+      "result_envelope": "codex-exec-command-v1"
+    }
+  ],
+  "validator_ids": [
+    "codex-exec-command-request-v1",
+    "codex-exec-command-result-v1",
+    "codex-prompt-budget-observed-v1"
+  ]
+}

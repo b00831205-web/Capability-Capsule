@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Literal, Self
 
-from pydantic import(
+from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
@@ -19,7 +19,9 @@ from capability_capsule.eval.records import (
     DatasetSplit,
     TeacherTrajectory,
 )
+from capability_capsule.eval.student_target import StudentTarget, verify_student_target
 from capability_capsule.eval.tasks import TaskSpec
+from capability_capsule.eval.harness_profile import HarnessProfileReference, verify_harness_profile
 
 
 class TeacherAssignment(BaseModel):
@@ -27,7 +29,7 @@ class TeacherAssignment(BaseModel):
 
     model_config = ConfigDict(extra = "forbid", frozen = True)
 
-    schema_version: Literal["0.1"] = "0.1"
+    schema_version: Literal["0.1", "0.2", "0.3"] = "0.2"
     assignment_id: str = Field(min_length = 1)
     trajectory_id: str = Field(min_length=1)
     teacher_model: str = Field(min_length=1)
@@ -35,6 +37,8 @@ class TeacherAssignment(BaseModel):
     authorized_fixture_root: str = Field(min_length=1)
     destination_jsonl: Path
     task: TaskSpec
+    student_target: StudentTarget | None = None
+    harness_profile: HarnessProfileReference | None = None
 
     @field_validator(
         "assignment_id",
@@ -66,14 +70,38 @@ class TeacherAssignment(BaseModel):
                 "Teacher assignments must not use the locked test split"
             )
 
+        if self.schema_version == "0.1" and self.student_target is not None:
+            raise ValueError("Schema 0.1 assignments cannot contain a Student target")
+
+        if self.schema_version in {"0.1", "0.2"} and self.harness_profile is not None:
+            raise ValueError(
+                f"Schema {self.schema_version} assignment cannot contain a HarnessProfile"
+            )
+
+        if self.schema_version == "0.3" and self.harness_profile is None:
+            raise ValueError(
+                f"Schema 0.3 assignments require a HarnessProfile"
+            )
+
         return self
 
-def render_teacher_prompt(assignment: TeacherAssignment) -> str:
+def render_teacher_prompt(
+    assignment: TeacherAssignment,
+    *,
+    artifact_root: Path | None = None,
+) -> str:
     """Render a complete prompt for the Capsule Teacher skill."""
+
+    if assignment.student_target is not None:
+        verify_student_target(assignment.student_target, artifact_root=artifact_root)
+
+    verified_harness_profile = None
+    if assignment.harness_profile is not None:
+        verified_harness_profile = verify_harness_profile(assignment.harness_profile, artifact_root = artifact_root)
 
     assignment_json = assignment.model_dump_json(indent=2)
 
-    return (
+    prompt = (
         "Use $capsule-teacher to execute this authorized Teacher assignment.\n"
         "Treat the JSON below as immutable provenance and constraints. "
         "Use only the authorized fixture and allowed tools. Capture only "
@@ -81,6 +109,18 @@ def render_teacher_prompt(assignment: TeacherAssignment) -> str:
         "reasoning.\n\n"
         f"{assignment_json}"
     )
+
+    if verified_harness_profile is not None:
+        prompt += (
+            "\n\nVerified HarnessProfile\n"
+            "Treat this as the exact Student-visible harness contract. "
+            "Generate tool requests and observable tool results that conform "
+            "to its tool schemas, shell semantics, and result envelopes.\n\n"
+            f"{verified_harness_profile.model_dump_json(indent=2)}"
+        )
+    return prompt
+
+
 
 def _validate_assignment_match(
         assignment: TeacherAssignment,
@@ -124,15 +164,25 @@ def _reject_duplicate_trajectory_id(
 
 def append_teacher_trajectory(
         assignment: TeacherAssignment,
-        trajectory: TeacherTrajectory
+        trajectory: TeacherTrajectory,
+        *,
+        artifact_root: Path | None = None,
 ) -> None:
     """Validate and append one completed Teacher trajectory."""
 
     _validate_assignment_match(assignment, trajectory)
 
+    harness_profile = None
+    if assignment.harness_profile is not None:
+        harness_profile = verify_harness_profile(
+            assignment.harness_profile,
+            artifact_root = artifact_root,
+        )
+
     validate_teacher_dataset(
         (trajectory,),
         tasks = (assignment.task,),
+        harness_profile= harness_profile,
     )
 
     _reject_duplicate_trajectory_id(

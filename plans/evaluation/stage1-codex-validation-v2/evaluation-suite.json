@@ -1,0 +1,89 @@
+{
+  "schema_version": "0.1",
+  "capability_id": "codex-windows-powershell-single-file-change",
+  "evaluation_suite_id": "stage1-codex-validation-v2",
+  "evaluation_split": "validation",
+  "system_prompt": "You are a coding agent on Windows PowerShell. Use only the supplied exec_command tool. The current working directory is the disposable task fixture. Inspect files before editing, modify only the requested file, validate the result, and then report completion.",
+  "cases": [
+    {
+      "schema_version": "0.1",
+      "case_id": "smoke-validation-greeting-change-codex-001",
+      "fixture_root": "fixtures/smoke-pilot/validation-greeting-change",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "smoke-validation-greeting-change-codex-001",
+        "fixture_id": "smoke-greeting-change-v1",
+        "fixture_family_id": "smoke-greeting-change",
+        "fixture_revision": "ea57bb64d1d092a61259cd56bf51be8285396cd7e935c5cee04527c8dcf5cdfe",
+        "defect_family": "greeting-message",
+        "split": "validation",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Modify only greeting.py so greeting(\"Ada\") returns \"Welcome, Ada\" and the supplied test passes. Do not modify test_greeting.py.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT2M",
+        "allowed_tools": ["exec_command"],
+        "expected_changes": [{"path": "greeting.py", "operation": "modify"}],
+        "validation_ids": ["pytest:test_greeting.py", "exact-content:greeting.py"]
+      },
+      "validators": [
+        {"validator_id": "pytest:test_greeting.py", "kind": "pytest", "target": "test_greeting.py"},
+        {"validator_id": "exact-content:greeting.py", "kind": "exact_text", "target": "greeting.py", "expected": "\"\"\"Greeting behavior for the smoke-pilot fixture.\"\"\"\n\ndef greeting(name: str) -> str:\n    return f\"Welcome, {name}\""}
+      ]
+    },
+    {
+      "schema_version": "0.1",
+      "case_id": "validation-greeting-exec-exec-002",
+      "fixture_root": "artifacts/teacher-fixtures/validation-greeting-exec",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "validation-greeting-exec-exec-002",
+        "fixture_id": "validation-greeting-exec-exec-v2",
+        "fixture_family_id": "validation-greeting-exec",
+        "fixture_revision": "0d838eecbe135f25ec927403d76dca1b0b232dfd7b17b184c3175777240e9f3b",
+        "defect_family": "greeting-prefix-exec",
+        "split": "validation",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Modify only greeting.py so greeting called with Ada returns Welcome, Ada, then validate the behavior.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": ["exec_command"],
+        "expected_changes": [{"path": "greeting.py", "operation": "modify"}],
+        "validation_ids": ["python-assert:validation-greeting-exec"]
+      },
+      "validators": [
+        {"validator_id": "python-assert:validation-greeting-exec", "kind": "python_call", "target": "greeting.py", "function": "greeting", "arguments": ["Ada"], "expected": "Welcome, Ada"}
+      ]
+    },
+    {
+      "schema_version": "0.1",
+      "case_id": "validation-powershell-salutation-unseen-001",
+      "fixture_root": "artifacts/evaluation-fixtures/validation-powershell-salutation-v1",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "validation-powershell-salutation-unseen-001",
+        "fixture_id": "validation-powershell-salutation-v1",
+        "fixture_family_id": "validation-powershell-salutation",
+        "fixture_revision": "bdece654c046d50688c9c3a33eb556c9d728ada54487ba289301e92cb5c0fd0a",
+        "defect_family": "powershell-salutation",
+        "split": "validation",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Modify only greeting.py so greeting called with Ada returns PowerShell ready, Ada!, then validate the behavior.",
+        "knowledge_distance": 0.3,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": ["exec_command"],
+        "expected_changes": [{"path": "greeting.py", "operation": "modify"}],
+        "validation_ids": ["pytest:test_greeting.py", "exact-content:greeting.py"]
+      },
+      "validators": [
+        {"validator_id": "pytest:test_greeting.py", "kind": "pytest", "target": "test_greeting.py"},
+        {"validator_id": "exact-content:greeting.py", "kind": "exact_text", "target": "greeting.py", "expected": "\"\"\"Greeting behavior for the unseen PowerShell validation fixture.\"\"\"\n\n\ndef greeting(name: str) -> str:\n    return f\"PowerShell ready, {name}!\"\n"}
+      ]
+    }
+  ]
+}

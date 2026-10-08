@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1",
+  "dataset_id": "stage1-codex-001",
+  "artifacts": [
+    {
+      "filename": "train.jsonl",
+      "record_count": 8,
+      "byte_count": 20817,
+      "sha256": "96d0dc645a4f84bcd44da6f140e25820e5f73b345334ee952716a14aee3f888a"
+    },
+    {
+      "filename": "validation.jsonl",
+      "record_count": 2,
+      "byte_count": 10300,
+      "sha256": "b3a00bc7b1e7d1f6608ddd060f8cc7faa412485ba658bbdd281509111d168f2a"
+    },
+    {
+      "filename": "duplicates.jsonl",
+      "record_count": 0,
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
