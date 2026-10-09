@@ -2,6 +2,32 @@
 
 ## Objective
 
+### Current experiment status (2026-10-08)
+
+- Checkpoint `stage1-codex-qwen35-2b-011-mix006007-28step` completed the authorized
+  fresh-base 28 updates / two epochs on fourteen mixed train trajectories. Its adapter was
+  independently reloaded. Mean training loss was 0.699726; loss is not task success evidence.
+- The unchanged fixed-v2 suite scored 011 at 0/3. The predeclared same-six comparison scored
+  011 at 0/6 and checkpoint 010 at 4/6; 010's fixed-v2 2/3 remains historical, not rerun.
+  No checkpoint was promoted. The six frozen cases have consumed their first-use independence.
+- User authorized a train-only diagnostic in the new directory
+  `runs/evaluation/stage1-codex-qwen35-2b-011-mix006007-28step-train-fit-diagnostic-v1/`.
+  Run all fourteen seen tasks once on independent original-source copies with unchanged prompts,
+  executor, greedy/no-thinking/256-token/four-tool budget. Keep `split=train`, do not enter these
+  results into a validation ledger, and never feed reference edits or Teacher answers to the model.
+  Fourteen original/reference preflight pairs passed their expected fail/pass checks.
+  The model-loading attempt was interrupted during a host resource incident: VS Code recorded
+  renderer OOM at 15:46:38 Europe/Paris. No generation log or model case result was saved, and
+  the diagnostic process is no longer running. Post-crash C: free space was about 79 MiB and
+  Windows physical memory headroom about 1.9 GiB. Preserve the attempt and preflights; restore
+  host resource headroom before any recorded recovery. This is not a 0/14 model-quality result.
+- Immediate decision: distinguish seen-task fit, command rejection, incorrect edit intent and
+  failure recovery before changing data or training exposure. A fresh 56-step/four-epoch run on
+  the same SFT is only a proposal and has no current execution authorization. Changing a linear
+  schedule from 28 to 56 steps changes the LR trajectory as well as the update budget.
+
+### End-to-end objective
+
 Prove one minimal, reproducible path from a Teacher model to an offline capsule that lets a user
 continue a real project through a selected existing coding harness while offline:
 

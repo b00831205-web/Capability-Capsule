@@ -6,6 +6,36 @@ correctness or safety issue.
 
 ## MVP rule
 
+### Current measured blockers (2026-10-08)
+
+- 011 scored 0/3 on fixed v2 and 0/6 on the frozen six; preselected 010 scored 4/6 on the same six.
+  In 011's nine tasks, source files remained unchanged and 25 commands were denied. Several edit
+  intentions were also wrong (lost fallback, file creation, unrelated append/comment), so relaxing
+  the executor alone cannot be assumed to rescue the checkpoint.
+- Tool documentation says PowerShell but the executor recognizes a small command subset. Its
+  whole-command path guard also rejects punctuation inside replacement text: 010's otherwise
+  correct job-status replacement was rejected for the colon in `{count:03d}`. Align documentation
+  and execution semantics in a separately authorized version; retain old suite results unchanged.
+- 011 used fresh-base fourteen-example training for two epochs, compared with 010's eight examples
+  for eight effective epochs. Supervised-token exposures were about 6,186 versus 12,704. Data,
+  exposure and schedule changed, so undertraining is plausible but not causally established;
+  these scores do not demonstrate that added examples caused overfitting.
+- The authorized next measurement is all fourteen seen train tasks, once each, under the same
+  executor and inference conditions. Preflight originals fail and references pass for all fourteen;
+  model loading was interrupted during a host resource incident with VS Code renderer OOM.
+  No model case results were saved; training fit remains unmeasured. Record strict completion, behavior, source changes, denied
+  commands, model-invoked tests and actual tool feedback separately. Preserve train provenance.
+- Fixing repeated invalid-command recovery and truthful completion reporting may require changes
+  after diagnosis. Do not automatically add data or extend training. A 56-step/four-epoch budget
+  comparison remains proposed; keep an independent future validation set separate from the now-used six.
+- Host-capacity blocker: post-crash C: free space was about 79 MiB, physical memory headroom about
+  1.9 GiB, with a roughly 15 GiB Windows pagefile on C:. Preflight disk and host memory/commit headroom
+  before future model loads; recording only fixture correctness is insufficient. Resource remediation
+  may require separately authorized cleanup or system configuration. Preserve the interrupted run;
+  do not automatically reload the model or report an infrastructure interruption as task failures.
+
+### Existing minimal-loop rule
+
 Use the smallest configuration that can complete one real trajectory, one SFT run, one evaluation,
 one capsule build, and one harness-driven task. Move an item back into the MVP only when the current
 pipeline cannot run or cannot produce trustworthy evidence without it.

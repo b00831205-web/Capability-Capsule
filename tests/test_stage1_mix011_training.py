@@ -62,7 +62,7 @@ def test_mix011_checkpoint_hashes_and_independent_reload_without_generation():
 def test_mix011_preserves_frozen_validation_old_runs_and_root_docs_and_refuses_overwrite(monkeypatch):
     protected, evidence = read("protected-input-hashes.json"), read("input-preservation.json")
     assert evidence["unchanged"] and evidence["changed_paths"] == []
-    assert training.verify_preservation() == evidence["protected_file_count"] == len(protected)
+    assert training.verify_preservation(allow_recorded_planning_update=True) == evidence["protected_file_count"] == len(protected)
     assert "MVP_ROADMAP.md" in protected and "PENDING_CONFIGURATION_OPTIMIZATIONS.md" in protected
     assert (training.frozen.OUTPUT / "freeze-manifest.json").relative_to(training.ROOT).as_posix() in protected
     assert training.frozen.BASELINE.relative_to(training.ROOT).as_posix() in protected

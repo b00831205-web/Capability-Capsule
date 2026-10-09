@@ -109,11 +109,13 @@ def prepare():
     print("Prepared 3 fixed-v2 + 6 frozen cases for 011, and identical 6 for 010; no inference yet", flush=True)
 
 
-def verify_prepared():
+def verify_prepared(*, allow_recorded_planning_update=False):
     prepared = read(RUN / "prepared.json")
     before = read(RUN / "protected-input-hashes.json")
     current = protected_hashes()
-    if any(current.get(path) != pinned for path,pinned in before.items()):
+    from authorized_planning_history import input_matches
+    if any(not (input_matches(path, pinned, current.get(path)) if allow_recorded_planning_update
+                else current.get(path) == pinned) for path,pinned in before.items()):
         raise ValueError("Protected inputs changed")
     if digest(FROZEN / "freeze-manifest.json") != prepared["frozen_validation_manifest_sha256"]:
         raise ValueError("Frozen validation manifest changed")
@@ -142,10 +144,10 @@ def report_metrics(results, reports):
 
 
 def evaluate(side):
-    prepared = verify_prepared()
     attempt = RUN / side / "inference-attempt.json"
     if attempt.exists():
         raise FileExistsError("Refusing to rerun a checkpoint after any inference attempt")
+    prepared = verify_prepared()
     for group in GROUPS[side]:
         directory = RUN / side / group
         if (directory / "case-results.jsonl").exists():

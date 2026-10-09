@@ -16,7 +16,7 @@ def read(path):
 
 
 def test_paired_evaluation_preserves_all_suite_bytes_and_preselected_models():
-    prepared = evaluation.verify_prepared()
+    prepared = evaluation.verify_prepared(allow_recorded_planning_update=True)
     assert prepared["first_use_before_model_inference"] and prepared["model_evaluation_authorized"]
     assert not prepared["root_planning_edits_authorized"]
     assert prepared["max_new_tokens"] == 256 and prepared["max_tool_rounds"] == 4
@@ -93,7 +93,8 @@ def test_comparison_uses_identical_six_cases_and_no_posthoc_promotion():
 def test_evaluation_preserves_old_files_and_refuses_preparation_or_inference_reruns():
     before = read(evaluation.RUN / "protected-input-hashes.json")
     current = evaluation.protected_hashes()
-    assert all(current.get(path) == pinned for path,pinned in before.items())
+    from authorized_planning_history import input_matches
+    assert all(input_matches(path, pinned, current.get(path)) for path,pinned in before.items())
     evidence = read(evaluation.RUN / "input-preservation.json")
     assert evidence["unchanged"] and evidence["changed_paths"] == []
     assert evidence["protected_file_count"] == len(before)

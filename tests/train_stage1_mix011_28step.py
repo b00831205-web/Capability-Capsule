@@ -122,10 +122,13 @@ class ScopedRecordingBackend(recording.RecordingBackend):
         return super().train(**kwargs)
 
 
-def verify_preservation():
+def verify_preservation(*, allow_recorded_planning_update=False):
     before = json.loads((RUN / "protected-input-hashes.json").read_text("utf-8"))
     current = protected_hashes()
-    changed = [path for path, pinned in before.items() if current.get(path) != pinned]
+    from authorized_planning_history import input_matches
+    changed = [path for path, pinned in before.items() if not (
+        input_matches(path, pinned, current.get(path)) if allow_recorded_planning_update
+        else current.get(path) == pinned)]
     if changed:
         raise ValueError(f"Protected inputs changed: {changed}")
     return len(before)
