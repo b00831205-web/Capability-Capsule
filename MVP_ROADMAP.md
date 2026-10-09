@@ -2,7 +2,45 @@
 
 ## Objective
 
-### Current experiment status (2026-10-08)
+### Current experiment status (2026-10-09)
+
+- User authorized the same-SFT fresh-base 56-step / four-epoch control, proposed run ID
+  `stage1-codex-qwen35-2b-012-mix006007-56step`. Configuration verification passed: only epochs
+  and max_steps differ from 011's training config; model/revision, seed, LoRA, learning rate and
+  fourteen-example SFT are unchanged. No training-period validation or task evaluation is authorized.
+  Startup at 2026-10-09T19:49:54Z was blocked before worker/model creation: physical free was
+  6.42 GiB and virtual free 8.00 GiB, below the retained 10/14 GiB startup gates. C: and WSL passed.
+  User subsequently explicitly requested ignoring memory protection and starting training. Run 012
+  bypassed host/WSL memory start and stop thresholds for this invocation only, retained memory
+  telemetry and C: disk gates (8 GiB start / 4 GiB stop), and record the override. This accepts OOM
+  risk; do not terminate other applications or change training parameters. No automatic evaluation.
+  Actual training completed 56 updates / four epochs; final checkpoint SHA-256 is
+  `60bf2bd64456b1264cc16dfe425cf7cd9d8ae781853eb6cff83587ebe72f2921`. Mean loss was 0.425322;
+  per-epoch means were 0.824923, 0.450069, 0.259922 and 0.166375. All 1,235 protected files remained
+  unchanged and the owned training worker exited cleanly without restart or resource abort.
+  Independent adapter reload did not start: C: free was 6.56 GiB, below the retained 8 GiB startup
+  gate. Adapter/checkpoint hashes are verified, but independent reload is outstanding. No task
+  inference, train-fit diagnostic or validation ran. Loss is not evidence of improved task execution.
+  Next: restore disk headroom, independently reload 012, then separately authorize the same fourteen
+  seen-task diagnostic against 011 before claiming that the larger budget improved execution fit.
+
+- User completed host cleanup and requested continuation of the authorized fourteen-case train
+  diagnostic. Recovery uses the additive `recovery-20261009/` subdirectory; original attempts,
+  preflights and interruption records are retained. All fourteen original model workspaces are
+  untouched and their reference/preflight receipts are reused after hash verification. The recovery
+  protects 1,103 existing files, including the interrupted diagnostic artifacts.
+- Recovery adds a host-resource supervisor without changing model, prompt, executor or task budgets.
+  Model start requires C: free >= 8 GiB, physical free >= 10 GiB, virtual free >= 14 GiB and WSL
+  available >= 10 GiB. Runtime limits are C: >= 4 GiB, physical >= 1.5 GiB, virtual >= 3 GiB and WSL
+  available >= 1 GiB. Resource checks run approximately every three seconds plus probe latency;
+  a failed probe or low-resource reading stops only this recovery's model process group and records
+  the interruption. A short wait for resource reclamation is allowed before model loading.
+  Recovery completed all fourteen cases without a resource abort or model restart. Strict and
+  behavior success were both 0/14 (literal006 0/8; fstring007 0/6); no source changed and no model
+  invoked pytest. Seventy generated turns included 42 denied executed commands; every case exhausted
+  its four-tool budget. Independent pytest failed all fourteen unchanged-source copies.
+  This is measured poor seen-task execution fit under the current contract, not an unseen-only gap
+  or proof of overfitting. Details and resource/preservation receipts are in the recovery directory.
 
 - Checkpoint `stage1-codex-qwen35-2b-011-mix006007-28step` completed the authorized
   fresh-base 28 updates / two epochs on fourteen mixed train trajectories. Its adapter was
@@ -21,10 +59,13 @@
   the diagnostic process is no longer running. Post-crash C: free space was about 79 MiB and
   Windows physical memory headroom about 1.9 GiB. Preserve the attempt and preflights; restore
   host resource headroom before any recorded recovery. This is not a 0/14 model-quality result.
-- Immediate decision: distinguish seen-task fit, command rejection, incorrect edit intent and
-  failure recovery before changing data or training exposure. A fresh 56-step/four-epoch run on
-  the same SFT is only a proposal and has no current execution authorization. Changing a linear
+- Immediate decision: command rejection, incorrect edit intent and repeated rejected calls are
+  observed alongside poor seen-task fit. Do not add more data yet. A fresh 56-step/four-epoch run on
+  the same SFT is now authorized but awaits host memory headroom. Changing a linear
   schedule from 28 to 56 steps changes the LR trajectory as well as the update budget.
+  Four epochs would expose about 12,372 supervised tokens versus 010's 12,704, reducing the exposure
+  mismatch without claiming an isolated causal test. Retain the used suites as regression checks;
+  any future first-use generalization claim requires separately frozen, genuinely new examples.
 
 ### End-to-end objective
 

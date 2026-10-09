@@ -6,7 +6,32 @@ correctness or safety issue.
 
 ## MVP rule
 
-### Current measured blockers (2026-10-08)
+### Current measured blockers (2026-10-09)
+
+- The same-SFT 56-step / four-epoch training control is authorized and configured as new run 012.
+  Startup was blocked before model loading by host memory, not by data or configuration: physical
+  free 6.42 GiB < 10 GiB and virtual free 8.00 GiB < 14 GiB at 2026-10-09T19:49:54Z. Disk and WSL
+  checks passed. User then explicitly authorized bypassing memory protection and starting training.
+  Implement a per-invocation memory-only override: retain telemetry and disk thresholds, do not
+  alter the historical diagnostic's guards, and record the accepted OOM risk. Task evaluation remains
+  outside scope; loss and a successfully saved adapter alone cannot establish improved task success.
+  Training subsequently completed 56/56 updates and four epochs with mean loss 0.425322. All 1,235
+  protected files were unchanged. Independent reload is outstanding: its separate startup was
+  blocked by C: free 6.56 GiB < 8 GiB, before any worker/model was created. Do not bypass the disk
+  guard without separate direction or automatically train again. The 199 training resource samples
+  reached minima of physical free 968,830,976 bytes and virtual free 396,341,248 bytes; the override
+  accepted real memory pressure. Disk minimum was 6,152,953,856 bytes, above the 4 GiB runtime stop
+  threshold. Resource sampling does not capture all transient peaks. Preserve this distinction
+  between completed optimization, verified hashes, outstanding reload and unmeasured task success.
+
+- Host cleanup restored disk space, and the user requested continuation of the existing train-fit
+  diagnostic. Its additive `recovery-20261009/` entry preserves the failed loading attempt and
+  verifies unchanged cases/reference receipts. Add pre-load and continuous host/WSL resource
+  gates; save samples and stop only the owned model process group if headroom falls too low.
+  Recovery completed all fourteen model cases with clean exit, no restart and no resource abort;
+  1,103 old files remained unchanged. Keep the original interrupted attempt as separate evidence.
+  Resource thresholds are operational protection for this machine, not model-quality metrics
+  or a proof that every transient allocation can be prevented.
 
 - 011 scored 0/3 on fixed v2 and 0/6 on the frozen six; preselected 010 scored 4/6 on the same six.
   In 011's nine tasks, source files remained unchanged and 25 commands were denied. Several edit
@@ -20,14 +45,16 @@ correctness or safety issue.
   for eight effective epochs. Supervised-token exposures were about 6,186 versus 12,704. Data,
   exposure and schedule changed, so undertraining is plausible but not causally established;
   these scores do not demonstrate that added examples caused overfitting.
-- The authorized next measurement is all fourteen seen train tasks, once each, under the same
-  executor and inference conditions. Preflight originals fail and references pass for all fourteen;
-  model loading was interrupted during a host resource incident with VS Code renderer OOM.
-  No model case results were saved; training fit remains unmeasured. Record strict completion, behavior, source changes, denied
-  commands, model-invoked tests and actual tool feedback separately. Preserve train provenance.
+- The fourteen-case train-only recovery measured strict and behavior success at 0/14: literal006
+  0/8 and fstring007 0/6. All sources and supplied tests remained unchanged; no model-invoked pytest
+  occurred. All fourteen cases exhausted the four-tool budget, with 42 denied executions across
+  seventy generated turns. Unsupported replacement/rewrite forms, wrong edit intentions and repeated
+  rejected test-path reads appear in actual feedback. This is not just a strict-format scoring issue.
+  Reference preflights pass all fourteen, but their answers were not supplied to the model. The earlier
+  loading crash had no case scores; these recovery results must not be attributed to that crash.
 - Fixing repeated invalid-command recovery and truthful completion reporting may require changes
   after diagnosis. Do not automatically add data or extend training. A 56-step/four-epoch budget
-  comparison remains proposed; keep an independent future validation set separate from the now-used six.
+  comparison is authorized but memory-gated; keep an independent future validation set separate from the now-used six.
 - Host-capacity blocker: post-crash C: free space was about 79 MiB, physical memory headroom about
   1.9 GiB, with a roughly 15 GiB Windows pagefile on C:. Preflight disk and host memory/commit headroom
   before future model loads; recording only fixture correctness is insufficient. Resource remediation

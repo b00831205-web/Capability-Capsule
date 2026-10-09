@@ -14,8 +14,15 @@ def input_matches(path, pinned, current, *, update_path=UPDATE):
         return True
     if path not in DOCS or not update_path.exists():
         return False
-    update = json.loads(update_path.read_text("utf-8"))
-    return (update.get("explicitly_authorized") is True
-            and update.get("before", {}).get(path) == pinned
-            and update.get("after", {}).get(path) == current
-            and sha256((ROOT / path).read_bytes()).hexdigest() == current)
+    cursor = pinned
+    # Recovery is an additive receipt; never rewrite the original authorization.
+    updates = (update_path, update_path.parent / "recovery-20261009/planning-update.json",
+               ROOT / "tests/mix012-budget-planning-update.json",
+               ROOT / "runs/training/stage1-codex-qwen35-2b-012-mix006007-56step/planning-update.json")
+    for candidate in updates:
+        if not candidate.exists():
+            continue
+        update = json.loads(candidate.read_text("utf-8"))
+        if update.get("explicitly_authorized") is True and update.get("before", {}).get(path) == cursor:
+            cursor = update.get("after", {}).get(path)
+    return cursor == current and sha256((ROOT / path).read_bytes()).hexdigest() == current

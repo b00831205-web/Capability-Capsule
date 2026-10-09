@@ -1,0 +1,32 @@
+{
+  "explicitly_authorized": true,
+  "reason": "User requested same-SFT 56-step/four-epoch control; standing instruction requires planning updates after design discussion",
+  "before": {
+    "MVP_ROADMAP.md": "1555a9f278f90ac3a3d71a3987d4b635d6635fcc4c852f80b0aa7a2a8e48a019",
+    "PENDING_CONFIGURATION_OPTIMIZATIONS.md": "8d2de55366391c2a70f9e750b97c4a99324dc0ae5a5295e5a223b8dfd472cdf3"
+  },
+  "after": {
+    "MVP_ROADMAP.md": "174f93357965effe340fb0614afcd3d90c603cdf6f65d6ca31d79cefecb2cdc9",
+    "PENDING_CONFIGURATION_OPTIMIZATIONS.md": "e070dad96913d51f110b83f5fb58636bb64d8a857ed7785b626993eac4e25707"
+  },
+  "training_started": false,
+  "worker_started": false,
+  "model_evaluation_started": false,
+  "proposed_run_id": "stage1-codex-qwen35-2b-012-mix006007-56step",
+  "startup_resources": {
+    "observed_at": "2026-10-09T19:49:54.618761+00:00",
+    "commit_free_bytes": 8594358272,
+    "physical_free_bytes": 6892769280,
+    "c_free_bytes": 11683061760,
+    "wsl_available_bytes": 12156059648
+  },
+  "failed_startup_checks": ["physical_free_bytes", "commit_free_bytes"],
+  "regression_verification": {
+    "passed": 16,
+    "skipped": 1,
+    "failed": 0,
+    "duration_seconds": 126.79,
+    "skip_reason": "Actual training completion and independent reload evidence does not exist yet"
+  },
+  "note": "Recorded in tests because the unstarted training run directory must remain absent; existing completion receipts are not rewritten"
+}
