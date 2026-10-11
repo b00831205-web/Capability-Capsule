@@ -45,3 +45,24 @@ def test_recovery_update_requires_unbroken_hash_chain(tmp_path, monkeypatch):
     receipt.write_text(json.dumps({"explicitly_authorized": True,
         "before": {document: "broken"}, "after": {document: final}}), encoding="utf-8")
     assert not history.input_matches(document, first, final, update_path=update)
+
+
+def test_reload_receipt_requires_explicit_authorization_and_matching_previous_hash(tmp_path, monkeypatch):
+    monkeypatch.setattr(history, "ROOT", tmp_path)
+    document = "MVP_ROADMAP.md"
+    (tmp_path / document).write_text("reloaded", encoding="utf-8")
+    initial = sha256(b"initial").hexdigest()
+    middle = sha256(b"trained").hexdigest()
+    final = sha256(b"reloaded").hexdigest()
+    update = tmp_path / "first.json"
+    update.write_text(json.dumps({"explicitly_authorized": True,
+        "before": {document: initial}, "after": {document: middle}}), encoding="utf-8")
+    receipt = tmp_path / "runs/training/stage1-codex-qwen35-2b-012-mix006007-56step/reload-planning-update-20261010.json"
+    receipt.parent.mkdir(parents=True)
+    value = {"explicitly_authorized": True, "before": {document: middle}, "after": {document: final}}
+    receipt.write_text(json.dumps(value), encoding="utf-8")
+    assert history.input_matches(document, initial, final, update_path=update)
+    receipt.write_text(json.dumps({**value, "explicitly_authorized": False}), encoding="utf-8")
+    assert not history.input_matches(document, initial, final, update_path=update)
+    receipt.write_text(json.dumps({**value, "before": {document: "unrelated"}}), encoding="utf-8")
+    assert not history.input_matches(document, initial, final, update_path=update)

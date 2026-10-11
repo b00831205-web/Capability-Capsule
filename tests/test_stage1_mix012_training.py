@@ -91,6 +91,7 @@ def test_completed_run_has_exact_budget_and_intact_adapter():
     assert abs(losses[1]["learning_rate"] - 2e-4 * 55 / 56) < 1e-12
     checkpoint = read("checkpoint.json")
     assert checkpoint["step"] == 56
+    assert training.digest(training.RUN / "checkpoint.json") == summary["checkpoint_sha256"]
     adapter = training.RUN / checkpoint["adapter_directory"]
     assert training.digest(adapter / "adapter_model.safetensors") == checkpoint["adapter_model_sha256"]
     assert training.digest(adapter / "adapter_config.json") == checkpoint["adapter_config_sha256"]
@@ -121,10 +122,19 @@ def test_independent_reload_is_verified_or_explicitly_blocked_before_start():
         assert not (training.RUN / "reload-supervisor-result.json").exists()
         return
     reload = read("adapter-reload-validation.json")
+    assert reload["run_id"] == training.RUN_ID
     assert reload["independent_process"] and reload["generated_tokens"] == 0
+    assert reload["base_model_revision_verified"] and reload["adapter_hashes_verified"]
+    assert reload["protected_file_count"] == read("input-preservation.json")["protected_file_count"]
     assert reload["active_adapters"] == ["default"]
     result = read("reload-supervisor-result.json")
     assert result["exit_code"] == 0 and result["resource_abort"] is None and not result["model_restarted"]
+    attempt = read("reload-supervisor-attempt.json")
+    assert attempt["memory_guard_override"]
+    assert attempt["start_limits"] == {"c_free_bytes": 8 * training.safety.GIB}
+    assert attempt["stop_limits"] == {"c_free_bytes": 4 * training.safety.GIB}
+    samples = read("reload-resource-samples.json")
+    assert samples and all(sample["c_free_bytes"] >= 4 * training.safety.GIB for sample in samples)
 
 
 @pytest.mark.parametrize("probe_failure", [False, True])

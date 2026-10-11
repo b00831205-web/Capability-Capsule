@@ -6,7 +6,20 @@ correctness or safety issue.
 
 ## MVP rule
 
-### Current measured blockers (2026-10-09)
+### Current measured blockers (2026-10-10)
+
+- 012's independent reload is no longer outstanding: the authorized reload completed with the
+  pinned base revision, matching adapter hashes, active `default` adapter, zero generated tokens
+  and 1,235 unchanged protected files. User explicitly waived memory thresholds for this reload;
+  disk protection and resource telemetry remained enabled. Forty-nine samples observed C: free
+  >= 20,942,958,592 bytes; no restart or resource abort occurred. Earlier blocked attempts remain
+  historical evidence, not the current reload status. No training or task inference was performed.
+- The remaining model-quality question is seen-task execution fit versus 011's 0/14, not whether
+  the adapter can be loaded. Separately authorize an unchanged fourteen-case train diagnostic;
+  do not claim improved behavior from loss or reload success. F: paging activation remains an
+  independent system configuration issue; this task did not repair it or change system settings.
+
+### Historical measured blockers (2026-10-09)
 
 - The same-SFT 56-step / four-epoch training control is authorized and configured as new run 012.
   Startup was blocked before model loading by host memory, not by data or configuration: physical

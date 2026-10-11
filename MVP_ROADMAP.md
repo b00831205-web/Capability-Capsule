@@ -2,7 +2,21 @@
 
 ## Objective
 
-### Current experiment status (2026-10-09)
+### Current experiment status (2026-10-10)
+
+- Checkpoint 012's independently launched adapter reload completed successfully after the user's
+  explicit memory-threshold override for this reload only. Disk guards remained 8 GiB at startup
+  and 4 GiB at runtime. The pinned base revision and adapter hashes were verified, active adapters
+  were `["default"]`, generated tokens were zero, and all 1,235 protected files remained unchanged.
+  The reload supervisor exited 0 without resource abort or restart. Training/checkpoint artifacts
+  and earlier blocked-attempt receipts were retained; no retraining or task evaluation occurred.
+- 012 now has completed 56-step/four-epoch training plus independent reload evidence. Improved
+  execution fit remains unmeasured. Next proposed step: separately authorize the same fourteen
+  seen-train-task diagnostic against 011's 0/14, keeping prompts, executor and inference/tool
+  budgets unchanged and retaining train provenance. Do not treat the used validation six as fresh.
+  The F: paging configuration's activation issue is separate and was not changed by this reload.
+
+### Historical experiment status (2026-10-09)
 
 - User authorized the same-SFT fresh-base 56-step / four-epoch control, proposed run ID
   `stage1-codex-qwen35-2b-012-mix006007-56step`. Configuration verification passed: only epochs
