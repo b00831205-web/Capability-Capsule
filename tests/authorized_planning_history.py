@@ -19,7 +19,11 @@ def input_matches(path, pinned, current, *, update_path=UPDATE):
     updates = (update_path, update_path.parent / "recovery-20261009/planning-update.json",
                ROOT / "tests/mix012-budget-planning-update.json",
                ROOT / "runs/training/stage1-codex-qwen35-2b-012-mix006007-56step/planning-update.json",
-               ROOT / "runs/training/stage1-codex-qwen35-2b-012-mix006007-56step/reload-planning-update-20261010.json")
+               ROOT / "runs/training/stage1-codex-qwen35-2b-012-mix006007-56step/reload-planning-update-20261010.json",
+               ROOT / "runs/evaluation/stage1-codex-qwen35-2b-012-mix006007-56step-train-fit-diagnostic-v1/planning-update.json",
+               ROOT / "runs/evaluation/stage1-codex-qwen35-2b-012-mix006007-56step-train-fit-diagnostic-v1/recovery-20261011/planning-update.json",
+               ROOT / "tests/eval-v2-planning-update.json",
+               ROOT / "runs/evaluation/stage1-codex-qwen35-2b-012-mix006007-56step-train-fit-diagnostic-evalfix-v2/planning-update.json")
     for candidate in updates:
         if not candidate.exists():
             continue

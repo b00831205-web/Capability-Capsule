@@ -1,0 +1,43 @@
+{
+  "implementation_id": "coding-checkpoint-literal-safe-termination-v2",
+  "implementation_sha256": "61d3c70099300761d263f7e0d6d97b6a179534bed6cc01fea84b3f755e5c5106",
+  "legacy_dependency_sha256": "c1b3ec738da80c59da83411adc0884223b36b372041b45390ffa0f9834381356",
+  "historical_evaluator_unchanged": true,
+  "related_regression": {
+    "execution_session_id": 59178,
+    "passed": 116,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 166.82,
+    "test_files": [
+      "tests/test_coding_checkpoint_v2.py",
+      "tests/test_coding_checkpoint.py",
+      "tests/test_stage1_mix012_train_fit_recovery.py",
+      "tests/test_stage1_mix012_train_fit_diagnostic.py",
+      "tests/test_stage1_mix012_training.py",
+      "tests/test_stage1_mix011_train_fit_diagnostic.py",
+      "tests/test_stage1_mix011_train_fit_recovery.py",
+      "tests/test_stage1_mix011_train_fit_results.py",
+      "tests/test_authorized_planning_history.py",
+      "tests/test_stage1_mix011_validation.py"
+    ]
+  },
+  "final_source_focused_regression": {
+    "passed": 68,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 4.41,
+    "test_files": ["tests/test_coding_checkpoint_v2.py", "tests/test_coding_checkpoint.py"]
+  },
+  "ruff_check": "passed",
+  "mypy_check": {
+    "status": "passed",
+    "execution_session_id": 81716,
+    "scope": "New source module; follow-imports=silent, ignore-missing-imports, cache disabled"
+  },
+  "real_model_evaluation_started": false,
+  "training_started": false,
+  "existing_data_fixture_or_run_directory_modified": false,
+  "test_artifacts": "Synthetic temporary fixtures only; historical artifacts inspected read-only",
+  "adoption": "Opt-in; future runs must pin both implementation/dependency digests and use a new identity"
+}

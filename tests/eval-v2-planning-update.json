@@ -1,0 +1,15 @@
+{
+  "explicitly_authorized": true,
+  "before": {
+    "MVP_ROADMAP.md": "cfc8af32c5a4f284778ff88f7a701ed005f9f449759b3450b5b542c835055d57",
+    "PENDING_CONFIGURATION_OPTIMIZATIONS.md": "6debb46423a9a7b5d48e8e881b20a419013d925a22092c342793908ac1682362"
+  },
+  "after": {
+    "MVP_ROADMAP.md": "f1196a173bd155569cda5e1bcf84b2d726f9a497d0eddcbb0414a19b5078040f",
+    "PENDING_CONFIGURATION_OPTIMIZATIONS.md": "dd24afe40c315f80d1dc7770aa70496672be1c197428ea136e1de88603bafb3a"
+  },
+  "reason": "User authorized versioned evaluator repair, related tests and both planning documents; historical evaluator and existing artifacts remain immutable",
+  "model_evaluation_authorized": false,
+  "training_authorized": false,
+  "existing_run_directory_writes_authorized": false
+}

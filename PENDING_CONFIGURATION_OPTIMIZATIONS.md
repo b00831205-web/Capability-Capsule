@@ -6,7 +6,80 @@ correctness or safety issue.
 
 ## MVP rule
 
-### Current measured blockers (2026-10-10)
+### Current repaired-evaluator findings (2026-10-11)
+
+- The authorized same-checkpoint/same-fourteen-train-task evaluator control completed at
+  `runs/evaluation/stage1-codex-qwen35-2b-012-mix006007-56step-train-fit-diagnostic-evalfix-v2/`.
+  Keep original prompts, greedy generation and 256-token/four-tool/five-turn budgets.
+  Strict success 2/14 and behavior/exact-source pass 3/14 did not improve; denied commands
+  dropped 14 -> 4, source changes 6 -> 8 and model-invoked pytest cases 7 -> 9.
+  Thus fixing literal punctuation rejection improves execution access but does not, by
+  itself, resolve content correctness. The colon/slash f-string edits now execute but
+  still omit the requested punctuation. Do not restore the false-positive path rule.
+- Record content, formatting and stopping independently, not as exclusive failure buckets:
+  eleven final sources miss the reference, one generation has malformed markup, three
+  generations are length-truncated, and the malformed generation is also truncated.
+  Six cases stop on tool budget; five reach natural EOS, including three failed tasks.
+  Final-source mismatch is not an attribution of eleven independent editing root causes.
+  A correct edit can still fail strict grading when the model exceeds the tool budget.
+- The read-only SFT audit found assistant-only supervision (3,093 tokens), masked
+  system/user/tool-result segments, supervised final EOS in all fourteen records and
+  unchanged labels after collation. Do not claim a masking bug or label leakage from
+  generated tool-envelope text alone. Further training-path hypotheses remain unproven.
+  Review source grounding, punctuation completeness, failed-edit feedback use and natural
+  completion as separate experimental targets. No new data or training budget is approved.
+  Preserve all prior results; this run is seen-task diagnosis, not validation or promotion.
+
+### Prior evaluator repair context (2026-10-11)
+
+- Implemented an opt-in evaluator repair without changing the hash-pinned historical evaluator:
+  `coding-checkpoint-literal-safe-termination-v2` accepts punctuation only as parsed literal data,
+  confines actual filenames, rejects unsupported shell syntax/interpolation and linked files,
+  and records EOS/length/unknown generation finishes plus distinct case termination categories.
+  Length-truncated and unknown-finish output cannot execute commands or claim natural completion;
+  malformed markup remains separately recorded even when a generation is also truncated.
+  New tests use synthetic temporary fixtures/fake generators only. Old scores and existing runs,
+  datasets and fixtures are immutable; no empirical model improvement is claimed. Future runs
+  need explicit implementation/dependency digests and a new identity, not a silent fixed-v2 rerun.
+  The trajectory review also found missed punctuation, duplicated separators, task/output text
+  mistaken for source literals, tool-envelope text generated as edits, repetitive ineffective
+  recovery and premature claims that editing is impossible. Fixing path false positives alone
+  does not fix the three affected cases' edit content. Inspect role separation/masking before
+  deciding whether new data or more training is justified; a masking defect is not yet established.
+
+### Completed diagnostic findings (2026-10-11)
+
+- The F: paging activation blocker is resolved by runtime verification after reboot: F: 16 GiB
+  and C: 2 GiB are actually active, not merely configured. This does not prove the prior WSL
+  interruption's cause. A new, separately authorized `recovery-20261011/` protects 1,378 files
+  and preserves the original unscored attempt. The recovery uses unchanged tasks, prompts,
+  checkpoint, executor, grading and inference budgets; restore default memory gates, retain
+  disk protection, and continuously persist telemetry. Do not carry the old invocation's memory
+  waiver into this execution. The recovery completed cleanly: strict 2/14, behavior/exact-source
+  3/14 versus 011's strict/behavior 0/14. Sources changed in 6/14, pytest was invoked in 7/14,
+  and denied commands fell from 42 to 14. Literal strict/behavior: 1/8 and 2/8; fstring: 1/6 both.
+  Nine cases exhausted the tool budget (one had a correct source and passing independent tests),
+  one had a malformed tool call, and two stopped with failing behavior. These terminal categories
+  are not independent root causes. Content errors, rejected commands and ineffective recovery
+  remain; do not assume more steps alone will solve them or label poor seen-task fit as overfitting.
+  Inspect the recorded failures before changing data/contracts or launching another experiment.
+  This budget comparison also changes linear LR decay horizon and says nothing about unseen fit.
+
+### Earlier interrupted attempt (2026-10-11)
+
+- The unchanged fourteen-case 012 train-fit comparison is separately authorized and prepared.
+  User explicitly waived host/WSL memory thresholds for this diagnostic only; preserve C: disk
+  startup >= 8 GiB and runtime >= 4 GiB, record resource samples, and stop only the owned process
+  group on disk/probe failure. 1,268 old files are protected; preflight receipts are hash-verified
+  and reused, not rerun. The model loaded and task 1 generation began, but the execution exited 1
+  without any saved generated turn or model case result; WSL then appeared freshly reinitialized
+  with unclean-journal warnings. Exact cause remains unconfirmed, and the Windows resource-event
+  query's approval timed out. Do not label this OOM as proven, a model task failure, or 0/14.
+  Current blocker is an interrupted execution, not evidence about larger-budget task quality.
+  Preserve all inputs/workspaces and the attempt; no automatic restart. F: paging activation was
+  not changed and should be resolved before a separately authorized diagnostic recovery.
+
+### Historical measured blockers (2026-10-10)
 
 - 012's independent reload is no longer outstanding: the authorized reload completed with the
   pinned base revision, matching adapter hashes, active `default` adapter, zero generated tokens

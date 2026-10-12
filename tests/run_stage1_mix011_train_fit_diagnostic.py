@@ -249,7 +249,7 @@ def evaluate():
             raise ValueError("Prepared reference changed")
     save(RUN / "inference-attempt.json", {"started_at": datetime.now(UTC).isoformat(), "one_shot": True,
          "checkpoint_sha256": preparation.PINS[preparation.CHECKPOINT]})
-    print("Loading 011 for fourteen train-only cases", flush=True)
+    print(f"Loading {preparation.RUN_ID} for fourteen train-only cases", flush=True)
     generator = ProgressGenerator(TransformersPeftTurnGenerator(preparation.CHECKPOINT, max_new_tokens=256))
     reports = []
     for case in plan["cases"]:

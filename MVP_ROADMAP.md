@@ -2,7 +2,91 @@
 
 ## Objective
 
-### Current experiment status (2026-10-10)
+### Current repaired-evaluator diagnostic (2026-10-11)
+
+- User authorized the same fourteen seen train tasks for checkpoint 012 using the opt-in
+  `coding-checkpoint-literal-safe-termination-v2` implementation. New immutable run:
+  `runs/evaluation/stage1-codex-qwen35-2b-012-mix006007-56step-train-fit-diagnostic-evalfix-v2/`.
+  Preserve the original train split, prompts, contract, task order, greedy decoding,
+  256 tokens per generation, four executed tools and five generated turns per case.
+  Pin both evaluator modules and the new runner; reuse only verified preflight receipts.
+  Default memory/disk gates stayed active; the process completed without abort or restart.
+  Strict success remains 2/14 and behavior/exact-source pass remains 3/14, unchanged from
+  the old 012 recovery. Denied commands fell from 14 to 4; changed sources rose from 6 to 8,
+  cases invoking pytest from 7 to 9, and generated turns fell from 62 to 60.
+  Terminal categories: six tool-budget stops, three length stops and five natural final
+  responses, of which only two are strict successes. One format error overlaps a length
+  stop. Eleven final sources fail the exact-reference gate; this is an outcome count, not
+  eleven independently established editing root causes. All fourteen tests and 1,510
+  protected existing files stayed byte-identical. No data, training, old-score rewrite,
+  validation-ledger append or checkpoint promotion occurred.
+- Read-only inspection of the same SFT independently confirmed all 3,093 supervised tokens
+  are in assistant segments; system/user/tool-result tokens are masked, all fourteen final
+  EOS targets remain supervised, and batch collation preserves labels. This does not prove
+  the absence of every training defect, but tool-result supervision leakage was not found.
+  Literal path false positives were real but not sufficient to explain task failures.
+  Remaining measured issues include missing punctuation, duplicated separators, confusing
+  task/output literals with source text, ineffective recovery and completion control.
+  Do not automatically add data, increase training budget or relax evaluation limits.
+  Next experiment needs separate design/authorization; retain this run as train-only evidence.
+
+### Prior evaluator implementation status (2026-10-11)
+
+- Authorized infrastructure repair is implemented as opt-in
+  `src/capability_capsule/eval/coding_checkpoint_v2.py`, implementation ID
+  `coding-checkpoint-literal-safe-termination-v2` (not the existing fixed-v2 task-suite version).
+  The old evaluator remains byte-identical, preserving pinned historical plans and results.
+  The new executor separates fixed filename grammar from literal replacement text, allowing
+  punctuation without allowing path escapes, extra commands, interpolation or linked-file writes.
+  Actual generated terminal token IDs distinguish EOS from length truncation, including EOS on
+  the final budgeted token. Per-generation metadata/raw output survive failures; case termination
+  distinguishes final response, truncation, malformed call, tool budget, unknown finish and errors.
+  Truncated/unknown generations are never executed or accepted as a final response. Existing
+  validators and tool/token budgets remain unchanged; natural EOS alone is not task success.
+  Only synthetic temporary-fixture tests are authorized here: no model evaluation, new training,
+  data/fixture changes or writes to existing run directories. Future evaluation must explicitly
+  select and pin the new implementation plus its legacy dependency under a new run identity;
+  retain historical 012 scores. Next proposed work is SFT role/mask inspection, not extra training.
+
+### Completed diagnostic status (2026-10-11)
+
+- F: paging activation is now verified after manual reboot: active allocation is 16 GiB on F:
+  and 2 GiB on C:. User separately authorized additive recovery at
+  `runs/evaluation/stage1-codex-qwen35-2b-012-mix006007-56step-train-fit-diagnostic-v1/recovery-20261011/`.
+  Preparation verified the unchanged fourteen train cases and 011 comparison protocol, created
+  fresh disposable copies, and protected 1,378 existing files including the interrupted attempt.
+  Reuse only hash-verified original/reference preflight receipts. Restore default memory gates;
+  retain C: disk gates (8 GiB startup / 4 GiB runtime), fail closed on probe errors, and persist
+  resource samples/process output incrementally. Execute once, without automatic retry, new
+  training, validation relabeling, reference prompting or checkpoint promotion.
+  Recovery completed all fourteen cases with strict success 2/14 and behavior/exact-source pass
+  3/14, versus 011's 0/14 for both strict and behavior. Literal006: strict 1/8, behavior 2/8;
+  fstring007: strict/behavior 1/6. Six sources changed and seven cases invoked pytest; denied
+  commands decreased from 42 to 14. One correct final source still failed strict grading after
+  exceeding the tool budget. There were 62 generated turns, all fourteen supplied tests stayed
+  unchanged, and no resource abort or model restart occurred. Old inputs and attempts are retained.
+  Larger training budget improved some seen-task execution, but fit remains poor; the linear LR
+  horizon also changed, so this is not an isolated causal result or unseen-generalization evidence.
+  Next: audit recorded edit-content errors, invalid/truncated calls and failure-recovery/termination
+  before choosing any separately authorized data, contract or training change. Do not promote 012.
+
+### Earlier interrupted attempt (2026-10-11)
+
+- User separately authorized checkpoint 012's fourteen-case seen-train diagnostic against 011's
+  measured 0/14, then explicitly authorized ignoring memory thresholds for this invocation while
+  retaining disk protection. New output: `runs/evaluation/stage1-codex-qwen35-2b-012-mix006007-56step-train-fit-diagnostic-v1/`.
+  Preparation passed: fourteen original train tasks, prompts, contract, executor, grading and
+  inference budgets match 011. Verified fail/pass preflight receipts are reused, with fresh model
+  workspaces. All 1,268 existing protected files remain unchanged. No new training or validation.
+  The one-shot execution loaded 012 and began generating for task 1/14, then exited with code 1
+  without saving any generated turn or task result. Subsequent process/kernel observations showed
+  WSL reinitialization and unclean prior journals; the exact cause is unconfirmed. There is no
+  candidate score, not a 0/14 result or a completed budget comparison. Preserve this attempt and
+  its fresh workspaces; do not retry automatically, promote a checkpoint or supply reference answers.
+  Verify preservation and record the interruption. Before a separately authorized recovery, address
+  the unresolved F: paging activation/host resource issue and retain unchanged inference conditions.
+
+### Historical experiment status (2026-10-10)
 
 - Checkpoint 012's independently launched adapter reload completed successfully after the user's
   explicit memory-threshold override for this reload only. Disk guards remained 8 GiB at startup
