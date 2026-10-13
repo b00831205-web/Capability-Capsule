@@ -23,7 +23,14 @@ def input_matches(path, pinned, current, *, update_path=UPDATE):
                ROOT / "runs/evaluation/stage1-codex-qwen35-2b-012-mix006007-56step-train-fit-diagnostic-v1/planning-update.json",
                ROOT / "runs/evaluation/stage1-codex-qwen35-2b-012-mix006007-56step-train-fit-diagnostic-v1/recovery-20261011/planning-update.json",
                ROOT / "tests/eval-v2-planning-update.json",
-               ROOT / "runs/evaluation/stage1-codex-qwen35-2b-012-mix006007-56step-train-fit-diagnostic-evalfix-v2/planning-update.json")
+               ROOT / "runs/evaluation/stage1-codex-qwen35-2b-012-mix006007-56step-train-fit-diagnostic-evalfix-v2/planning-update.json",
+               ROOT / "runs/evaluation/stage1-codex-mix006007-teacher-forced-base-011-012-v1/planning-update.json",
+               ROOT / "runs/evaluation/stage1-codex-mix006007-teacher-forced-base-011-012-v1-retry-20261013/planning-update.json",
+               ROOT / "runs/evaluation/stage1-codex-mix006007-teacher-forced-base-011-012-v1-retry2-20261013/planning-update.json",
+               ROOT / "runs/evaluation/stage1-codex-mix006007-teacher-forced-adapters-011-012-v1/planning-update.json",
+               ROOT / "runs/evaluation/stage1-codex-mix006007-teacher-forced-adapters-011-012-memory-override-v1/planning-update.json",
+               ROOT / "runs/evaluation/stage1-codex-qwen35-2b-012-first-edit-precision-v1/planning-update.json",
+               ROOT / "runs/evaluation/stage1-codex-qwen35-2b-012-first-edit-precision-memory-override-v1/planning-update.json")
     for candidate in updates:
         if not candidate.exists():
             continue

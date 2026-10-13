@@ -71,5 +71,5 @@ def test_resource_and_completion_receipts_are_consistent():
     assert update["explicitly_authorized"]
     for name,before in update["before"].items():
         current = digest(probe.ROOT / name)
-        assert update["after"][name] == current
+        assert input_matches(name, update["after"][name], current)
         assert input_matches(name, before, current)

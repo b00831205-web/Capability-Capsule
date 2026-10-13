@@ -6,6 +6,150 @@ correctness or safety issue.
 
 ## MVP rule
 
+### Scoped memory waiver for the unchanged precision probe (2026-10-13)
+
+- User authorized ignoring memory gates for this diagnostic only, retaining disk protection.
+  New attempt `runs/evaluation/stage1-codex-qwen35-2b-012-first-edit-precision-memory-override-v1/`.
+  Frozen four cases, same 012 adapter and all generation conditions unchanged. Prior blocked
+  attempt remains immutable. Memory telemetry and probe failure stop remain; C:8/4 GiB guards
+  are active. No persistent/system override, generated command execution or training.
+- Completed eight turns, matching tokenized prompts, normal worker exits, no disk abort/retry;
+  1,782 existing files unchanged. Actual parameter elements: FP32 all1,882,242,880 float32;
+  BF161,881,825,088 bfloat16 +417,792 float32. Adapter policy unchanged.
+  Both precisions: 0/4 full-reference first edits; call format, grammar and EOS4/4, old text
+  found2/4. Identical old/new literals and resulting source per case, despite some variable-name
+  differences. Two punctuation errors and two absent-source-string errors in each condition.
+- Precision alone did not explain/rescue the selected failures. Prioritize tracing where free
+  generation departs from gold source/replacement semantics, not automatically adding epochs,
+  data or production hints. A follow-up diagnostic needs separate authorization; historical
+  actual inference dtype remains unknown. This is not an independent accuracy estimate.
+- FP32 sampled Windows free RAM fell to22,548,480 bytes (~21.5 MiB); BF16 minimum~3.89 GiB.
+  C: remained above17.30 GiB. No observed abort is not evidence of safe memory margin.
+  Do not automatically carry this waiver forward; favor a lower-memory diagnostic design when
+  planning follow-up work, and retain disk protection. No system configuration was changed.
+- This is a failure-selected seen-case precision check, not validation or release grading.
+  Historical actual inference dtype remains unrecorded; do not infer causality in advance.
+
+### Precision-controlled first-edit probe prepared, not measured (2026-10-13)
+
+- New authorized diagnostic: `runs/evaluation/stage1-codex-qwen35-2b-012-first-edit-precision-v1/`.
+  Four failure-selected seen cases, two explicit base dtypes, one greedy edit turn each;
+  identical prompt, adapter policy, seed42, CPU/four threads, max256 and use_cache=True.
+  No fixture copies needed: interpret literal substitutions against source strings in memory.
+  Never execute model commands, edit original fixtures, retrain or overwrite prior evidence.
+- Both startup probes failed the restored 14 GiB host-free-RAM requirement; neither model
+  loaded and no outputs were scored. Retain full disk/commit/WSL guards and probe receipts.
+  No memory waiver is active. A new attempt requires headroom or a new scoped authorization.
+- Historical free-running evaluation did not pin/record actual model dtype. Current loader
+  defaults can inherit BF16 from the model text configuration; this is a plausible confound,
+  not proof that the historical process used BF16 or that precision caused its failures.
+  Existing teacher-forced FP32 scores and autoregressive results are different measurements.
+- Record actual base/adapter dtype distribution, active adapter, versions and tokenized prompt
+  equality when a new attempt reaches loading. Report single-edit correctness and EOS/length
+  separately, not task success; unsupported grammar is not universally invalid shell syntax.
+  Do not add data, increase training budget or claim overfitting from this unmeasured probe.
+
+### Measured learning versus critical-token precision (2026-10-13)
+
+- User explicitly waived memory thresholds for only this new 011/012 forward diagnostic:
+  `runs/evaluation/stage1-codex-mix006007-teacher-forced-adapters-011-012-memory-override-v1/`.
+  Keep original raw-base reuse, model/SFT, float32 CPU, four threads, causal/category scoring
+  and all old artifacts. Disable only physical/commit/WSL memory gates inside these processes;
+  retain all telemetry and C: disk gates (8 GiB startup / 4 GiB runtime). No system changes,
+  persistent override, training, generation, command execution or model retry are authorized.
+  Both 011 and 012 completed fourteen cases, normal exit/no disk abort/restart; reuse the saved
+  base and verify identical targets before merging. Retain truthful plan/authorization flags
+  and 1,715 unchanged old files. Body NLL base/011/012 is 1.191684/0.598250/0.193828 and
+  body top1 is 78.37%/85.58%/94.93%: training is not wholly ineffective on seen gold targets.
+  Source-literal top1 reaches 86.76%, replacement-literal 87.84%, placeholders 78.69% in 012;
+  punctuation-related top1 is only 70.59% versus 73.53% in 011, despite lower punctuation NLL.
+  The category has 34 tokens, includes overlapping/mixed tokens and expression dots; the
+  difference is one argmax miss, not evidence establishing overfitting. Avoid loss-only decisions.
+  012 has eighteen literal argmax misses across ten gold trajectories; these are not ten failed
+  tasks and alternatives may be valid. Gold histories include correct earlier command tokens,
+  so these metrics are not autonomous command success. Closing/EOS top1 is already 100% in
+  the raw base under this condition and cannot prove free-running stopping is solved.
+  Review critical text/punctuation/placeholder prediction and gold-versus-actual execution
+  context before choosing a new training intervention. More budget helped overall fitting,
+  but is not established as a sufficient remedy; LR horizon changes prevent pure attribution.
+  No data, training, heldout performance claim, validation ledger or promotion is authorized.
+  This process-local memory waiver does not carry over to future runs.
+
+### Adapter-only continuation: parent and child resource gates (2026-10-13)
+
+- Authorized new `runs/evaluation/stage1-codex-mix006007-teacher-forced-adapters-011-012-v1/`.
+  Never rerun base. Verify its fourteen cases against stored SFT targets and recompute metrics;
+  pin eighteen reuse inputs and the unchanged forward implementation. Score 011 and 012 in
+  separate invocations with unchanged float32/causal/category/model settings and all guards.
+  Permit bounded resource checks (180 seconds before a new adapter), not automatic model retries.
+  Initial full-environment check passed, but post-preparation 011 waited 180 seconds and
+  stopped at ~13.79 GiB free RAM without a worker launch. A separate 012 invocation passed
+  the parent gate (~14.13 GiB), then failed the same 14 GiB child pre-load gate at ~13.80 GiB.
+  Exit 1 is a recorded startup rejection, not model task failure, OOM or runtime-guard abort;
+  forward-attempt/model-load/score files are absent. Preserve and separately classify both
+  gate outcomes, with no retry or false zero scores. Old file inventory: 1,697 unchanged.
+  The idle/preparation parent snapshot is not guaranteed worker headroom. Request another
+  1-2 GiB reserve rather than barely crossing 14 GiB; do not silently raise/lower frozen
+  thresholds or change precision. A three-model learning comparison is still unavailable.
+  Merge only complete aligned scores; retain the valid base without any reexecution.
+
+### Renewed forward-only attempt: valid base, incomplete comparison (2026-10-13)
+
+- The user requested another attempt; full-environment RAM precheck now passes (~14.75 GiB).
+  Use new `runs/evaluation/stage1-codex-mix006007-teacher-forced-base-011-012-v1-retry2-20261013/`.
+  Retain 14 GiB startup / 1.5 GiB runtime physical-free protection and all other gates.
+  Do not alter float32, data, causal scoring or the base/011/012 comparison after freeze.
+  Both previous attempts and hash-pinned implementations remain immutable. Base completed
+  fourteen cases with saved scores for 3,093 targets and normal exit (no resource abort).
+  The following 011 startup check stopped after six bounded waits: Windows free RAM remained
+  9,598,287,872 bytes (~8.94 GiB), below 14 GiB, despite ~13.21 GiB available inside WSL.
+  The worker had exited; guest-available memory does not by itself satisfy the Windows RAM
+  guard. Host reclamation lag/caching is a hypothesis, not a proven unique cause.
+  011 and 012 never started. Keep base scores and missing adapter scores distinct, preserve
+  1,665 old files, and claim no trained-model comparison. A next separately authorized run
+  should score only 011/012 and hash-pin this valid base summary/cases rather than repeat base.
+  Do not auto-retry, stop WSL services, weaken guards or change precision without authorization.
+  Correct gold-context prediction is not autonomous task success or unseen generalization.
+
+### Latest float32 attempt: startup headroom still insufficient (2026-10-13)
+
+- The user requested a separate new attempt under
+  `runs/evaluation/stage1-codex-mix006007-teacher-forced-base-011-012-v1-retry-20261013/`.
+  Freeze the same gold-history scoring and precision, pin the old implementation and retain
+  all prior outputs. Strengthen only startup physical-free RAM to 14 GiB; retain the 1.5 GiB
+  runtime RAM minimum and all original disk/commit/WSL protections.
+  Idle Windows free RAM (~15.4 GiB) is not a guarantee of model-load headroom: after environment
+  startup the final snapshot was 13,002,190,848 bytes (~12.11 GiB). Six bounded gate waits did
+  not reach 14 GiB, so no model worker launched. Disk and other startup gates passed.
+  Record no model-learning conclusion and no fabricated zero scores. All 1,655 protected
+  existing files must remain unchanged. Do not auto-retry, kill unrelated processes or silently
+  change precision. Free additional physical RAM before a new attempt, or separately design
+  and authorize consistent lower-memory scoring for all three variants.
+
+### Forward-only diagnostic resource blocker (2026-10-13)
+
+- Authorized a frozen base/011/012 gold-history comparison on the same fourteen seen train
+  trajectories, without generation, command execution, new data or training. One model per
+  isolated process; CPU float32 and unchanged default memory/disk protection. New run:
+  `runs/evaluation/stage1-codex-mix006007-teacher-forced-base-011-012-v1/`.
+  Track causal next-token NLL, target probability/rank and top1/top5 by edit source/target,
+  punctuation, placeholders, closing tags and EOS. Separate the 2,621 meaningful response
+  targets from 413 inference-provided prefix targets and 59 post-EOS template targets;
+  otherwise easy formatting may conceal content weaknesses in the 3,093-token overall mean.
+  Gold-conditioned token accuracy is not free-running exact-command or task accuracy.
+  Do not change loss weighting, LoRA modules, learning rate, data or budgets before results
+  are reviewed and a subsequent experiment is separately authorized.
+  The float32 base load triggered the unchanged physical-memory runtime guard:
+  983,060,480 bytes free versus a 1.5 GiB minimum. The startup snapshot passed its 10 GiB
+  physical-memory requirement, so passing startup did not guarantee adequate float32 peak
+  headroom. The process exited on supervisor SIGTERM (-15); zero complete scored cases were
+  saved, and 011/012 never started. This is not model task failure or a 0/14 score.
+  C: had about 17.87 GiB free at abort; commit and WSL gates were not crossed. Do not call
+  this disk exhaustion or assume more pagefile capacity resolves the physical-memory gate.
+  Preserve the stopped attempt and all old inputs. A future float32 attempt needs greater
+  measured startup headroom; alternatively design a matched lower-memory precision protocol
+  and separately authorize a new run. Do not auto-retry, weaken guards or change frozen precision.
+
 ### Current repaired-evaluator findings (2026-10-11)
 
 - The authorized same-checkpoint/same-fourteen-train-task evaluator control completed at
