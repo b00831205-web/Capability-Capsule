@@ -1,11 +1,15 @@
 """Functional tests for preparing and collecting Teacher trajectories."""
 
+import inspect
+import json
 from datetime import timedelta
+from hashlib import sha256
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from capability_capsule.eval.harness_profile import HarnessProfileReference
 from capability_capsule.eval.jsonl import load_jsonl
 from capability_capsule.eval.records import (
     DatasetSplit,
@@ -55,6 +59,71 @@ def make_assignment(tmp_path: Path) -> TeacherAssignment:
         destination_jsonl=tmp_path / "raw" / "teacher.jsonl",
         task=make_task(),
     )
+
+
+def make_harness_profile(tmp_path: Path) -> HarnessProfileReference:
+    profile_path = tmp_path / "profiles" / "codex.json"
+    profile_path.parent.mkdir(parents=True)
+    encoded = json.dumps(
+        {
+            "schema_version": "0.1",
+            "profile_id": "codex-windows-powershell-001",
+            "harness_id": "codex",
+            "harness_version": "pinned-version-001",
+            "provider_protocol": "openai-compatible-chat-completions",
+            "model_injection": "invocation-scoped-config",
+            "prompt_template_sha256": "1" * 64,
+            "fixed_context_tokens": 12000,
+            "shell": "windows-powershell",
+            "filesystem": "workspace-write",
+            "approval_policy": "on-request",
+            "sandbox_policy": "workspace-write",
+            "supports_parallel_tools": False,
+            "supports_multi_turn_tools": True,
+            "tools": [
+                {
+                    "name": "exec_command",
+                    "arguments_schema": {
+                        "type": "object",
+                        "required": ["cmd"],
+                        "additionalProperties": False,
+                        "properties": {"cmd": {"type": "string"}},
+                    },
+                    "result_envelope": "codex-exec-command-v1",
+                }
+            ],
+            "validator_ids": ["codex-tool-envelope-v1"],
+        },
+        sort_keys=True,
+    ).encode() + b"\n"
+    profile_path.write_bytes(encoded)
+    return HarnessProfileReference(
+        profile_id="codex-windows-powershell-001",
+        harness_id="codex",
+        harness_version="pinned-version-001",
+        path=Path("profiles/codex.json"),
+        sha256=sha256(encoded).hexdigest(),
+    )
+
+
+def make_harness_assignment(tmp_path: Path) -> TeacherAssignment:
+    return TeacherAssignment(
+        schema_version="0.3",
+        assignment_id="assignment-001",
+        trajectory_id="trajectory-001",
+        teacher_model="gpt-6-astra",
+        teacher_skill_version="0.1.0",
+        authorized_fixture_root="/fixtures/fixture-cli",
+        destination_jsonl=tmp_path / "raw" / "teacher.jsonl",
+        task=make_task(),
+        harness_profile=make_harness_profile(tmp_path),
+    )
+
+
+def require_append_harness_support() -> None:
+    parameters = inspect.signature(append_teacher_trajectory).parameters
+    if "artifact_root" not in parameters:
+        pytest.skip("Teacher append does not verify HarnessProfile yet")
 
 
 def make_trajectory(
@@ -187,5 +256,67 @@ def test_append_teacher_trajectory_enforces_allowed_tools(tmp_path: Path) -> Non
 
     with pytest.raises(ValueError, match="not allowed"):
         append_teacher_trajectory(assignment, trajectory)
+
+    assert not assignment.destination_jsonl.exists()
+
+
+def test_append_teacher_trajectory_rejects_tampered_harness_profile(
+    tmp_path: Path,
+) -> None:
+    require_append_harness_support()
+    assignment = make_harness_assignment(tmp_path)
+    assert assignment.harness_profile is not None
+    (tmp_path / assignment.harness_profile.path).write_text(
+        "{}\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="SHA-256 mismatch"):
+        append_teacher_trajectory(
+            assignment,
+            make_trajectory(),
+            artifact_root=tmp_path,
+        )
+
+    assert not assignment.destination_jsonl.exists()
+
+
+def test_append_teacher_trajectory_enforces_harness_tool_schema(
+    tmp_path: Path,
+) -> None:
+    require_append_harness_support()
+    assignment = make_harness_assignment(tmp_path)
+    trajectory = make_trajectory().model_copy(
+        update={
+            "messages": (
+                TrajectoryMessage(
+                    role=MessageRole.USER,
+                    content="Find the CLI entry point.",
+                ),
+                TrajectoryMessage(
+                    role=MessageRole.ASSISTANT,
+                    content="I will inspect the project.",
+                    tool_calls=(
+                        ToolCallRecord(
+                            name="exec_command",
+                            arguments={},
+                        ),
+                    ),
+                ),
+                TrajectoryMessage(
+                    role=MessageRole.TOOL,
+                    content="No output.",
+                    tool_name="exec_command",
+                ),
+            )
+        }
+    )
+
+    with pytest.raises(ValueError, match="exec_command"):
+        append_teacher_trajectory(
+            assignment,
+            trajectory,
+            artifact_root=tmp_path,
+        )
 
     assert not assignment.destination_jsonl.exists()

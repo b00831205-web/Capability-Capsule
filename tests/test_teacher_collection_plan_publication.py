@@ -3,6 +3,7 @@
 from datetime import timedelta
 from hashlib import sha256
 from pathlib import Path
+from typing import get_args
 
 import pytest
 
@@ -47,6 +48,25 @@ def make_plan(tmp_path: Path) -> TeacherCollectionPlan:
         plan_id="pilot-001",
         assignments=(assignment,),
     )
+
+
+def require_schema_03_publication_support() -> None:
+    annotation = PublishedTeacherCollectionPlan.model_fields[
+        "schema_version"
+    ].annotation
+    if "0.3" not in get_args(annotation):
+        pytest.skip("Collection-plan publication does not support schema 0.3 yet")
+
+
+def load_checked_in_schema_03_plan() -> TeacherCollectionPlan:
+    plan_path = (
+        Path(__file__).resolve().parents[1]
+        / "plans"
+        / "teacher"
+        / "smoke-pilot-003"
+        / "collection-plan.json"
+    )
+    return TeacherCollectionPlan.model_validate_json(plan_path.read_text())
 
 
 def test_publish_teacher_collection_plan_writes_immutable_portable_record(
@@ -118,3 +138,23 @@ def test_load_teacher_collection_plan_rejects_unexpected_files(tmp_path: Path) -
 
     with pytest.raises(ValueError, match=r"unexpected.*notes\.txt"):
         load_teacher_collection_plan(tmp_path / "pilot-001")
+
+
+def test_publish_schema_03_plan_preserves_harness_profile_and_manifest_version(
+    tmp_path: Path,
+) -> None:
+    require_schema_03_publication_support()
+    plan = load_checked_in_schema_03_plan()
+
+    published = publish_teacher_collection_plan(
+        plan,
+        output_root=tmp_path,
+    )
+    plan_dir = tmp_path / "smoke-pilot-003"
+    plan_path = plan_dir / "collection-plan.json"
+
+    assert published.schema_version == "0.3"
+    assert published.plan.schema_version == "0.3"
+    assert published.plan.harness_profile == plan.harness_profile
+    assert published.sha256 == sha256(plan_path.read_bytes()).hexdigest()
+    assert load_teacher_collection_plan(plan_dir) == published

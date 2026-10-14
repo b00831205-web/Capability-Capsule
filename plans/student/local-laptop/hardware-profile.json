@@ -1,0 +1,45 @@
+{
+  "schema_version": "0.2",
+  "profile_id": "hardware-29cd0cedfa402e5e",
+  "captured_at": "2026-09-15T09:13:19.686604+00:00",
+  "observation_scope": "tool_execution_host",
+  "model_inference_location": "not_inferred",
+  "environment": {
+    "verification_status": "confirmed",
+    "purposes": [
+      "inference",
+      "evaluation",
+      "benchmarking"
+    ]
+  },
+  "platform": {
+    "system": "linux",
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "machine": "x86_64",
+    "execution_environment": "wsl"
+  },
+  "cpu": {
+    "model": "AMD Ryzen 7 H 255 w/ Radeon 780M Graphics",
+    "physical_cores": null,
+    "logical_cores": 16
+  },
+  "memory": {
+    "effective_total_bytes": 16131485696
+  },
+  "accelerators": [],
+  "memory_observation": {
+    "available_bytes_at_capture": 8544530432
+  },
+  "privacy": {
+    "excluded": [
+      "hostname",
+      "username",
+      "serial_numbers",
+      "network_addresses",
+      "environment_variables"
+    ]
+  },
+  "warnings": [
+    "No supported GPU detector reported an accelerator."
+  ]
+}

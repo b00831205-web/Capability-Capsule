@@ -5,6 +5,7 @@ from typing import Annotated
 
 import httpx
 import typer
+from datetime import datetime
 
 from capability_capsule import __version__
 from capability_capsule.config import Settings
@@ -18,6 +19,11 @@ from capability_capsule.runtime.ollama import answer_question
 from capability_capsule.runtime.policy_config import load_tool_policy
 from capability_capsule.runtime.readiness import check_capsule_readiness
 from capability_capsule.telemetry.report import summarize_telemetry
+from capability_capsule.eval.records import DatasetSplit
+from capability_capsule.eval.training_completion import (
+    process_training_checkpoint_files,
+)
+
 
 app = typer.Typer(
     name="capsule",
@@ -511,3 +517,204 @@ def agent_command(
 
     if result.tool_names:
         typer.echo(f"Tools used: {', '.join(result.tool_names)}")
+
+
+@app.command("record-checkpoint")
+def record_checkpoint_command(
+    training_run_path: Annotated[
+        Path,
+        typer.Option(
+            "--training-run",
+            exists= True,
+            dir_okay= False,
+            help = "Training run manifest JSON file."
+        ),
+    ],
+    results_path: Annotated[
+        Path,
+        typer.Option(
+            "--results",
+            exists = True,
+            dir_okay = False,
+            help = "Evaluated case results JSONL file."
+        ),
+    ],
+    evaluation_suite_path: Annotated[
+        Path,
+        typer.Option(
+            "--evaluation-suite",
+            exists=True,
+            dir_okay = False,
+            help = "Capability-specific evaluation suite JSON file."
+        ),
+    ],
+    capability_id: Annotated[
+        str,
+        typer.Option(
+            "--capability-id",
+            help = "Capability measured by this evaluation suite."
+        )
+    ],
+    evaluation_suite_id: Annotated[
+        str,
+        typer.Option(
+            "--evaluation-suite-id",
+            help = "Stable version identifier for the evaluation suite."
+        )
+    ],
+    ledger_path: Annotated[
+        Path,
+        typer.Option(
+            "--ledger",
+            dir_okay = False,
+            help = "Append-only learning-curve JSONL ledger."
+        ),
+    ],
+    completed_at: Annotated[
+        str,
+        typer.Option(
+            "--completed-at",
+            help = "Timezone-aware checkpoint completion time."
+        ),
+    ],
+    experiment_id: Annotated[
+        str,
+        typer.Option(
+            "--experiment-id",
+            help = "Evaluation experiment identifier"
+        ),
+    ],
+    task_family_id: Annotated[
+        str,
+        typer.Option(
+            "--task-family",
+            help = "Task family measured by this checkpoint."
+        ),
+    ],
+    evaluation_split: Annotated[
+        DatasetSplit,
+        typer.Option(
+            "--split",
+            help = "Evaluation dataset split.",
+        ),
+    ],
+    knowledge_usage_dir: Annotated[
+        Path | None,
+        typer.Option(
+            "--knowledge-usage",
+            exists = True,
+            file_okay= False,
+            help = "Optional directory containing knowledge-usage events"
+        ),
+    ] = None,
+    checkpoint_id: Annotated[
+        str | None,
+        typer.Option(
+            "--checkpoint-id",
+            help = "Optional checkpoint ID overriding the capsule ID."
+        ),
+    ] = None,
+    target_success_rate: Annotated[
+        float,
+        typer.Option(
+            "--target-success-rate",
+            min = 0.0,
+            max = 1.0,
+            help = "Success rate considered learned"
+        ),
+    ] = 0.8,
+    plateau_threshold: Annotated[
+        float,
+        typer.Option(
+            "--plateau-threshold",
+            min = 0.0,
+            help = (
+                "Maximum percentage-point gain per 100 trajectories "
+                "considered a plateau"
+            ),
+        ),
+    ] = 1.0,
+    plateau_intervals: Annotated[
+        int,
+        typer.Option(
+            "--plateau-intervals",
+            min=1,
+            help="Consecutive low-growth intervals required for a plateau."
+        ),
+    ] = 2,
+    json_output: Annotated[
+        bool,
+        typer.Option(
+            "--json",
+            help = "Output the recorded checkpoint as JSON."
+        ),
+    ] = False,
+) -> None:
+    """Record one evaluted training checkpoint."""
+
+    try:
+
+        parsed_completed_at = datetime.fromisoformat(completed_at)
+
+        if parsed_completed_at.tzinfo is None or parsed_completed_at.utcoffset() is None:
+            raise ValueError(
+                "--completed-at must include a timezone offset"
+            )
+
+        recorded = process_training_checkpoint_files(
+            training_run_path= training_run_path,
+            results_path = results_path,
+            evaluation_suite_path= evaluation_suite_path,
+            capability_id= capability_id,
+            evaluation_suite_id= evaluation_suite_id,
+            knowledge_usage_dir= knowledge_usage_dir,
+            ledger_path = ledger_path,
+            completed_at= parsed_completed_at,
+            experiment_id= experiment_id,
+            task_family_id= task_family_id,
+            evaluation_split= evaluation_split,
+            checkpoint_id = checkpoint_id,
+            target_success_rate= target_success_rate,
+            plateau_threshold_percentage_points_per_100_trajectories= plateau_threshold,
+            plateau_interval_count= plateau_intervals,
+        )
+
+    except(OSError, ValueError) as error:
+        typer.echo(
+            f"Checkpoint recording failed: {error}",
+            err = True,
+        )
+        raise typer.Exit(code=1) from error
+
+    if json_output:
+        typer.echo(recorded.model_dump_json(indent=2))
+        return
+
+    point = recorded.point
+
+    typer.echo(f"Checkpoint: {point.checkpoint_id}")
+    typer.echo(f"Base model: {point.base_model_id}")
+    typer.echo(f"Capability: {point.capability_id}")
+    typer.echo(f"Evaluation suite: {point.evaluation_suite_id}")
+    typer.echo(f"Task family: {point.task_family_id}")
+    typer.echo(f"Split: {point.evaluation_split.value}")
+    typer.echo(
+        f"Training trajectories: "
+        f"{point.cumulative_trajectory_count}"
+    )
+    typer.echo(f"Success rate: {point.success_rate:.1%}")
+
+    if point.knowledge_node_coverage is None:
+        typer.echo("Knowledge-node coverage: unknown")
+
+    else:
+        typer.echo(f"Knowledge-node coverage: {point.knowledge_node_coverage:.1%}")
+
+    typer.echo(f"Ledger: {recorded.ledger_path}")
+    typer.echo(f"Recorded points: {recorded.point_count}")
+
+    if recorded.learning_rate_summary is not None:
+        summary = recorded.learning_rate_summary
+        typer.echo(f"Forgetting rate: {summary.forgetting_rate:.1%}")
+        typer.echo(f"Regression detected: {str(summary.regression_detected).lower()}")
+        typer.echo(f"Plateau detected: {str(summary.plateau_detected).lower()}")

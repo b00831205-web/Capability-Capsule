@@ -1,0 +1,115 @@
+{
+  "schema_version": "0.3",
+  "plan_id": "smoke-pilot-003",
+  "assignments": [
+    {
+      "schema_version": "0.3",
+      "assignment_id": "smoke-pilot-003:smoke-validation-greeting-change-codex-001",
+      "trajectory_id": "smoke-validation-greeting-change-codex-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "fixtures/smoke-pilot/validation-greeting-change",
+      "destination_jsonl": "datasets/teacher/smoke-pilot-003/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "smoke-validation-greeting-change-codex-001",
+        "fixture_id": "smoke-greeting-change-v1",
+        "fixture_family_id": "smoke-greeting-change",
+        "fixture_revision": "ea57bb64d1d092a61259cd56bf51be8285396cd7e935c5cee04527c8dcf5cdfe",
+        "defect_family": "greeting-message",
+        "split": "validation",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Modify only greeting.py so greeting(\"Ada\") returns \"Welcome, Ada\" and the supplied test passes. Do not modify test_greeting.py.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT2M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py",
+          "exact-content:greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans/harness/codex-0.154.0-alpha.6.2/harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    }
+  ],
+  "student_target": {
+    "hardware": {
+      "profile_id": "hardware-29cd0cedfa402e5e",
+      "path": "plans/student/local-laptop/hardware-profile.json",
+      "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+      "verification_status": "confirmed",
+      "purposes": [
+        "inference",
+        "evaluation",
+        "benchmarking"
+      ]
+    },
+    "recommendation": {
+      "recommendation_id": "base-model-da8ab427d76174db",
+      "path": "plans/student/local-laptop/base-model-recommendation.json",
+      "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+      "evidence_status": "provisional",
+      "accepted": true,
+      "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+      "model_id": "Qwen/Qwen3.5-2B",
+      "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+      "quantization": "Q4-K-M target",
+      "runtime": "llama.cpp revision pending benchmark",
+      "roles": [
+        "executor",
+        "coder"
+      ]
+    }
+  },
+  "harness_profile": {
+    "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+    "harness_id": "codex",
+    "harness_version": "0.154.0-alpha.6.2",
+    "path": "plans/harness/codex-0.154.0-alpha.6.2/harness-profile.json",
+    "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+  }
+}

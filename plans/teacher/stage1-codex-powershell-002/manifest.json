@@ -1,0 +1,625 @@
+{
+  "schema_version": "0.3",
+  "plan_id": "stage1-codex-powershell-002",
+  "plan_filename": "collection-plan.json",
+  "byte_count": 24845,
+  "sha256": "709c846139c457cf81c2cbe39fd1c314e9f08f6a9fedaa3601abb4adf665490d",
+  "plan": {
+    "schema_version": "0.3",
+    "plan_id": "stage1-codex-powershell-002",
+    "assignments": [
+      {
+        "schema_version": "0.3",
+        "assignment_id": "stage1-codex-powershell-002:train-cache-rate-powershell-003",
+        "trajectory_id": "train-cache-rate-powershell-codex-trajectory-001",
+        "teacher_model": "gpt-5",
+        "teacher_skill_version": "0.2.0",
+        "authorized_fixture_root": "artifacts/teacher-fixtures/train-cache-rate",
+        "destination_jsonl": "datasets/teacher/stage1-codex-powershell-002/raw.jsonl",
+        "task": {
+          "schema_version": "0.1",
+          "task_id": "train-cache-rate-powershell-003",
+          "fixture_id": "train-cache-rate-exec-v2",
+          "fixture_family_id": "train-cache-rate",
+          "fixture_revision": "c2cb90d69f3ea32a2a0fba75c0bfe040692d2ef9b0f52441822fa523c374686e",
+          "defect_family": "cache-rate-denominator",
+          "split": "train",
+          "category": "single_file_change",
+          "difficulty": "easy",
+          "task": "Fix cache_hit_rate so its denominator includes only cache-eligible events. Modify only usage.py and validate the behavior.",
+          "knowledge_distance": 0.2,
+          "logical_arrival": "PT0S",
+          "time_limit": "PT3M",
+          "allowed_tools": [
+            "exec_command"
+          ],
+          "expected_changes": [
+            {
+              "path": "usage.py",
+              "operation": "modify"
+            }
+          ],
+          "validation_ids": [
+            "python-assert:train-cache-rate"
+          ]
+        },
+        "student_target": {
+          "hardware": {
+            "profile_id": "hardware-29cd0cedfa402e5e",
+            "path": "plans/student/local-laptop/hardware-profile.json",
+            "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+            "verification_status": "confirmed",
+            "purposes": [
+              "inference",
+              "evaluation",
+              "benchmarking"
+            ]
+          },
+          "recommendation": {
+            "recommendation_id": "base-model-da8ab427d76174db",
+            "path": "plans/student/local-laptop/base-model-recommendation.json",
+            "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+            "evidence_status": "provisional",
+            "accepted": true,
+            "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+            "model_id": "Qwen/Qwen3.5-2B",
+            "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+            "quantization": "Q4-K-M target",
+            "runtime": "llama.cpp revision pending benchmark",
+            "roles": [
+              "executor",
+              "coder"
+            ]
+          }
+        },
+        "harness_profile": {
+          "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+          "harness_id": "codex",
+          "harness_version": "0.154.0-alpha.6.2",
+          "path": "plans/harness/codex-0.154.0-alpha.6.2/harness-profile.json",
+          "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+        }
+      },
+      {
+        "schema_version": "0.3",
+        "assignment_id": "stage1-codex-powershell-002:train-chunk-overlap-powershell-003",
+        "trajectory_id": "train-chunk-overlap-powershell-codex-trajectory-001",
+        "teacher_model": "gpt-5",
+        "teacher_skill_version": "0.2.0",
+        "authorized_fixture_root": "artifacts/teacher-fixtures/train-chunk-overlap",
+        "destination_jsonl": "datasets/teacher/stage1-codex-powershell-002/raw.jsonl",
+        "task": {
+          "schema_version": "0.1",
+          "task_id": "train-chunk-overlap-powershell-003",
+          "fixture_id": "train-chunk-overlap-exec-v2",
+          "fixture_family_id": "train-chunk-overlap",
+          "fixture_revision": "f165675ddfc819114c3690f1a5b7f53f42d90aff008046837808409b310cb1e8",
+          "defect_family": "chunk-overlap-boundary",
+          "split": "train",
+          "category": "single_file_change",
+          "difficulty": "easy",
+          "task": "Fix chunk_text so adjacent chunks preserve the requested overlap. Modify only chunker.py and validate the behavior.",
+          "knowledge_distance": 0.2,
+          "logical_arrival": "PT0S",
+          "time_limit": "PT3M",
+          "allowed_tools": [
+            "exec_command"
+          ],
+          "expected_changes": [
+            {
+              "path": "chunker.py",
+              "operation": "modify"
+            }
+          ],
+          "validation_ids": [
+            "python-assert:train-chunk-overlap"
+          ]
+        },
+        "student_target": {
+          "hardware": {
+            "profile_id": "hardware-29cd0cedfa402e5e",
+            "path": "plans/student/local-laptop/hardware-profile.json",
+            "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+            "verification_status": "confirmed",
+            "purposes": [
+              "inference",
+              "evaluation",
+              "benchmarking"
+            ]
+          },
+          "recommendation": {
+            "recommendation_id": "base-model-da8ab427d76174db",
+            "path": "plans/student/local-laptop/base-model-recommendation.json",
+            "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+            "evidence_status": "provisional",
+            "accepted": true,
+            "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+            "model_id": "Qwen/Qwen3.5-2B",
+            "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+            "quantization": "Q4-K-M target",
+            "runtime": "llama.cpp revision pending benchmark",
+            "roles": [
+              "executor",
+              "coder"
+            ]
+          }
+        },
+        "harness_profile": {
+          "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+          "harness_id": "codex",
+          "harness_version": "0.154.0-alpha.6.2",
+          "path": "plans/harness/codex-0.154.0-alpha.6.2/harness-profile.json",
+          "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+        }
+      },
+      {
+        "schema_version": "0.3",
+        "assignment_id": "stage1-codex-powershell-002:train-config-toml-powershell-003",
+        "trajectory_id": "train-config-toml-powershell-codex-trajectory-001",
+        "teacher_model": "gpt-5",
+        "teacher_skill_version": "0.2.0",
+        "authorized_fixture_root": "artifacts/teacher-fixtures/train-config-toml",
+        "destination_jsonl": "datasets/teacher/stage1-codex-powershell-002/raw.jsonl",
+        "task": {
+          "schema_version": "0.1",
+          "task_id": "train-config-toml-powershell-003",
+          "fixture_id": "train-config-toml-exec-v2",
+          "fixture_family_id": "train-config-toml",
+          "fixture_revision": "97b3840cdba515da2c4fe13f19d38872980fad8c09643f888dc04a54ac71dd42",
+          "defect_family": "toml-binary-mode",
+          "split": "train",
+          "category": "single_file_change",
+          "difficulty": "easy",
+          "task": "Fix load_name so tomllib reads the configuration in binary mode. Modify only settings.py and validate the behavior.",
+          "knowledge_distance": 0.2,
+          "logical_arrival": "PT0S",
+          "time_limit": "PT3M",
+          "allowed_tools": [
+            "exec_command"
+          ],
+          "expected_changes": [
+            {
+              "path": "settings.py",
+              "operation": "modify"
+            }
+          ],
+          "validation_ids": [
+            "python-assert:train-config-toml"
+          ]
+        },
+        "student_target": {
+          "hardware": {
+            "profile_id": "hardware-29cd0cedfa402e5e",
+            "path": "plans/student/local-laptop/hardware-profile.json",
+            "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+            "verification_status": "confirmed",
+            "purposes": [
+              "inference",
+              "evaluation",
+              "benchmarking"
+            ]
+          },
+          "recommendation": {
+            "recommendation_id": "base-model-da8ab427d76174db",
+            "path": "plans/student/local-laptop/base-model-recommendation.json",
+            "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+            "evidence_status": "provisional",
+            "accepted": true,
+            "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+            "model_id": "Qwen/Qwen3.5-2B",
+            "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+            "quantization": "Q4-K-M target",
+            "runtime": "llama.cpp revision pending benchmark",
+            "roles": [
+              "executor",
+              "coder"
+            ]
+          }
+        },
+        "harness_profile": {
+          "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+          "harness_id": "codex",
+          "harness_version": "0.154.0-alpha.6.2",
+          "path": "plans/harness/codex-0.154.0-alpha.6.2/harness-profile.json",
+          "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+        }
+      },
+      {
+        "schema_version": "0.3",
+        "assignment_id": "stage1-codex-powershell-002:train-dataset-empty-powershell-003",
+        "trajectory_id": "train-dataset-empty-powershell-codex-trajectory-001",
+        "teacher_model": "gpt-5",
+        "teacher_skill_version": "0.2.0",
+        "authorized_fixture_root": "artifacts/teacher-fixtures/train-dataset-empty",
+        "destination_jsonl": "datasets/teacher/stage1-codex-powershell-002/raw.jsonl",
+        "task": {
+          "schema_version": "0.1",
+          "task_id": "train-dataset-empty-powershell-003",
+          "fixture_id": "train-dataset-empty-exec-v2",
+          "fixture_family_id": "train-dataset-empty",
+          "fixture_revision": "efedd8fcc019b1aea2250686fd1eba5abd7e3bc48f7165d8e2de9573d11aed07",
+          "defect_family": "empty-dataset-validation",
+          "split": "train",
+          "category": "single_file_change",
+          "difficulty": "easy",
+          "task": "Make load_cases reject an empty array with a ValueError mentioning at least one. Modify only dataset.py and validate the behavior.",
+          "knowledge_distance": 0.2,
+          "logical_arrival": "PT0S",
+          "time_limit": "PT3M",
+          "allowed_tools": [
+            "exec_command"
+          ],
+          "expected_changes": [
+            {
+              "path": "dataset.py",
+              "operation": "modify"
+            }
+          ],
+          "validation_ids": [
+            "python-assert:train-dataset-empty"
+          ]
+        },
+        "student_target": {
+          "hardware": {
+            "profile_id": "hardware-29cd0cedfa402e5e",
+            "path": "plans/student/local-laptop/hardware-profile.json",
+            "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+            "verification_status": "confirmed",
+            "purposes": [
+              "inference",
+              "evaluation",
+              "benchmarking"
+            ]
+          },
+          "recommendation": {
+            "recommendation_id": "base-model-da8ab427d76174db",
+            "path": "plans/student/local-laptop/base-model-recommendation.json",
+            "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+            "evidence_status": "provisional",
+            "accepted": true,
+            "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+            "model_id": "Qwen/Qwen3.5-2B",
+            "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+            "quantization": "Q4-K-M target",
+            "runtime": "llama.cpp revision pending benchmark",
+            "roles": [
+              "executor",
+              "coder"
+            ]
+          }
+        },
+        "harness_profile": {
+          "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+          "harness_id": "codex",
+          "harness_version": "0.154.0-alpha.6.2",
+          "path": "plans/harness/codex-0.154.0-alpha.6.2/harness-profile.json",
+          "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+        }
+      },
+      {
+        "schema_version": "0.3",
+        "assignment_id": "stage1-codex-powershell-002:train-document-suffix-powershell-003",
+        "trajectory_id": "train-document-suffix-powershell-codex-trajectory-001",
+        "teacher_model": "gpt-5",
+        "teacher_skill_version": "0.2.0",
+        "authorized_fixture_root": "artifacts/teacher-fixtures/train-document-suffix",
+        "destination_jsonl": "datasets/teacher/stage1-codex-powershell-002/raw.jsonl",
+        "task": {
+          "schema_version": "0.1",
+          "task_id": "train-document-suffix-powershell-003",
+          "fixture_id": "train-document-suffix-exec-v2",
+          "fixture_family_id": "train-document-suffix",
+          "fixture_revision": "1ba564e9a15ecf545ef3e6cfd1cb2c5376dd281da830ee042b9262fa14294c23",
+          "defect_family": "case-insensitive-suffix",
+          "split": "train",
+          "category": "single_file_change",
+          "difficulty": "easy",
+          "task": "Make supported_paths recognize supported suffixes case-insensitively. Modify only documents.py and validate the behavior.",
+          "knowledge_distance": 0.2,
+          "logical_arrival": "PT0S",
+          "time_limit": "PT3M",
+          "allowed_tools": [
+            "exec_command"
+          ],
+          "expected_changes": [
+            {
+              "path": "documents.py",
+              "operation": "modify"
+            }
+          ],
+          "validation_ids": [
+            "python-assert:train-document-suffix"
+          ]
+        },
+        "student_target": {
+          "hardware": {
+            "profile_id": "hardware-29cd0cedfa402e5e",
+            "path": "plans/student/local-laptop/hardware-profile.json",
+            "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+            "verification_status": "confirmed",
+            "purposes": [
+              "inference",
+              "evaluation",
+              "benchmarking"
+            ]
+          },
+          "recommendation": {
+            "recommendation_id": "base-model-da8ab427d76174db",
+            "path": "plans/student/local-laptop/base-model-recommendation.json",
+            "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+            "evidence_status": "provisional",
+            "accepted": true,
+            "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+            "model_id": "Qwen/Qwen3.5-2B",
+            "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+            "quantization": "Q4-K-M target",
+            "runtime": "llama.cpp revision pending benchmark",
+            "roles": [
+              "executor",
+              "coder"
+            ]
+          }
+        },
+        "harness_profile": {
+          "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+          "harness_id": "codex",
+          "harness_version": "0.154.0-alpha.6.2",
+          "path": "plans/harness/codex-0.154.0-alpha.6.2/harness-profile.json",
+          "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+        }
+      },
+      {
+        "schema_version": "0.3",
+        "assignment_id": "stage1-codex-powershell-002:train-manifest-build-id-powershell-003",
+        "trajectory_id": "train-manifest-build-id-powershell-codex-trajectory-001",
+        "teacher_model": "gpt-5",
+        "teacher_skill_version": "0.2.0",
+        "authorized_fixture_root": "artifacts/teacher-fixtures/train-manifest-build-id",
+        "destination_jsonl": "datasets/teacher/stage1-codex-powershell-002/raw.jsonl",
+        "task": {
+          "schema_version": "0.1",
+          "task_id": "train-manifest-build-id-powershell-003",
+          "fixture_id": "train-manifest-build-id-exec-v2",
+          "fixture_family_id": "train-manifest-build-id",
+          "fixture_revision": "78a20506f67f8dbf2894f6955f3b0e120cd569c5e12dbcc6c5b848ece03011f6",
+          "defect_family": "manifest-build-id-predicate",
+          "split": "train",
+          "category": "single_file_change",
+          "difficulty": "easy",
+          "task": "Fix validate_manifest so matching artifact IDs are accepted and any mismatch is rejected. Modify only manifest.py and validate the behavior.",
+          "knowledge_distance": 0.2,
+          "logical_arrival": "PT0S",
+          "time_limit": "PT3M",
+          "allowed_tools": [
+            "exec_command"
+          ],
+          "expected_changes": [
+            {
+              "path": "manifest.py",
+              "operation": "modify"
+            }
+          ],
+          "validation_ids": [
+            "python-assert:train-manifest-build-id"
+          ]
+        },
+        "student_target": {
+          "hardware": {
+            "profile_id": "hardware-29cd0cedfa402e5e",
+            "path": "plans/student/local-laptop/hardware-profile.json",
+            "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+            "verification_status": "confirmed",
+            "purposes": [
+              "inference",
+              "evaluation",
+              "benchmarking"
+            ]
+          },
+          "recommendation": {
+            "recommendation_id": "base-model-da8ab427d76174db",
+            "path": "plans/student/local-laptop/base-model-recommendation.json",
+            "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+            "evidence_status": "provisional",
+            "accepted": true,
+            "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+            "model_id": "Qwen/Qwen3.5-2B",
+            "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+            "quantization": "Q4-K-M target",
+            "runtime": "llama.cpp revision pending benchmark",
+            "roles": [
+              "executor",
+              "coder"
+            ]
+          }
+        },
+        "harness_profile": {
+          "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+          "harness_id": "codex",
+          "harness_version": "0.154.0-alpha.6.2",
+          "path": "plans/harness/codex-0.154.0-alpha.6.2/harness-profile.json",
+          "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+        }
+      },
+      {
+        "schema_version": "0.3",
+        "assignment_id": "stage1-codex-powershell-002:train-task-normalization-powershell-003",
+        "trajectory_id": "train-task-normalization-powershell-codex-trajectory-001",
+        "teacher_model": "gpt-5",
+        "teacher_skill_version": "0.2.0",
+        "authorized_fixture_root": "artifacts/teacher-fixtures/train-task-normalization",
+        "destination_jsonl": "datasets/teacher/stage1-codex-powershell-002/raw.jsonl",
+        "task": {
+          "schema_version": "0.1",
+          "task_id": "train-task-normalization-powershell-003",
+          "fixture_id": "train-task-normalization-exec-v2",
+          "fixture_family_id": "train-task-normalization",
+          "fixture_revision": "4e4614280b23e3ed1867274cad72b0253bbc91f3c1cb80d3abb31895b3eaa723",
+          "defect_family": "unicode-compatibility-normalization",
+          "split": "train",
+          "category": "single_file_change",
+          "difficulty": "easy",
+          "task": "Make normalize_task fold Unicode compatibility characters. Modify only curation.py and validate the behavior.",
+          "knowledge_distance": 0.2,
+          "logical_arrival": "PT0S",
+          "time_limit": "PT3M",
+          "allowed_tools": [
+            "exec_command"
+          ],
+          "expected_changes": [
+            {
+              "path": "curation.py",
+              "operation": "modify"
+            }
+          ],
+          "validation_ids": [
+            "python-assert:train-task-normalization"
+          ]
+        },
+        "student_target": {
+          "hardware": {
+            "profile_id": "hardware-29cd0cedfa402e5e",
+            "path": "plans/student/local-laptop/hardware-profile.json",
+            "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+            "verification_status": "confirmed",
+            "purposes": [
+              "inference",
+              "evaluation",
+              "benchmarking"
+            ]
+          },
+          "recommendation": {
+            "recommendation_id": "base-model-da8ab427d76174db",
+            "path": "plans/student/local-laptop/base-model-recommendation.json",
+            "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+            "evidence_status": "provisional",
+            "accepted": true,
+            "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+            "model_id": "Qwen/Qwen3.5-2B",
+            "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+            "quantization": "Q4-K-M target",
+            "runtime": "llama.cpp revision pending benchmark",
+            "roles": [
+              "executor",
+              "coder"
+            ]
+          }
+        },
+        "harness_profile": {
+          "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+          "harness_id": "codex",
+          "harness_version": "0.154.0-alpha.6.2",
+          "path": "plans/harness/codex-0.154.0-alpha.6.2/harness-profile.json",
+          "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+        }
+      },
+      {
+        "schema_version": "0.3",
+        "assignment_id": "stage1-codex-powershell-002:train-workspace-path-powershell-003",
+        "trajectory_id": "train-workspace-path-powershell-codex-trajectory-001",
+        "teacher_model": "gpt-5",
+        "teacher_skill_version": "0.2.0",
+        "authorized_fixture_root": "artifacts/teacher-fixtures/train-workspace-path",
+        "destination_jsonl": "datasets/teacher/stage1-codex-powershell-002/raw.jsonl",
+        "task": {
+          "schema_version": "0.1",
+          "task_id": "train-workspace-path-powershell-003",
+          "fixture_id": "train-workspace-path-exec-v2",
+          "fixture_family_id": "train-workspace-path",
+          "fixture_revision": "2566703c81bf50a1015cfce73725339fe0e56416e7d4813c00ee197729f924e6",
+          "defect_family": "workspace-parent-traversal",
+          "split": "train",
+          "category": "single_file_change",
+          "difficulty": "easy",
+          "task": "Reject paths that resolve outside ReadOnlyWorkspace.root. Modify only workspace.py and validate the behavior.",
+          "knowledge_distance": 0.2,
+          "logical_arrival": "PT0S",
+          "time_limit": "PT3M",
+          "allowed_tools": [
+            "exec_command"
+          ],
+          "expected_changes": [
+            {
+              "path": "workspace.py",
+              "operation": "modify"
+            }
+          ],
+          "validation_ids": [
+            "python-assert:train-workspace-path"
+          ]
+        },
+        "student_target": {
+          "hardware": {
+            "profile_id": "hardware-29cd0cedfa402e5e",
+            "path": "plans/student/local-laptop/hardware-profile.json",
+            "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+            "verification_status": "confirmed",
+            "purposes": [
+              "inference",
+              "evaluation",
+              "benchmarking"
+            ]
+          },
+          "recommendation": {
+            "recommendation_id": "base-model-da8ab427d76174db",
+            "path": "plans/student/local-laptop/base-model-recommendation.json",
+            "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+            "evidence_status": "provisional",
+            "accepted": true,
+            "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+            "model_id": "Qwen/Qwen3.5-2B",
+            "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+            "quantization": "Q4-K-M target",
+            "runtime": "llama.cpp revision pending benchmark",
+            "roles": [
+              "executor",
+              "coder"
+            ]
+          }
+        },
+        "harness_profile": {
+          "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+          "harness_id": "codex",
+          "harness_version": "0.154.0-alpha.6.2",
+          "path": "plans/harness/codex-0.154.0-alpha.6.2/harness-profile.json",
+          "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+        }
+      }
+    ],
+    "student_target": {
+      "hardware": {
+        "profile_id": "hardware-29cd0cedfa402e5e",
+        "path": "plans/student/local-laptop/hardware-profile.json",
+        "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+        "verification_status": "confirmed",
+        "purposes": [
+          "inference",
+          "evaluation",
+          "benchmarking"
+        ]
+      },
+      "recommendation": {
+        "recommendation_id": "base-model-da8ab427d76174db",
+        "path": "plans/student/local-laptop/base-model-recommendation.json",
+        "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+        "evidence_status": "provisional",
+        "accepted": true,
+        "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+        "model_id": "Qwen/Qwen3.5-2B",
+        "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+        "quantization": "Q4-K-M target",
+        "runtime": "llama.cpp revision pending benchmark",
+        "roles": [
+          "executor",
+          "coder"
+        ]
+      }
+    },
+    "harness_profile": {
+      "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+      "harness_id": "codex",
+      "harness_version": "0.154.0-alpha.6.2",
+      "path": "plans/harness/codex-0.154.0-alpha.6.2/harness-profile.json",
+      "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+    }
+  }
+}

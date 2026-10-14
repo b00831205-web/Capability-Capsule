@@ -1,0 +1,96 @@
+{
+  "schema_version": "0.1",
+  "recommendation_id": "base-model-239c618b7e5b451f",
+  "created_at": "2026-09-15T13:13:25.378940+00:00",
+  "status": "provisional",
+  "hardwar_profile_id": "hardware-29cd0cedfa402e5e",
+  "workload": {
+    "scope": "single-project offline coding tasks",
+    "offline_required": true,
+    "required_context_tokens": 8192,
+    "target_session_hours": 15
+  },
+  "primary": {
+    "model_id": "Qwen/Qwen3.5-2B",
+    "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+    "quantization": "Q4-K-M target",
+    "runtime": "llama.cpp revision pending benchmark",
+    "roles": [
+      "executor",
+      "coder"
+    ],
+    "license": "apache-2.0",
+    "reasons": [
+      "Primary candidate for constrained single-project coding task",
+      "Expected to provide mode coding and tool-use capacity than the 0.8B candidate.",
+      "Q4 deployment is expected to fit within the observed WSL memory limit"
+    ],
+    "risks": [
+      "CPU generation speed has not been measured on the deployment environment.",
+      "Peak memory at the target context has not been measured",
+      "The exact GGUF artifact and llama.cpp revision are not pinned"
+    ]
+  },
+  "fallback": {
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "quantization": "Q4-K-M target",
+    "runtime": "llama.cpp revision pending benchmark",
+    "roles": [
+      "executor",
+      "coder"
+    ],
+    "license": "apache-2.0",
+    "reasons": [
+      "Fallback candidate when lower latency or memory use is required",
+      "Suitable for comparison against the 2B primary candidate"
+    ],
+    "risks": [
+      "May not have sufficient capacity for multi-step coding tasks",
+      "May require shorter trajectories and more task decomposition."
+    ]
+  },
+  "deployment_constraints": {
+    "execution_environment": "wsl",
+    "accelerator_mode": "cpu_only",
+    "effective_total_memory_bytes": 16131485696,
+    "safe_process_memory_budget_bytes": 12098614272
+  },
+  "rejected": [],
+  "evidence": {
+    "metadata_sources": [
+      {
+        "model_id": "Qwen/Qwen3.5-2B",
+        "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+        "model_card_url": "http//huggingface.co/Qwen/Qwen3.5-2B",
+        "metadata_url": "http://huggingface.co/api/models/Qwen/Qwen3.5-2B",
+        "last_modified": "2026-03-02T11:26:29.000Z"
+      },
+      {
+        "model_id": "Qwen/Qwen3.5-0.8B",
+        "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+        "model_card_url": "http//huggingface.co/Qwen/Qwen3.5-0.8B",
+        "metadata_url": "http://huggingface.co/api/models/Qwen/Qwen3.5-0.8B",
+        "last_modified": "2026-03-02T11:26:58.000Z"
+      }
+    ],
+    "estimated": {
+      "accelerator_mode": "cpu_only",
+      "safe_process_memory_budget_mb": 11538,
+      "memory_headroom_fraction": 0.25
+    },
+    "measured": {}
+  },
+  "required_benchmark": {
+    "task_suite": "authorized project validation suite",
+    "acceptance_thresholds": {
+      "context_tokens": 8192,
+      "minimum_task_success_rate": 0.9,
+      "minimum_generation_tokens_per_second": 5.0,
+      "maximum_peak_rss_mb": 11538,
+      "maximum_invalid_tool_call_rate": 0.02,
+      "sustained_session_hours": 15
+    },
+    "commands": []
+  }
+}

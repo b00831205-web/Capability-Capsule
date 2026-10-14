@@ -1,0 +1,80 @@
+{
+  "schema_version": "0.1",
+  "snapshot_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+  "evidence_status": "observed",
+  "scope": "Observable MVP contract; not a copy of the hidden Codex system prompt.",
+  "harness": {
+    "id": "codex",
+    "version": "0.154.0-alpha.6.2",
+    "entry_point": "codex exec --json",
+    "provider_protocol": "openai-compatible local provider through LM Studio",
+    "shell": "windows-powershell",
+    "filesystem": "workspace-write",
+    "approval_policy": "on-request",
+    "sandbox_policy": "workspace-write",
+    "supports_parallel_tools": false,
+    "supports_multi_turn_tools": true
+  },
+  "prompt_budget_observation": {
+    "captured_on": "2026-09-18",
+    "invocation": "codex exec --json --ephemeral --ignore-user-config --ignore-rules --oss --local-provider lmstudio -m <model> -s read-only",
+    "minimal_user_prompt": "Reply with exactly OK. Do not use tools.",
+    "observed_prompt_tokens": 9916,
+    "loaded_context_tokens": 8192,
+    "outcome": "rejected_by_provider_before_generation",
+    "interpretation": "9916 is a conservative observed prompt-overhead value because it includes the minimal user prompt. A context larger than 9916 tokens is required; the MVP target remains 32768."
+  },
+  "tools": [
+    {
+      "name": "exec_command",
+      "arguments_schema": {
+        "type": "object",
+        "required": [
+          "cmd"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "cmd": {
+            "type": "string"
+          },
+          "justification": {
+            "type": "string"
+          },
+          "login": {
+            "type": "boolean"
+          },
+          "max_output_tokens": {
+            "type": "integer"
+          },
+          "prefix_rule": {
+            "type": "array"
+          },
+          "sandbox_permissions": {
+            "type": "string"
+          },
+          "shell": {
+            "type": "string"
+          },
+          "tty": {
+            "type": "boolean"
+          },
+          "workdir": {
+            "type": "string"
+          },
+          "yield_time_ms": {
+            "type": "integer"
+          }
+        }
+      },
+      "result_envelope": {
+        "id": "codex-exec-command-v1",
+        "normalization": "Teacher records store a canonical JSON object in TrajectoryMessage.content.",
+        "required": {
+          "envelope": "codex-exec-command-v1",
+          "exit_code": "integer",
+          "output": "string"
+        }
+      }
+    }
+  ]
+}

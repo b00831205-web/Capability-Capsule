@@ -1,0 +1,906 @@
+{
+  "schema_version": "0.3",
+  "plan_id": "stage1-codex-powershell-edit-005",
+  "assignments": [
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-01-morning-docstring",
+      "trajectory_id": "train-edit-005-01-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/morning-docstring",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-01-morning-docstring",
+        "fixture_id": "train-edit-005-morning-docstring-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "099d9cfaf3050babf818d1dc9342a333b089eabe4a5a3e6f256220f6457cb384",
+        "defect_family": "morning-docstring",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Change only greeting.py so greeting(\"Mira\") returns \"Morning, Mira!\". Keep the module description and run the supplied test.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    },
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-02-evening-blank-lines",
+      "trajectory_id": "train-edit-005-02-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/evening-blank-lines",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-02-evening-blank-lines",
+        "fixture_id": "train-edit-005-evening-blank-lines-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "c477fbe57c3dd144ca29990657e26915c6050e09f49fedd7e11d5067b81020b1",
+        "defect_family": "evening-blank-lines",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "For Ivo, greeting should say \"Good evening, Ivo.\" Edit greeting.py only and validate.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    },
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-03-meet-single-quotes",
+      "trajectory_id": "train-edit-005-03-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/meet-single-quotes",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-03-meet-single-quotes",
+        "fixture_id": "train-edit-005-meet-single-quotes-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "8a1c67aa616ad25a8635671af8e93181fadf30b49371adec23d4c914421268f2",
+        "defect_family": "meet-single-quotes",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Update greeting.py to greet Nia with \"Nice to meet you, Nia!\"; leave the test file untouched.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    },
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-04-cheers-comment",
+      "trajectory_id": "train-edit-005-04-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/cheers-comment",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-04-cheers-comment",
+        "fixture_id": "train-edit-005-cheers-comment-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "86c3aae8dcc5e147473af290d6a1804d3d9112546a65a8bcb243b74ddee69910",
+        "defect_family": "cheers-comment",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Make greeting(\"Noor\") return \"Cheers, Noor!\" by changing only the behavior in greeting.py, then test.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    },
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-05-all-set-variable",
+      "trajectory_id": "train-edit-005-05-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/all-set-variable",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-05-all-set-variable",
+        "fixture_id": "train-edit-005-all-set-variable-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "ebb46736803687a8b0b724c0cee2213c94188e21bff302cf86a85c62bd9e8800",
+        "defect_family": "all-set-variable",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "In greeting.py, update the constructed message so Lena hears \"All set, Lena.\". Run the provided test.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    },
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-06-glad-prefix",
+      "trajectory_id": "train-edit-005-06-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/glad-prefix",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-06-glad-prefix",
+        "fixture_id": "train-edit-005-glad-prefix-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "3bc705a3a25d262104cc858012c60ef7a469ce2d18f6cb1ad1ef4a3b8199b0d2",
+        "defect_family": "glad-prefix",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Change the greeting prefix in greeting.py so the result for Tari is \"Glad to see you, Tari\"; validate.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    },
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-07-again-indented-comment",
+      "trajectory_id": "train-edit-005-07-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/again-indented-comment",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-07-again-indented-comment",
+        "fixture_id": "train-edit-005-again-indented-comment-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "cff68fef445017713797d8bc18f60da7f42580fcd256f8eb5bb519c666d46468",
+        "defect_family": "again-indented-comment",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Modify greeting.py only: the greeting for Rui must become \"Hi again, Rui!\". Keep the note.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    },
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-08-ready-format-call",
+      "trajectory_id": "train-edit-005-08-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/ready-format-call",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-08-ready-format-call",
+        "fixture_id": "train-edit-005-ready-format-call-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "0c31697acfe589f08f829290d3aebbe9a677d2f597f25e73320edba239412a65",
+        "defect_family": "ready-format-call",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Have greeting.py return \"Ready for work, Sana!\" for Sana without changing test_greeting.py.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    },
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-09-great-day-salutation",
+      "trajectory_id": "train-edit-005-09-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/great-day-salutation",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-09-great-day-salutation",
+        "fixture_id": "train-edit-005-great-day-salutation-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "b69dce0a187a887cd95ce9f767ff7178a3a61293b5a59c41e2e3c36816e5c152",
+        "defect_family": "great-day-salutation",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Update the salutation in greeting.py to produce \"Have a great day, Emil\" for Emil, then run pytest.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    },
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-10-wonderful-branch",
+      "trajectory_id": "train-edit-005-10-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/wonderful-branch",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-10-wonderful-branch",
+        "fixture_id": "train-edit-005-wonderful-branch-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "1eb52ccf576f9832ea3157b3490b73be6b0b928b3dc869d77f9b3da35ebc8b43",
+        "defect_family": "wonderful-branch",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "For a named caller such as Pia, return \"Wonderful day, Pia!\" from greeting.py; preserve the empty-name behavior.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    },
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-11-from-here-concatenation",
+      "trajectory_id": "train-edit-005-11-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/from-here-concatenation",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-11-from-here-concatenation",
+        "fixture_id": "train-edit-005-from-here-concatenation-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "caa036f756273dba506463a388f678e6e16844af9aed0b57a01b41b89e63dd49",
+        "defect_family": "from-here-concatenation",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Change the greeting.py result for Uma to \"Greetings from here, Uma\" and check the supplied tests.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    },
+    {
+      "schema_version": "0.3",
+      "assignment_id": "stage1-codex-powershell-edit-005:train-edit-005-12-onward-uppercase",
+      "trajectory_id": "train-edit-005-12-trajectory-001",
+      "teacher_model": "gpt-5",
+      "teacher_skill_version": "0.2.0",
+      "authorized_fixture_root": "artifacts/teacher-fixtures/stage1-codex-powershell-edit-005/onward-uppercase",
+      "destination_jsonl": "datasets/teacher/stage1-codex-powershell-edit-005/raw.jsonl",
+      "task": {
+        "schema_version": "0.1",
+        "task_id": "train-edit-005-12-onward-uppercase",
+        "fixture_id": "train-edit-005-onward-uppercase-v1",
+        "fixture_family_id": "train-greeting-edit-005",
+        "fixture_revision": "5d36315383bafe29c981809d5bb7b768c9a1656809fd27122a02bfecce80e968",
+        "defect_family": "onward-uppercase",
+        "split": "train",
+        "category": "single_file_change",
+        "difficulty": "easy",
+        "task": "Keep the uppercase-name behavior, but make greeting.py return \"Onward, JULES!\" for jules. Validate.",
+        "knowledge_distance": 0.2,
+        "logical_arrival": "PT0S",
+        "time_limit": "PT3M",
+        "allowed_tools": [
+          "exec_command"
+        ],
+        "expected_changes": [
+          {
+            "path": "greeting.py",
+            "operation": "modify"
+          }
+        ],
+        "validation_ids": [
+          "pytest:test_greeting.py"
+        ]
+      },
+      "student_target": {
+        "hardware": {
+          "profile_id": "hardware-29cd0cedfa402e5e",
+          "path": "plans/student/local-laptop/hardware-profile.json",
+          "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+          "verification_status": "confirmed",
+          "purposes": [
+            "inference",
+            "evaluation",
+            "benchmarking"
+          ]
+        },
+        "recommendation": {
+          "recommendation_id": "base-model-da8ab427d76174db",
+          "path": "plans/student/local-laptop/base-model-recommendation.json",
+          "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+          "evidence_status": "provisional",
+          "accepted": true,
+          "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+          "model_id": "Qwen/Qwen3.5-2B",
+          "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+          "quantization": "Q4-K-M target",
+          "runtime": "llama.cpp revision pending benchmark",
+          "roles": [
+            "executor",
+            "coder"
+          ]
+        }
+      },
+      "harness_profile": {
+        "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+        "harness_id": "codex",
+        "harness_version": "0.154.0-alpha.6.2",
+        "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+        "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+      }
+    }
+  ],
+  "student_target": {
+    "hardware": {
+      "profile_id": "hardware-29cd0cedfa402e5e",
+      "path": "plans/student/local-laptop/hardware-profile.json",
+      "sha256": "a5a4e9464245da2461d7810165e8162fd5b104528ac77d7f1c8fb20c4dedf7c6",
+      "verification_status": "confirmed",
+      "purposes": [
+        "inference",
+        "evaluation",
+        "benchmarking"
+      ]
+    },
+    "recommendation": {
+      "recommendation_id": "base-model-da8ab427d76174db",
+      "path": "plans/student/local-laptop/base-model-recommendation.json",
+      "sha256": "5912ac8958473ab8f99f091fd5b164d0c0381d8647fcdc0a7e8051f4e1f70422",
+      "evidence_status": "provisional",
+      "accepted": true,
+      "hardware_profile_id": "hardware-29cd0cedfa402e5e",
+      "model_id": "Qwen/Qwen3.5-2B",
+      "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+      "quantization": "Q4-K-M target",
+      "runtime": "llama.cpp revision pending benchmark",
+      "roles": [
+        "executor",
+        "coder"
+      ]
+    }
+  },
+  "harness_profile": {
+    "profile_id": "codex-0.154.0-alpha.6.2-windows-powershell-exec-v1",
+    "harness_id": "codex",
+    "harness_version": "0.154.0-alpha.6.2",
+    "path": "plans\\harness\\codex-0.154.0-alpha.6.2\\harness-profile.json",
+    "sha256": "890daf95418bc58de7f0fc794f09282f464ac0c3db9b72d9ea490654b82a4cae"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1",
+  "dataset_id": "stage1-codex-powershell-contract-004",
+  "artifacts": [
+    {
+      "filename": "train.jsonl",
+      "record_count": 8,
+      "byte_count": 19499,
+      "sha256": "ed0d1d525147a5d3f4b22c7f52c39fccd330c34e53ce8b6d69ec6bb734ff521d"
+    },
+    {
+      "filename": "validation.jsonl",
+      "record_count": 0,
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "filename": "duplicates.jsonl",
+      "record_count": 0,
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
